@@ -1,15 +1,24 @@
 import torch
 from torch import nn
+from Autoencoder import 
 
-class LSTM_Model(nn.Module):
-    def __init__(self, N, input_size, hidden_size, num_layers, seq_length, device):
-        super(LSTM_Model, self).__init__()
+class Latent_Manifold(nn.Module):
+    def __init__(self, args : dict, 
+                       autoencoder : object,
+                       memory : object,
+                       device):
+        super(Latent_Manifold, self).__init__()
+        
         self.device = device
-        self.N = N  # number of classes
-        self.num_layers  = num_layers  # number of layers
-        self.input_size  = input_size  # input size
+        self.args = args
+        self.autoencoder = autoencoder
+        self.memory      = memory()
+
+        self.N = N  # output_size
+        self.num_layers  = num_layers   # number of layers
+        self.input_size  = input_size   # input size
         self.hidden_size = hidden_size  # hidden state
-        self.seq_length  = seq_length  # sequence length
+        self.seq_length  = seq_length   # sequence length
 
         self.lstm = nn.LSTM(input_size=input_size, hidden_size=hidden_size,
                             num_layers=num_layers, batch_first=True)  # lstm

@@ -21,7 +21,7 @@ if __name__ == "__main__":
     parser.add_argument('--ntransients', type = int,   default = 100)
     parser.add_argument('--seq_len',     type = int,   default=64)
     parser.add_argument('--bs',          type = int,   default=16)
-    parser.add_argument('--ntrain',      type = float, default=0.8)
+    parser.add_argument('--train_size',      type = float, default=0.8)
     parser.add_argument('--norm_input',  action = 'store_true',  help = "normalises input")
 
     #Directory Params ARGS

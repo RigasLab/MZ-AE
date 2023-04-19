@@ -1,45 +1,87 @@
 import torch
-from torch import nn
+import torch.nn as nn
+from torch.autograd import Variable
 
-class LSTM_Model(nn.Module):
-    def __init__(self, N, input_size, hidden_size, num_layers, seq_length, device):
-        super(LSTM_Model, self).__init__()
-        self.device = device
-        self.N = N  # number of classes
-        self.num_layers  = num_layers  # number of layers
-        self.input_size  = input_size  # input size
-        self.hidden_size = hidden_size  # hidden state
-        self.seq_length  = seq_length  # sequence length
+class KoopmanNetwork(nn.Module):
 
-        self.lstm = nn.LSTM(input_size=input_size, hidden_size=hidden_size,
-                            num_layers=num_layers, batch_first=True)  # lstm
-        self.fc_1 = nn.Linear(hidden_size, 128)  # fully connected 1
-        self.bn1  = nn.BatchNorm1d(128)
-        self.fc_2 = nn.Linear(128,64)
-        self.bn2  = nn.BatchNorm1d(64)
-        self.dp   = nn.Dropout(p=0.5)
-        self.fc   = nn.Linear(64, N)  # fully connected last layer
+    def __init__(self, input_size, latent_size):
+        super(KoopmanNetwork, self).__init__()
+        self.encoder = nn.Sequential(
+            nn.Linear(input_size, 100),
+            nn.ReLU(inplace=True),
+            nn.Linear(100, 100),
+            nn.ReLU(inplace=True),
+            nn.Linear(100, latent_size)
+        )
 
-        self.relu = nn.ReLU()
+        self.decoder = nn.Sequential(
+            nn.Linear(latent_size, 100),
+            nn.ReLU(inplace=True),
+            nn.Linear(100, 100),
+            nn.ReLU(inplace=True),
+            nn.Linear(100, input_size)
+        )
+        # Learned koopman operator
+        # Learns skew-symmetric matrix with a diagonal
+        self.kMatrixDiag = nn.Parameter(torch.rand(latent_size))
+        self.kMatrixUT   = nn.Parameter(0.01*torch.randn(int(latent_size*(latent_size-1)/2)))
+        
+        # self.kMatrix = nn.Parameter(torch.rand(latent_size, latent_size))
+        self.latent_size = latent_size
+        print('Total number of parameters: {}'.format(self._num_parameters()))
 
     def forward(self, x):
-        h_0 = torch.zeros(self.num_layers, x.size(0), self.hidden_size).to(self.device)  # hidden state
-        c_0 = torch.zeros(self.num_layers, x.size(0), self.hidden_size).to(self.device)  # internal state
-        # Propagate input through LSTM
-        output, (hn, cn) = self.lstm(x, (h_0, c_0))  # lstm with input, hidden, and internal state
-        # print("hn size: ", hn.size())
-        hn = hn.view(-1, self.hidden_size)  # reshaping the data for Dense layer next
-        # hn = self.linear(hn[0]).flatten()
-        # hn = hn[-1]
-        # print("hn size: ", hn.size())
-        out = self.relu(hn)
-        out = self.fc_1(out)  # first Dense
-        out = self.relu(out)  # relu
-        # out = self.bn1(out)
-        # out = self.dp(out)
-        out = self.fc_2(out)  # second Dense
-        out = self.relu(out)  # relu
-        # out = self.bn2(out)
-        # out = self.dp(out)
-        out = self.fc(out)    # Final Output
-        return out
+        g  = self.decoder(x)
+        x0 = self.encoder(g)
+
+        return g, x0
+
+    def recover(self, g):
+        x0 = self.encoder(g)
+        return x0
+
+    def koopmanOperation(self, g):
+        '''
+        Applies the learned koopman operator on the given observables.
+        Parameters
+        ----------
+            g (torch.Tensor): [bs x  g] batch of observables, must match dim of koopman transform
+        Returns
+        -------
+            gnext (torch.Tensor): [bs x g] predicted observables at the next time-step
+        '''
+        # assert g.size(-1) == self.kMatrix.size(0), 'Observables should have dim {}'.format(self.kMatrix.size(0))
+        # Build Koopman matrix (skew-symmetric with diagonal)
+        kMatrix = Variable(torch.Tensor(self.latent_size, self.latent_size)).to(self.kMatrixUT.device)
+
+        utIdx = torch.triu_indices(self.latent_size, self.latent_size, offset=1)
+        diagIdx = torch.stack([torch.arange(0,self.latent_size,dtype=torch.long).unsqueeze(0), \
+            torch.arange(0,self.latent_size,dtype=torch.long).unsqueeze(0)], dim=0)
+        kMatrix[utIdx[0], utIdx[1]] = self.kMatrixUT
+        kMatrix[utIdx[1], utIdx[0]] = -self.kMatrixUT
+        kMatrix[diagIdx[0], diagIdx[1]] = torch.nn.functional.relu(self.kMatrixDiag)
+
+        gnext = torch.bmm(g.unsqueeze(1), kMatrix.expand(g.size(0), kMatrix.size(0), kMatrix.size(0)))
+        return gnext.squeeze(1)
+
+    def getKoopmanMatrix(self, requires_grad=False):
+        '''
+        Returns current Koopman operator
+        '''
+        kMatrix = Variable(torch.Tensor(self.latent_size, self.latent_size), requires_grad=requires_grad).to(self.kMatrixUT.device)
+
+        utIdx = torch.triu_indices(self.latent_size, self.latent_size, offset=1)
+        diagIdx = torch.stack([torch.arange(0, self.latent_size, dtype=torch.long).unsqueeze(0), \
+            torch.arange(0,self.latent_size,dtype=torch.long).unsqueeze(0)], dim=0)
+        kMatrix[utIdx[0], utIdx[1]] = self.kMatrixUT
+        kMatrix[utIdx[1], utIdx[0]] = -self.kMatrixUT
+        kMatrix[diagIdx[0], diagIdx[1]] = torch.nn.functional.relu(self.kMatrixDiag)
+
+        return kMatrix
+
+    def _num_parameters(self):
+        count = 0
+        for name, param in self.named_parameters():
+            # print(name, param.numel())
+            count += param.numel()
+        return count

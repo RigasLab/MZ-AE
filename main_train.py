@@ -10,6 +10,46 @@ from utils.make_dir import mkdirs
 # from torch.utils.tensorboard import SummaryWriter
 torch.manual_seed(99)
 
+def load_and_preproc_data(args):
+
+    hfdata = h5py.File(args.data_dir,"r")
+    data   = np.array(hfdata["Data"])
+    data   = np.einsum("ijk -> jki",data)
+    data   = data[args.ntransients:,:]
+    data_args = dict(hfdata.attrs)
+    hfdata.close()
+    print("Data Shape: ", data.shape)
+
+    #Normalising Data
+    if norm_input:
+        print("normalizing Input")
+        data[...,0] = (data[...,0] - np.mean(data[...,0],axis=0))/np.std(data[...,0],axis=0)
+    else:
+        print("Not normalizing Input")
+    # data[...,1] = (data[...,1] - np.mean(data[...,1]))/np.std(data[...,1])
+
+    return data, data_args
+
+def create_dataset(args, data, device):
+
+    train_data = data[:int(args.train_size*data.shape[0])]
+    test_data  = data[int(args.train_size*data.shape[0]):]
+
+    print("Train_Shape: ", train_data.shape)
+    print("Test_Shape: " , test_data.shape)
+
+    train_dataset    = SequenceDataset(train_data, device, args.seq_len)
+    test_dataset     = SequenceDataset(test_data , device, args.seq_len)
+    train_dataloader = DataLoader(train_dataset  , batch_size=args.bs, shuffle = True)
+    test_dataloader  = DataLoader(test_dataset   , batch_size=args.bs, shuffle = False)
+
+    X,y = next(iter(test_dataloader))
+    print("Input Shape : ", X.shape)
+    print("Output Shape: ", y.shape)
+
+    return train_dataset, test_dataset, train_dataloader, test_dataloader, train_data, test_data
+
+
 def main_train(args):
     #Device parameters
     if torch.cuda.is_available():
@@ -53,43 +93,14 @@ def main_train(args):
     # sys.stdout = f
 
     #Loading and visualising data
-    # data = scipy.io.loadmat("Data/KS_tau_data.mat")
-    hfdata = h5py.File(data_dir,"r")
-    data   = np.array(hfdata["Data"])
-    data   = np.einsum("ijk -> jki",data)
-    data   = data[ntransients:,:]
-    data_args = dict(hfdata.attrs)
-    hfdata.close()
-    print("Data Shape: ", data.shape)
-
-    #Normalising Data
-    if norm_input:
-        print("normalizing Input")
-        data[...,0] = (data[...,0] - np.mean(data[...,0],axis=0))/np.std(data[...,0],axis=0)
-    else:
-        print("Not normalizing Input")
-    # data[...,1] = (data[...,1] - np.mean(data[...,1]))/np.std(data[...,1])
+    data, data_args = load_and_preproc_data(args)
 
     #Creating Dataset
-    def create_dataset(args):
-
-    train_data = data[:int(train_size*data.shape[0])]
-    test_data  = data[int(train_size*data.shape[0]):]
-
-    print("Train_Shape: ", train_data.shape)
-    print("Test_Shape: " , test_data.shape)
-
-    train_dataset    = SequenceDataset(train_data, device, sequence_length)
-    test_dataset     = SequenceDataset(test_data , device, sequence_length)
-    train_dataloader = DataLoader(train_dataset  , batch_size=batch_size, shuffle = True)
-    test_dataloader  = DataLoader(test_dataset   , batch_size=batch_size, shuffle = False)
-
-    X,y = next(iter(test_dataloader))
-    print("Input Shape : ", X.shape)
-    print("Output Shape: ", y.shape)
-
+    train_dataset, test_dataset, train_dataloader, test_dataloader, train_data, test_data = create_dataset(args, data, device)
+    
     #Creating Model
-    model = LSTM_Model(N=data.shape[1], input_size = data.shape[1], hidden_size=num_hidden_units, num_layers = num_layers, seq_length = sequence_length, device = device).to(device)
+    input_size = data.shape[1]
+    model = LSTM_Model(N=input_size, input_size = input_size, hidden_size=num_hidden_units, num_layers = num_layers, seq_length = sequence_length, device = device).to(device)
     loss_function = nn.MSELoss()
     optimizer     = torch.optim.Adam(model.parameters(), lr=learning_rate)#, weight_decay=1e-5)
     # writer = SummaryWriter(exp_dir+'/'+exp_name+'/'+'log/') #Tensorboard writer

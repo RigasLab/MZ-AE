@@ -5,7 +5,7 @@ class LSTM_Model(nn.Module):
     def __init__(self, N, input_size, hidden_size, num_layers, seq_length, device):
         super(LSTM_Model, self).__init__()
         self.device = device
-        self.N = N  # number of classes
+        self.N = N  # output_size
         self.num_layers  = num_layers  # number of layers
         self.input_size  = input_size  # input size
         self.hidden_size = hidden_size  # hidden state
