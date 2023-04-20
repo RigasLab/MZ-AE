@@ -43,7 +43,7 @@ class SequenceDataset(Dataset):
         return x, self.X[i+1], self.Phi[i], self.Phi[i+1]
    
 
-class Autoencoder_Dataset(Dataset):
+class StateVariableDataset(Dataset):
     def __init__(self, data, device, sequence_length=5):
 
         self.device = device

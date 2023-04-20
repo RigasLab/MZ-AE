@@ -31,14 +31,14 @@ class Autoencoder(nn.Module):
         print('Total number of parameters: {}'.format(self._num_parameters()))
 
     def forward(self, Phi_n):
-        x  = self.encoder(Phi_n)
-        Phi_nn = self.decoder(x)
+        x_n  = self.encoder(Phi_n)
+        Phi_n_hat = self.decoder(x_n)
 
-        return x, Phi_nn
+        return x_n, Phi_n_hat
 
-    def recover(self, x):
-        Phi_n = self.decoder(x)
-        return Phi_n
+    def recover(self, x_n):
+        Phi_n_hat = self.decoder(x_n)
+        return Phi_n_hat
 
     def koopmanOperation(self, x_n):
         '''

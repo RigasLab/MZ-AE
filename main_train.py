@@ -4,7 +4,7 @@ import numpy as np
 import csv, h5py, json, pickle
 from torch.utils.data import Dataset, DataLoader
 from RNN.RNN_Model import LSTM_Model
-from utils.PreProc_Data.DataProc import SequenceDataset
+from utils.PreProc_Data.DataProc import StateVariableDataset
 from utils.train_test import train_model, test_model, predict
 from utils.make_dir import mkdirs
 # from torch.utils.tensorboard import SummaryWriter
@@ -32,22 +32,34 @@ def load_and_preproc_data(args):
 
 def create_dataset(args, data, device):
 
+    '''
+    Creates non sequence dataset for state variables
+    Input
+    -----
+    data: [num_traj, timesteps, statedim] state variables
+
+    Returns
+    -------
+    Dataset : Input , Label [num_traj, timesteps, statedim] 
+
+    '''
+
     train_data = data[:int(args.train_size*data.shape[0])]
     test_data  = data[int(args.train_size*data.shape[0]):]
 
     print("Train_Shape: ", train_data.shape)
     print("Test_Shape: " , test_data.shape)
+    
+    train_dataset    = StateVariableDataset(train_data, device, args.seq_len)
+    test_dataset     = StateVariableDataset(test_data , device, args.seq_len)
+    # train_dataloader = DataLoader(train_dataset  , batch_size=args.bs, shuffle = True)
+    # test_dataloader  = DataLoader(test_dataset   , batch_size=args.bs, shuffle = False)
 
-    train_dataset    = SequenceDataset(train_data, device, args.seq_len)
-    test_dataset     = SequenceDataset(test_data , device, args.seq_len)
-    train_dataloader = DataLoader(train_dataset  , batch_size=args.bs, shuffle = True)
-    test_dataloader  = DataLoader(test_dataset   , batch_size=args.bs, shuffle = False)
+    # X,y = next(iter(test_dataloader))
+    # print("Input Shape : ", X.shape)
+    # print("Output Shape: ", y.shape)
 
-    X,y = next(iter(test_dataloader))
-    print("Input Shape : ", X.shape)
-    print("Output Shape: ", y.shape)
-
-    return train_dataset, test_dataset, train_dataloader, test_dataloader, train_data, test_data
+    return train_dataset, test_dataset, train_data, test_data
 
 
 def main_train(args):
@@ -95,8 +107,8 @@ def main_train(args):
     #Loading and visualising data
     data, data_args = load_and_preproc_data(args)
 
-    #Creating Dataset
-    train_dataset, test_dataset, train_dataloader, test_dataloader, train_data, test_data = create_dataset(args, data, device)
+    #Creating Statevariable Dataset
+    train_dataset, test_dataloader, train_data, test_data = create_dataset(args, data, device)
     
     #Creating Model
     input_size = data.shape[1]

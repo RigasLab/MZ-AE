@@ -1,10 +1,9 @@
 import torch
-from torch import nn
-from Autoencoder import Autoencoder
-from RNN_Model import LSTM_Model
-from 
+from torch.utils.data import DataLoader
+from utils.PreProc_Data.DataProc import SequenceDataset
 
-class Latent_Manifold(nn.Module):
+
+class MZANetwork(nn.Module):
     def __init__(self, args : dict, 
                        autoencoder : object,
                        seqmodel : object,
@@ -37,17 +36,31 @@ class Latent_Manifold(nn.Module):
         x = self.autoencoder.encoder(Phi)
         return x
     
-    def create_obs_dataset(self, x, Phi):
+    def create_obs_dataset(self, Phi, shuffle):
 
         """
-        Computes observables using encoder
+        Creates sequence dataset for the observables along with the coresponding state variables
         Input
         -----
         Phi : [time, statedim] State variables
-        x : [time, obsdim] Obervables
+        x   : [time, obsdim] Obervables
+        shuffle : [Bool] Shuffle the dataloader or not
         
         Returns
         -------
         Dataloader and Dataset
         """
+
+        x = self.get_observables(Phi)
+
+        dataset = SequenceDataset(Phi, x, self.device, sequence_length=self.args.seq_len)
+        dataloader = DataLoader(dataset, batch_size = self.args.bs, shuffle = shuffle)
+
+        return dataloader, dataset
+    
+    def 
+        
+
+        
+
 
