@@ -2,10 +2,10 @@ import torch
 import torch.nn as nn
 from torch.autograd import Variable
 
-class KoopmanNetwork(nn.Module):
+class Autoencoder(nn.Module):
 
     def __init__(self, input_size, latent_size):
-        super(KoopmanNetwork, self).__init__()
+        super(Autoencoder, self).__init__()
         self.encoder = nn.Sequential(
             nn.Linear(input_size, 100),
             nn.ReLU(inplace=True),
@@ -30,17 +30,17 @@ class KoopmanNetwork(nn.Module):
         self.latent_size = latent_size
         print('Total number of parameters: {}'.format(self._num_parameters()))
 
-    def forward(self, x):
-        g  = self.decoder(x)
-        x0 = self.encoder(g)
+    def forward(self, Phi_n):
+        x  = self.encoder(Phi_n)
+        Phi_nn = self.decoder(x)
 
-        return g, x0
+        return x, Phi_nn
 
-    def recover(self, g):
-        x0 = self.encoder(g)
-        return x0
+    def recover(self, x):
+        Phi_n = self.decoder(x)
+        return Phi_n
 
-    def koopmanOperation(self, g):
+    def koopmanOperation(self, x_n):
         '''
         Applies the learned koopman operator on the given observables.
         Parameters
@@ -61,8 +61,8 @@ class KoopmanNetwork(nn.Module):
         kMatrix[utIdx[1], utIdx[0]] = -self.kMatrixUT
         kMatrix[diagIdx[0], diagIdx[1]] = torch.nn.functional.relu(self.kMatrixDiag)
 
-        gnext = torch.bmm(g.unsqueeze(1), kMatrix.expand(g.size(0), kMatrix.size(0), kMatrix.size(0)))
-        return gnext.squeeze(1)
+        x_nn = torch.bmm(x_n.unsqueeze(1), kMatrix.expand(x_n.size(0), kMatrix.size(0), kMatrix.size(0)))
+        return x_nn.squeeze(1)
 
     def getKoopmanMatrix(self, requires_grad=False):
         '''

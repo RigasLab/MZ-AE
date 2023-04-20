@@ -17,6 +17,15 @@ class SequenceDataset(Dataset):
         return self.Phi.shape[0]
 
     def __getitem__(self, i):
+        '''
+        Creates sequence of Data
+        Returns
+        -------
+        x       : sequence input to RNN
+        X[i+1]  : observable at next time step
+        Phi[i]  : state variable at current step
+        Phi[i+1]: state variable at next time step
+        '''
         if i==len(self)-1:
             i = len(self)-2
         if i >= self.sequence_length:
@@ -30,17 +39,9 @@ class SequenceDataset(Dataset):
             padding = self.X[0].repeat(self.sequence_length - i, 1)
             x = self.X[1:(i+1), :]
             x = torch.cat((padding, x), 0)
+            
         return x, self.X[i+1], self.Phi[i], self.Phi[i+1]
-    # def __getitem__(self, i):
-    #     if i >= self.sequence_length - 1:
-    #         i_start = i - self.sequence_length + 1
-    #         x = self.X[i_start:(i + 1), :]
-    #     else:
-    #         padding = self.X[0].repeat(self.sequence_length - i - 1, 1)
-    #         x = self.X[0:(i + 1), :]
-    #         x = torch.cat((padding, x), 0)
-    #
-    #     return x, self.y[i]
+   
 
 class Autoencoder_Dataset(Dataset):
     def __init__(self, data, device, sequence_length=5):
@@ -58,16 +59,7 @@ class Autoencoder_Dataset(Dataset):
 
     def __getitem__(self, i):
         return self.Phi[i], self.Phi[i]
-    # def __getitem__(self, i):
-    #     if i >= self.sequence_length - 1:
-    #         i_start = i - self.sequence_length + 1
-    #         x = self.X[i_start:(i + 1), :]
-    #     else:
-    #         padding = self.X[0].repeat(self.sequence_length - i - 1, 1)
-    #         x = self.X[0:(i + 1), :]
-    #         x = torch.cat((padding, x), 0)
-    #
-    #     return x, self.y[i]
+   
 
 
 
