@@ -8,7 +8,7 @@ sys.path.append('../')
 from Lorenz_Datagen.L96_torch import L96TwoLevel_torch
 
 #%%
-def train_model(data_loader, model, loss_function, optimizer):
+def train_loss_bp(data_loader, model, loss_function, optimizer):
     '''
     Data_Loader -> X [batch_size seq_len state_dim]
     '''
@@ -30,7 +30,7 @@ def train_model(data_loader, model, loss_function, optimizer):
     return avg_loss
 
 
-def test_model(data_loader, model, loss_function):
+def test_loss(data_loader, model, loss_function):
     '''
     Data_Loader -> X [batch_size seq_len state_dim]
     '''

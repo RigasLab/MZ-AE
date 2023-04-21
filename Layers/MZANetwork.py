@@ -1,24 +1,25 @@
 import torch
+import torch.nn as nn
 from torch.utils.data import DataLoader
 from utils.PreProc_Data.DataProc import SequenceDataset
 
 
 class MZANetwork(nn.Module):
-    def __init__(self, args : dict, 
+    def __init__(self, exp_args : dict, 
                        autoencoder : object,
                        seqmodel : object,
-                       state_dim : tuple,
-                       device):
-        super(Latent_Manifold, self).__init__()
-        
-        self.device = device
-        self.args   = args
-        self.autoencoder = autoencoder(state_dim, args.num_obs)
-        self.seqmodel    = seqmodel(N = args.num_obs, input_size = args.num_obs, 
-                                    hidden_size = args.nhu, num_layers = args.nlayers, 
-                                    seq_length = args.seq_len, device = device).to(device)
+                       koopman  : object,
+                       state_dim : tuple):
+        super(MZANetwork, self).__init__()
         
 
+        self.args        = exp_args
+        self.state_dim   = state_dim
+        self.autoencoder = autoencoder(input_size = self.args.state_dim, latent_size = self.args.num_obs)
+        self.koopman     = koopman(latent_size = self.args.num_obs, device = self.args.device)
+        self.seqmodel    = seqmodel(N = self.args.num_obs, input_size = self.args.num_obs, 
+                                    hidden_size = self.args.num_hidden_units, num_layers = self.args.num_layers, 
+                                    seq_length = self.args.seq_len, device = self.args.device).to(self.args.device)
         
     def get_observables(self, Phi):
 
@@ -57,8 +58,20 @@ class MZANetwork(nn.Module):
         dataloader = DataLoader(dataset, batch_size = self.args.bs, shuffle = shuffle)
 
         return dataloader, dataset
+
     
-    def 
+    def save_model(self, exp_dir, exp_name):
+
+        '''
+        Saves the models to the given exp_dir and exp_name
+        '''
+
+        torch.save(self.seqmodel, exp_dir+'/'+exp_name+"/seqmodel_"+exp_name)
+        print("saved the seqmodel")
+        torch.save(self.autoencoder, exp_dir+'/'+exp_name+"/autoencoder_"+exp_name)
+        print("saved the autoencoder model")
+
+
         
 
         

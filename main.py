@@ -40,12 +40,7 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     #Running the main code
-    if args.coupled:
-        print("Running Coupled Training")
-        coupled_train(args)
-    else:
-        print("Running UnCoupled Training")
-        main_train(args)
+    main_train(args)
 
 
 
