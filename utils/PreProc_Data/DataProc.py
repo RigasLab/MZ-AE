@@ -47,7 +47,6 @@ class SequenceDataset(Dataset):
             phi = self.Phi[1:(i+1), ...]
             phi = torch.cat((padding, phi), 0)
             
-        
         return phi, self.Phi[i+1]
    
 

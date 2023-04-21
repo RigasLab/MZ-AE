@@ -80,11 +80,16 @@ class MZA_Experiment():
 
         hfdata = h5py.File(self.data_dir,"r")
         self.lp_data   = np.array(hfdata["Data"])
-        self.lp_data   = np.einsum("ijk -> jki",self.lp_data)
+        self.lp_data   = np.einsum("ijk -> jki", self.lp_data)
         self.lp_data   = self.lp_data[self.ntransients:,:]
         self.data_args = dict(hfdata.attrs)
         hfdata.close()
         print("Data Shape: ", self.lp_data.shape)
+
+        #additional data parameters
+        self.num_trajs = self.lp_data.shape[0]
+        self.statedim  = self.data.shape[2:]
+        
 
         #Normalising Data
         if self.norm_input:
@@ -137,8 +142,29 @@ class MZA_Experiment():
         num_batches = len(data_loader)
         total_loss  = 0
         self.model.train()
-        
-        for X, y in data_loader:
+
+
+        for Phi_seq, Phi_nn in data_loader:
+            Phi_seq = torch.movedim(X,-1,1)  #move traj axis next to bs axis
+            Phi_seq = torch.flatten(X, start_dim = 0, end_dim = 2) #flattening batchsize seqlen [bs*num_traj*seqlen, obsdim]
+            Phi_nn  = torch.movedim(y,-1,1)
+            Phi_nn  = torch.flatten(y, start_dim = 0, end_dim = 1) #[bs*num_traj, obsdim]
+
+            #obtain observables
+            x_seq, Phi_seq_hat = self.model.autoencoder(Phi_seq)
+            x_nn, Phi_nn_hat = self.model.autoencoder(Phi_nn)
+
+            #reordering tensors in desired form
+            x_seq = x_seq.reshape(self.batch_size, self.num_trajs, self.seq_len, self.num_obs)
+            x_seq = torch.movedim(x_seq, 1, 0) #[num_trajs bs seqlen obsdim]
+            Phi_seq_hat = Phi_seq_hat.reshape(self.batch_size, self.num_trajs, self.seq_len, *self.statedim)
+            Phi_seq_hat = torch.movedim(Phi_seq_hat, 1, 0) #[num_trajs bs seqlen statedim]
+
+            x_nn  = x_nn.reshape(self.batch_size, self.num_trajs, self.num_obs)
+            x_nn = torch.movedim(x_nn, 1, 0)
+            Phi_nn = Phi_nn.reshape(self.batch_size, self.num_trajs, *self.statedim)
+            Phi_nn = torch.movedim(Phi_nn, 1, 0)
+            
             output = model(X)
             loss   = loss_function(output, y)
 
@@ -184,7 +210,6 @@ class MZA_Experiment():
 
         #Loading and visualising data
         self.load_and_preproc_data()
-        self.statedim = self.data.shape[2:]
 
         #Creating Statevariable Dataset
         self.create_dataset()
