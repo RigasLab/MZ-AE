@@ -20,7 +20,12 @@ class MZANetwork(nn.Module):
         self.seqmodel    = seqmodel(N = self.args.num_obs, input_size = self.args.num_obs, 
                                     hidden_size = self.args.num_hidden_units, num_layers = self.args.num_layers, 
                                     seq_length = self.args.seq_len, device = self.args.device).to(self.args.device)
-        
+
+    # def forward(self, Phi_n):
+    #     """
+    #     Phi_n [bs statedim]
+    #     """
+
     def get_observables(self, Phi):
 
         """
@@ -54,8 +59,8 @@ class MZANetwork(nn.Module):
 
         x = self.get_observables(Phi)
 
-        dataset = SequenceDataset(Phi, x, self.device, sequence_length=self.args.seq_len)
-        dataloader = DataLoader(dataset, batch_size = self.args.bs, shuffle = shuffle)
+        dataset = SequenceDataset(Phi, x, self.args.device, sequence_length=self.args.seq_len)
+        dataloader = DataLoader(dataset, batch_size = self.args.batch_size, shuffle = shuffle)
 
         return dataloader, dataset
 

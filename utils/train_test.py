@@ -12,9 +12,13 @@ def train_loss_bp(data_loader, model, loss_function, optimizer):
     '''
     Data_Loader -> X [batch_size seq_len state_dim]
     '''
+
+    
+    
     num_batches = len(data_loader)
-    total_loss = 0
+    total_loss  = 0
     model.train()
+    
 
     for X, y in data_loader:
         output = model(X)

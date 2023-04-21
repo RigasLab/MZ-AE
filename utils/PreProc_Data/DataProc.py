@@ -1,15 +1,23 @@
 import torch
 from torch.utils.data import Dataset
+import numpy as np
 
 class SequenceDataset(Dataset):
-    def __init__(self, statedata, obsdata, device, sequence_length=5):
-
+    def __init__(self, statedata, device, sequence_length=5):
+        '''
+        Input
+        -----
+        statedata (numpy array) [num_traj, timesteps, statedim]
+        '''
         self.device = device
         self.sequence_length = sequence_length
         #changing datatype for torch device
         if self.device == torch.device("mps"):
             data = data.astype("float32")
-        self.X   = torch.tensor(obsdata, device=self.device).float()
+
+        #shifting the traj axis to the back for creating sequences
+        self.statedata = np.moveaxis(statedata, 0, -1)
+        # self.X   = torch.tensor(obsdata, device=self.device).float()
         self.Phi = torch.tensor(statedata, device=self.device).float()
 
 
@@ -18,33 +26,40 @@ class SequenceDataset(Dataset):
 
     def __getitem__(self, i):
         '''
-        Creates sequence of Data
+        Creates sequence of Data for state variables
         Returns
         -------
-        x       : sequence input to RNN
-        X[i+1]  : observable at next time step
-        Phi[i]  : state variable at current step
-        Phi[i+1]: state variable at next time step
+        phi       : [bs, seq_len, obsdim, num_traj] sequence of State Variables
+        Phi[i+1]  : [bs, obsdim, num_traj]   observable at next time step
         '''
+        non_time_dims = (1,)*(self.statedata.ndim-1)
         if i==len(self)-1:
             i = len(self)-2
         if i >= self.sequence_length:
             i_start = i - self.sequence_length + 1
-            x = self.X[i_start:(i+1), :]
+            phi = self.Phi[i_start:(i+1), ...]
         elif i==0:
-            padding = self.X[0].repeat(self.sequence_length - 1, 1)
-            x = self.X[0:(i+1), :]
-            x = torch.cat((padding, x), 0)
+            padding = self.Phi[0].repeat(self.sequence_length - 1, *non_time_dims)
+            phi = self.Phi[0:(i+1), ...]
+            phi = torch.cat((padding, phi), 0)
         else:
-            padding = self.X[0].repeat(self.sequence_length - i, 1)
-            x = self.X[1:(i+1), :]
-            x = torch.cat((padding, x), 0)
+            padding = self.Phi[0].repeat(self.sequence_length - i, *non_time_dims)
+            phi = self.Phi[1:(i+1), ...]
+            phi = torch.cat((padding, phi), 0)
             
-        return x, self.X[i+1], self.Phi[i], self.Phi[i+1]
+        
+        return phi, self.Phi[i+1]
    
 
 class StateVariableDataset(Dataset):
-    def __init__(self, data, device, sequence_length=5):
+    '''
+        Creates Dataset for state variables
+        Returns
+        -------
+        Phi[i]  : [bs, statedim] state variable at current step
+        Phi[i+1]: [bs, statedim] state variable at next time step
+        '''
+    def __init__(self, data, device):
 
         self.device = device
         self.sequence_length = sequence_length

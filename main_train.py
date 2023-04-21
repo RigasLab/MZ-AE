@@ -7,7 +7,7 @@ from Layers.RNN_Model import LSTM_Model
 from Layers.MZANetwork import MZANetwork
 from Layers.Autoencoder import Autoencoder
 from Layers.Koopman import Koopman
-from utils.PreProc_Data.DataProc import StateVariableDataset
+from utils.PreProc_Data.DataProc import SequenceDataset
 from utils.train_test import train_model, test_model, predict
 from utils.make_dir import mkdirs
 # from torch.utils.tensorboard import SummaryWriter
@@ -114,10 +114,10 @@ class MZA_Experiment():
         print("Train_Shape: ", self.train_data.shape)
         print("Test_Shape: " , self.test_data.shape)
         
-        self.train_dataset = StateVariableDataset(self.train_data, self.device)
-        self.test_dataset  = StateVariableDataset(self.test_data , self.device)
-        # train_dataloader = DataLoader(train_dataset  , batch_size=args.bs, shuffle = True)
-        # test_dataloader  = DataLoader(test_dataset   , batch_size=args.bs, shuffle = False)
+        self.train_dataset = SequenceDataset(self.train_data, self.device)
+        self.test_dataset  = SequenceDataset(self.test_data , self.device)
+        self.train_dataloader = DataLoader(self.train_dataset  , batch_size=self.batch_size, shuffle = True)
+        self.test_dataloader  = DataLoader(self.test_dataset   , batch_size=self.batch_size, shuffle = False)
 
         #print the dataset shape
         # X,y = next(iter(test_dataloader))
@@ -133,16 +133,14 @@ class MZA_Experiment():
         '''
         Reuires: dataloader, model, loss_function, optimizer
         '''
-        x = self.model.create_obs_dataset(self.train_data, shuffle = True)
 
         num_batches = len(data_loader)
         total_loss  = 0
-        model.train()
+        self.model.train()
         
-
         for X, y in data_loader:
             output = model(X)
-            loss = loss_function(output, y)
+            loss   = loss_function(output, y)
 
             optimizer.zero_grad()
             loss.backward()
