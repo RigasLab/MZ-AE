@@ -163,14 +163,15 @@ class MZA_Experiment():
             x_nn , _   = self.model.autoencoder(Phi_nn)
 
             #reshaping tensors in desired form
-            x_seq = x_seq.reshape(self.batch_size, self.seq_len, self.num_obs) #[bs seqlen obsdim]
+            x_seq = x_seq.reshape(int(x_seq.shape[0]/self.seq_len), self.seq_len, self.num_obs) #[bs seqlen obsdim]
             x_n   = torch.squeeze(x_seq[:,-1,:])  #[bs obsdim]
             
-            Phi_seq_hat = Phi_seq_hat.reshape(self.batch_size, self.seq_len, *self.statedim) #[bs seqlen statedim]
+            sd = (self.statedim,) if str(type(self.statedim)) == "<class 'int'>" else self.statedim
+            Phi_seq_hat = Phi_seq_hat.reshape(int(Phi_seq_hat.shape[0]/self.seq_len), self.seq_len, *sd) #[bs seqlen statedim]
             Phi_n_hat   = torch.squeeze(Phi_seq_hat[:, -1, :]) 
             
             #Evolving in Time
-            x_nn_hat   = self.model.koopman(x_n) + self.seqmodel(x_seq)
+            x_nn_hat   = self.model.koopman(x_n) + self.model.seqmodel(x_seq)
             Phi_nn_hat = self.model.autoencoder.recover(x_nn_hat)
 
             #Calculating loss
@@ -208,10 +209,10 @@ class MZA_Experiment():
         total_loss, total_ObsEvo_Loss, total_Autoencoder_Loss, total_StateEvo_Loss  = 0,0,0,0
         self.model.eval()
 
-
+        i = 0
         for Phi_seq, Phi_nn in self.test_dataloader:
             
-             
+            i = i+1
             Phi_n   = torch.squeeze(Phi_seq[:,-1,...])  #[bs statedim]
             
             #flattening batchsize seqlen
@@ -224,14 +225,16 @@ class MZA_Experiment():
             x_nn , _   = self.model.autoencoder(Phi_nn)
 
             #reshaping tensors in desired form
-            x_seq = x_seq.reshape(self.batch_size, self.seq_len, self.num_obs) #[bs seqlen obsdim]
+            
+            x_seq = x_seq.reshape(int(x_seq.shape[0]/self.seq_len), self.seq_len, self.num_obs) #[bs seqlen obsdim]
             x_n   = torch.squeeze(x_seq[:,-1,:])  #[bs obsdim]
             
-            Phi_seq_hat = Phi_seq_hat.reshape(self.batch_size, self.seq_len, *self.statedim) #[bs seqlen statedim]
+            sd = (self.statedim,) if str(type(self.statedim)) == "<class 'int'>" else self.statedim
+            Phi_seq_hat = Phi_seq_hat.reshape(int(Phi_seq_hat.shape[0]/self.seq_len), self.seq_len, *sd) #[bs seqlen statedim]
             Phi_n_hat   = torch.squeeze(Phi_seq_hat[:, -1, :]) 
             
             #Evolving in Time
-            x_nn_hat   = self.model.koopman(x_n) + self.seqmodel(x_seq)
+            x_nn_hat   = self.model.koopman(x_n) + self.model.seqmodel(x_seq)
             Phi_nn_hat = self.model.autoencoder.recover(x_nn_hat)
 
             #Calculating loss
@@ -272,8 +275,8 @@ class MZA_Experiment():
                 test_loss, test_ObsEvo_Loss, test_Autoencoder_Loss, test_StateEvo_Loss  = self.test_loss()
                 print(f"Epoch {ix_epoch}  ")
                 print(f"Train loss: {train_loss} Test loss: {test_loss}")
-                self.log.writerow({"epoch":ix_epoch,"train_loss":train_loss, "train_ObsEvo_Loss":train_ObsEvo_Loss, "train_Autoencoder_Loss":train_Autoencoder_Loss, "train_StateEvo_Loss":train_StateEvo_Loss,\
-                                                    "test_loss":test_loss, "test_ObsEvo_Loss":test_ObsEvo_Loss, "test_Autoencoder_Loss":test_Autoencoder_Loss, "test_StateEvo_Loss":test_StateEvo_Loss})
+                self.log.writerow({"epoch":ix_epoch,"Train_Loss":train_loss, "Train_ObsEvo_Loss":train_ObsEvo_Loss, "Train_Autoencoder_Loss":train_Autoencoder_Loss, "Train_StateEvo_Loss":train_StateEvo_Loss,\
+                                                    "Test_Loss":test_loss, "Test_ObsEvo_Loss":test_ObsEvo_Loss, "Test_Autoencoder_Loss":test_Autoencoder_Loss, "Test_StateEvo_Loss":test_StateEvo_Loss})
                 self.logf.flush()
                 # writer.add_scalars('tt',{'train': train_loss, 'test': test_loss}, ix_epoch)
 
@@ -286,8 +289,8 @@ class MZA_Experiment():
     def log_data(self):
 
         # Logging Data
-        self.metrics = ["epoch","Train_ObsEvoLoss","Train_Autoencoder_Loss","Train_StateEvo_Loss","Train_Loss"\
-                               ,"Test_ObsEvoLoss","Test_Autoencoder_Loss","Test_StateEvo_Loss","Test_Loss"]
+        self.metrics = ["epoch","Train_Loss","Train_ObsEvo_Loss","Train_Autoencoder_Loss","Train_StateEvo_Loss"\
+                               ,"Test_Loss","Test_ObsEvo_Loss","Test_Autoencoder_Loss","Test_StateEvo_Loss"]
         self.logf = open(self.exp_dir + '/' + self.exp_name + "/out_log/log", "w")
         self.log = csv.DictWriter(self.logf, self.metrics)
         self.log.writeheader()
