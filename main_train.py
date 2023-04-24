@@ -7,7 +7,7 @@ from Layers.RNN_Model import LSTM_Model
 from Layers.MZANetwork import MZANetwork
 from Layers.Autoencoder import Autoencoder
 from Layers.Koopman import Koopman
-from utils.PreProc_Data.DataProc import SequenceDataset
+from utils.PreProc_Data.DataProc import StackedSequenceDataset
 from utils.train_test import train_model, test_model, predict
 from utils.make_dir import mkdirs
 # from torch.utils.tensorboard import SummaryWriter
@@ -121,8 +121,8 @@ class MZA_Experiment():
         print("Train_Shape: ", self.train_data.shape)
         print("Test_Shape: " , self.test_data.shape)
         
-        self.train_dataset    = SequenceDataset(self.train_data, self.device)
-        self.test_dataset     = SequenceDataset(self.test_data , self.device)
+        self.train_dataset    = StackedSequenceDataset(self.train_data, self.device)
+        self.test_dataset     = StackedSequenceDataset(self.test_data , self.device)
         self.train_dataloader = DataLoader(self.train_dataset  , batch_size=self.batch_size, shuffle = True)
         self.test_dataloader  = DataLoader(self.test_dataset   , batch_size=self.batch_size, shuffle = False)
 
@@ -138,7 +138,7 @@ class MZA_Experiment():
 
     def train_loss_bp(self):
         '''
-        Reuires: dataloader, model, loss_function, optimizer
+        Reuires: dataloader, model, optimizer
         '''
 
         num_batches = len(self.train_dataloader)
@@ -148,35 +148,27 @@ class MZA_Experiment():
 
         for Phi_seq, Phi_nn in self.train_dataloader:
             
-            #move traj axis to the leftmost
-            Phi_seq = torch.movedim(Phi_seq,-1,0)  
-            Phi_n   = torch.squeeze(Phi_seq[:,:,-1,...])
-            Phi_nn  = torch.movedim(Phi_nn,-1,0)
-
+             
+            Phi_n   = torch.squeeze(Phi_seq[:,-1,...])  #[bs statedim]
+            
             #flattening batchsize seqlen
-            Phi_seq = torch.flatten(Phi_seq, start_dim = 0, end_dim = 2) #[num_traj*bs*seqlen, statedim]
-            Phi_n   = torch.flatten(Phi_n, start_dim=0, end_sim = 1)     #[num_traj*bs, statedim]
-            Phi_nn  = torch.flatten(Phi_nn, start_dim = 0, end_dim = 1)  #[num_traj*bs, statedim]
+            Phi_seq = torch.flatten(Phi_seq, start_dim = 0, end_dim = 1) #[bs*seqlen, statedim]
+            # Phi_n   = torch.flatten(Phi_n, start_dim=0, end_sim = 1)     #[num_traj*bs, statedim]
+            # Phi_nn  = torch.flatten(Phi_nn, start_dim = 0, end_dim = 1)  #[num_traj*bs, statedim]
 
             #obtain observables
             x_seq, Phi_seq_hat = self.model.autoencoder(Phi_seq)
-            x_nn, _   = self.model.autoencoder(Phi_nn)
+            x_nn , _   = self.model.autoencoder(Phi_nn)
 
-            #reordering tensors in desired form
-            x_seq = x_seq.reshape(self.train_num_trajs*self.batch_size, self.seq_len, self.num_obs) #[num_trajs*bs seqlen obsdim]
-            x_n   = torch.squeeze(x_seq[:,-1,:]) 
-            # x_seq = torch.movedim(x_seq, 1, 0) #[num_trajs bs seqlen obsdim]
-            Phi_seq_hat = Phi_seq_hat.reshape(self.train_num_trajs*self.batch_size, self.seq_len, *self.statedim) #[num_trajs*bs seqlen statedim]
+            #reshaping tensors in desired form
+            x_seq = x_seq.reshape(self.batch_size, self.seq_len, self.num_obs) #[bs seqlen obsdim]
+            x_n   = torch.squeeze(x_seq[:,-1,:])  #[bs obsdim]
+            
+            Phi_seq_hat = Phi_seq_hat.reshape(self.batch_size, self.seq_len, *self.statedim) #[bs seqlen statedim]
             Phi_n_hat   = torch.squeeze(Phi_seq_hat[:, -1, :]) 
-            # Phi_seq_hat = torch.movedim(Phi_seq_hat, 1, 0) #[num_trajs bs seqlen statedim]
-
-            x_nn  = x_nn.reshape(self.train_num_trajs*self.batch_size, self.num_obs) #[num_trajs*bs obsdim]
-            # x_nn = torch.movedim(x_nn, 1, 0) #[num_trajs bs obsdim]
-            # Phi_nn_hat = Phi_nn_hat.reshape(self.batch_size, self.train_num_trajs, *self.statedim) #[nums_trajs*bs statedim]
-            # Phi_nn_hat = torch.movedim(Phi_nn_hat, 1, 0) #[nums_trajs bs statedim]
             
             #Evolving in Time
-            x_nn_hat = self.model.koopman(x_n) + self.seqmodel(x_seq)
+            x_nn_hat   = self.model.koopman(x_n) + self.seqmodel(x_seq)
             Phi_nn_hat = self.model.autoencoder.recover(x_nn_hat)
 
             #Calculating loss
@@ -195,6 +187,57 @@ class MZA_Experiment():
 
         avg_loss = total_loss / num_batches
         return avg_loss
+    
+    def test_loss(self):
+
+        '''
+        Reuires: dataloader, model, optimizer
+        '''
+
+        num_batches = len(self.train_dataloader)
+        total_loss  = 0
+        self.model.eval()
+
+
+        for Phi_seq, Phi_nn in self.test_dataloader:
+            
+             
+            Phi_n   = torch.squeeze(Phi_seq[:,-1,...])  #[bs statedim]
+            
+            #flattening batchsize seqlen
+            Phi_seq = torch.flatten(Phi_seq, start_dim = 0, end_dim = 1) #[bs*seqlen, statedim]
+            # Phi_n   = torch.flatten(Phi_n, start_dim=0, end_sim = 1)     #[num_traj*bs, statedim]
+            # Phi_nn  = torch.flatten(Phi_nn, start_dim = 0, end_dim = 1)  #[num_traj*bs, statedim]
+
+            #obtain observables
+            x_seq, Phi_seq_hat = self.model.autoencoder(Phi_seq)
+            x_nn , _   = self.model.autoencoder(Phi_nn)
+
+            #reshaping tensors in desired form
+            x_seq = x_seq.reshape(self.batch_size, self.seq_len, self.num_obs) #[bs seqlen obsdim]
+            x_n   = torch.squeeze(x_seq[:,-1,:])  #[bs obsdim]
+            
+            Phi_seq_hat = Phi_seq_hat.reshape(self.batch_size, self.seq_len, *self.statedim) #[bs seqlen statedim]
+            Phi_n_hat   = torch.squeeze(Phi_seq_hat[:, -1, :]) 
+            
+            #Evolving in Time
+            x_nn_hat   = self.model.koopman(x_n) + self.seqmodel(x_seq)
+            Phi_nn_hat = self.model.autoencoder.recover(x_nn_hat)
+
+            #Calculating loss
+            mseLoss       = nn.MSELoss()
+            ObsEvo_Loss   = mseLoss(x_nn_hat, x_nn)
+            Autoencoder_Loss = mseLoss(Phi_n_hat, Phi_n)
+            StateEvo_Loss = mseLoss(Phi_nn_hat, Phi_nn)
+
+            loss = ObsEvo_Loss + Autoencoder_Loss + StateEvo_Loss
+
+            total_loss += loss.item()
+
+        avg_loss = total_loss / num_batches
+        return avg_loss
+
+
 
     def training_loop(self):
             '''
@@ -209,7 +252,7 @@ class MZA_Experiment():
             for ix_epoch in range(self.nepochs):
 
                 train_loss = self.train_loss_bp()
-                test_loss  = test_model(val_dataloader, model, loss_function)
+                test_loss  = self.test_loss()
                 print(f"Epoch {ix_epoch}  ")
                 print(f"Train loss: {train_loss} Test loss: {test_loss}")
                 log.writerow({"epoch":ix_epoch,"train_loss":train_loss,"test_loss":test_loss})

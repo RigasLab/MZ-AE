@@ -18,7 +18,7 @@ class SequenceDataset(Dataset):
         #shifting the traj axis to the back for creating sequences
         self.statedata = np.moveaxis(statedata, 0, -1)
         # self.X   = torch.tensor(obsdata, device=self.device).float()
-        self.Phi = torch.tensor(statedata, device=self.device).float()
+        self.Phi = torch.tensor(self.statedata, device=self.device).float()
 
 
     def __len__(self):
@@ -29,8 +29,8 @@ class SequenceDataset(Dataset):
         Creates sequence of Data for state variables
         Returns
         -------
-        phi       : [bs, seq_len, statedim, num_traj] sequence of State Variables
-        Phi[i+1]  : [bs, statedim, num_traj]   observable at next time step
+        Phi_seq : [num_traj, seq_len, statedim] sequence of State Variables
+        Phi_nn  : [num_traj, statedim]   observable at next time step
         '''
         non_time_dims = (1,)*(self.statedata.ndim-1)   #dims apart from timestep in tuple form (1,1...)
         if i==len(self)-1:
@@ -47,34 +47,58 @@ class SequenceDataset(Dataset):
             phi = self.Phi[1:(i+1), ...]
             phi = torch.cat((padding, phi), 0)
         
-        Phi_seq = phi
-        return Phi_seq, self.Phi[i+1]
-   
+        Phi_seq = torch.movedim(phi, -1, 0)
+        Phi_nn  = torch.movedim(self.Phi[i+1], -1, 0)
 
-class StateVariableDataset(Dataset):
-    '''
-        Creates Dataset for state variables
-        Returns
-        -------
-        Phi[i]  : [bs, statedim] state variable at current step
-        Phi[i+1]: [bs, statedim] state variable at next time step
+        return Phi_seq, Phi_nn
+
+class StackedSequenceDataset(Dataset):
+    def __init__(self, statedata, device, sequence_length=5):
         '''
-    def __init__(self, data, device):
+        Input
+        -----
+        statedata (numpy array) [num_traj, timesteps, statedim]
+        device
+        sequence_length
+        '''
 
         self.device = device
-        self.sequence_length = sequence_length
-        #changing datatype for torch device
-        if self.device == torch.device("mps"):
-            data = data.astype("float32")
-        # self.y = torch.tensor(data, device=self.device).float()
-        self.Phi = torch.tensor(data, device=self.device).float()
+        self.seqdataset = SequenceDataset(statedata, self.device, sequence_length)
 
+        self.stacked_Phi_seq, self.stacked_Phi_nn  = self.stack_data()
+
+
+            
     def __len__(self):
-        return self.Phi.shape[0]
+        return self.stacked_Phi_seq.shape[0]
+
+    def stack_data(self):
+        it = iter(self.seqdataset)
+        Phi_seq, Phi_nn = next(it)
+        for i, data in enumerate(self.seqdataset):
+            if (i!=0):
+                Phi_seq = torch.cat((Phi_seq, data[0]), dim = 0)
+                Phi_nn  = torch.cat((Phi_nn, data[1]), dim = 0)
+        
+        return Phi_seq, Phi_nn
+
 
     def __getitem__(self, i):
-        return self.Phi[i], self.Phi[i]
-   
+        '''
+        Returns stacked sequences of Data for state variables
+        Returns
+        -------
+        stacked_Phi_seq : [num_trajs*timesteps, seq_len, statedim] sequence of State Variables
+        stacked_Phi_nn  : [num_trajs*timesteps, statedim]   observable at next time step
+        '''
+        
+        return self.stacked_Phi_seq[i], self.stacked_Phi_nn[i]
+
+
+
+        
+
+
 
 
 
