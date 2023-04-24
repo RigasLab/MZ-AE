@@ -45,7 +45,7 @@ class MZA_Experiment():
 
         #Model Training # Model Hyper-parameters
         self.learning_rate    = args.lr              
-        self.nepochs       = args.nepochs
+        self.nepochs          = args.nepochs
         self.norm_input       = args.norm_input         #if input should be normalised
 
         #Directory Parameters
@@ -54,6 +54,7 @@ class MZA_Experiment():
         self.exp_dir     = args.exp_dir
         self.exp_name    = "sl{sl}_nhu{nhu}_nl{nl}_bs{bs}_{info}".format(sl = args.seq_len, nhu = args.nhu, nl = args.nlayers, bs=args.bs, info=args.info)
         self.data_dir    = args.data_dir
+        self.no_save_model = args.no_save_model
 
     def make_directories(self):
         '''
@@ -142,7 +143,7 @@ class MZA_Experiment():
         '''
 
         num_batches = len(self.train_dataloader)
-        total_loss  = 0
+        total_loss, total_ObsEvo_Loss, total_Autoencoder_Loss, total_StateEvo_Loss  = 0,0,0,0
         self.model.train()
 
 
@@ -184,9 +185,17 @@ class MZA_Experiment():
             self.optimizer.step()
 
             total_loss += loss.item()
+            total_ObsEvo_Loss +=  ObsEvo_Loss.item()
+            total_Autoencoder_Loss += Autoencoder_Loss.item()
+            total_StateEvo_Loss += StateEvo_Loss.item()
+
 
         avg_loss = total_loss / num_batches
-        return avg_loss
+        avg_ObsEvo_Loss = total_ObsEvo_Loss / num_batches
+        avg_Autoencoder_Loss = total_Autoencoder_Loss / num_batches
+        avg_StateEvo_Loss = total_StateEvo_Loss / num_batches
+
+        return avg_loss, avg_ObsEvo_Loss, avg_Autoencoder_Loss, avg_StateEvo_Loss
     
     def test_loss(self):
 
@@ -195,7 +204,7 @@ class MZA_Experiment():
         '''
 
         num_batches = len(self.train_dataloader)
-        total_loss  = 0
+        total_loss, total_ObsEvo_Loss, total_Autoencoder_Loss, total_StateEvo_Loss  = 0,0,0,0
         self.model.eval()
 
 
@@ -233,9 +242,16 @@ class MZA_Experiment():
             loss = ObsEvo_Loss + Autoencoder_Loss + StateEvo_Loss
 
             total_loss += loss.item()
+            total_ObsEvo_Loss +=  ObsEvo_Loss.item()
+            total_Autoencoder_Loss += Autoencoder_Loss.item()
+            total_StateEvo_Loss += StateEvo_Loss.item()
 
         avg_loss = total_loss / num_batches
-        return avg_loss
+        avg_ObsEvo_Loss = total_ObsEvo_Loss / num_batches
+        avg_Autoencoder_Loss = total_Autoencoder_Loss / num_batches
+        avg_StateEvo_Loss = total_StateEvo_Loss / num_batches
+
+        return avg_loss, avg_ObsEvo_Loss, avg_Autoencoder_Loss, avg_StateEvo_Loss
 
 
 
@@ -246,24 +262,34 @@ class MZA_Experiment():
             '''
             print("Device: ", self.device)
             print("Untrained Test\n--------")
-            test_loss = test_model(val_dataloader, model, loss_function)
+            test_loss, test_ObsEvo_Loss, test_Autoencoder_Loss, test_StateEvo_Loss = self.test_loss()
             print(f"Test loss: {test_loss}")
 
             for ix_epoch in range(self.nepochs):
 
-                train_loss = self.train_loss_bp()
-                test_loss  = self.test_loss()
+                train_loss, train_ObsEvo_Loss, train_Autoencoder_Loss, train_StateEvo_Loss = self.train_loss_bp()
+                test_loss, test_ObsEvo_Loss, test_Autoencoder_Loss, test_StateEvo_Loss  = self.test_loss()
                 print(f"Epoch {ix_epoch}  ")
                 print(f"Train loss: {train_loss} Test loss: {test_loss}")
-                log.writerow({"epoch":ix_epoch,"train_loss":train_loss,"test_loss":test_loss})
-                logf.flush()
+                self.log.writerow({"epoch":ix_epoch,"train_loss":train_loss, "train_ObsEvo_Loss":train_ObsEvo_Loss, "train_Autoencoder_Loss":train_Autoencoder_Loss, "train_StateEvo_Loss":train_StateEvo_Loss,\
+                                                    "test_loss":test_loss, "test_ObsEvo_Loss":test_ObsEvo_Loss, "test_Autoencoder_Loss":test_Autoencoder_Loss, "test_StateEvo_Loss":test_StateEvo_Loss})
+                self.logf.flush()
                 # writer.add_scalars('tt',{'train': train_loss, 'test': test_loss}, ix_epoch)
 
-                if (ix_epoch%nsave == 0):
+                if (ix_epoch%self.nsave == 0):
                     #saving weights
-                    torch.save(model.state_dict(), args.exp_dir+'/'+ exp_name+"/model_weights/at_epoch{epoch}".format(epoch=ix_epoch))
+                    torch.save(self.model.state_dict(), self.exp_dir+'/'+ self.exp_name+"/model_weights/at_epoch{epoch}".format(epoch=ix_epoch))
             # writer.close()
-            logf.close()
+            self.logf.close()
+    
+    def log_data(self):
+
+        # Logging Data
+        self.metrics = ["epoch","Train_ObsEvoLoss","Train_Autoencoder_Loss","Train_StateEvo_Loss","Train_Loss"\
+                               ,"Test_ObsEvoLoss","Test_Autoencoder_Loss","Test_StateEvo_Loss","Test_Loss"]
+        self.logf = open(self.exp_dir + '/' + self.exp_name + "/out_log/log", "w")
+        self.log = csv.DictWriter(self.logf, self.metrics)
+        self.log.writeheader()
 
     def main_train(self):
 
@@ -278,13 +304,13 @@ class MZA_Experiment():
 
         #Creating Model
         self.model = MZANetwork(self.__dict__, Autoencoder, Koopman, LSTM_Model).to(self.device)
-
         self.optimizer = torch.optim.Adam(self.model.parameters(), lr = self.learning_rate)#, weight_decay=1e-5)
         # writer = SummaryWriter(exp_dir+'/'+exp_name+'/'+'log/') #Tensorboard writer
 
+
         #Saving Initial Model
-        if args.no_save_model:
-            torch.save(model, exp_dir+'/'+exp_name+'/'+exp_name)
+        if self.no_save_model:
+            torch.save(self.model, exp_dir+'/'+exp_name+'/'+exp_name)
 
         #saving args
         with open(exp_dir+'/'+exp_name+"/args", 'wb') as f:
@@ -302,27 +328,7 @@ class MZA_Experiment():
             log.writeheader()
 
         #Training Model
-        def training(model, args, optimizer, train_dataloader, val_dataloader, device):
-            print("Device: ", device)
-            print("Untrained Test\n--------")
-            test_loss = test_model(val_dataloader, model, loss_function)
-            print(f"Test loss: {test_loss}")
-
-            for ix_epoch in range(args.nepochs):
-
-                train_loss = train_model(train_dataloader, model, loss_function, optimizer=optimizer)
-                test_loss  = test_model(val_dataloader, model, loss_function)
-                print(f"Epoch {ix_epoch}  ")
-                print(f"Train loss: {train_loss} Test loss: {test_loss}")
-                log.writerow({"epoch":ix_epoch,"train_loss":train_loss,"test_loss":test_loss})
-                logf.flush()
-                # writer.add_scalars('tt',{'train': train_loss, 'test': test_loss}, ix_epoch)
-
-                if (ix_epoch%nsave == 0):
-                    #saving weights
-                    torch.save(model.state_dict(), args.exp_dir+'/'+ exp_name+"/model_weights/at_epoch{epoch}".format(epoch=ix_epoch))
-            # writer.close()
-            logf.close()
+        self.training_loop()
 
         #Saving Model
         if args.no_save_model:
