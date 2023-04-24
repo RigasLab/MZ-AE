@@ -25,6 +25,7 @@ class MZANetwork(nn.Module):
     #     """
     #     Phi_n [bs statedim]
     #     """
+    
 
     def get_observables(self, Phi):
 

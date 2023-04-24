@@ -17,15 +17,15 @@ class Koopman(nn.Module):
         
         print('Koopman Parameters: {}'.format(self._num_parameters()))
 
-    def koopmanOperation(self, x_n):
+    def forward(self, x_n):
         '''
         Applies the learned koopman operator on the given observables.
-        Parameters
-        ----------
-            x_n (torch.Tensor): [bs x  obsdim] batch of observables, must match dim of koopman transform
+        Input
+        -----
+            x_n (torch.Tensor): [bs  obsdim] batch of observables, must match dim of koopman transform
         Returns
         -------
-            x_nn (torch.Tensor): [bs x obsdim] predicted observables at the next time-step
+            x_nn (torch.Tensor): [bs obsdim] predicted observables at the next time-step
         '''
         # assert g.size(-1) == self.kMatrix.size(0), 'Observables should have dim {}'.format(self.kMatrix.size(0))
         # Build Koopman matrix (skew-symmetric with diagonal)

@@ -29,10 +29,10 @@ class SequenceDataset(Dataset):
         Creates sequence of Data for state variables
         Returns
         -------
-        phi       : [bs, seq_len, obsdim, num_traj] sequence of State Variables
-        Phi[i+1]  : [bs, obsdim, num_traj]   observable at next time step
+        phi       : [bs, seq_len, statedim, num_traj] sequence of State Variables
+        Phi[i+1]  : [bs, statedim, num_traj]   observable at next time step
         '''
-        non_time_dims = (1,)*(self.statedata.ndim-1)
+        non_time_dims = (1,)*(self.statedata.ndim-1)   #dims apart from timestep in tuple form (1,1...)
         if i==len(self)-1:
             i = len(self)-2
         if i >= self.sequence_length:
@@ -46,8 +46,9 @@ class SequenceDataset(Dataset):
             padding = self.Phi[0].repeat(self.sequence_length - i, *non_time_dims)
             phi = self.Phi[1:(i+1), ...]
             phi = torch.cat((padding, phi), 0)
-            
-        return phi, self.Phi[i+1]
+        
+        Phi_seq = phi
+        return Phi_seq, self.Phi[i+1]
    
 
 class StateVariableDataset(Dataset):

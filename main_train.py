@@ -87,8 +87,7 @@ class MZA_Experiment():
         print("Data Shape: ", self.lp_data.shape)
 
         #additional data parameters
-        self.num_trajs = self.lp_data.shape[0]
-        self.statedim  = self.data.shape[2:]
+        self.statedim  = self.lp_data.shape[2:]
         
 
         #Normalising Data
@@ -104,23 +103,26 @@ class MZA_Experiment():
 
         '''
         Creates non sequence dataset for state variables and divides into test, train and val dataset
-        Input
-        -----
-        data: [num_traj, timesteps, statedim] state variables
+        Requires
+        --------
+        lp_data: [num_traj, timesteps, statedim] state variables
 
         Returns
         -------
         Dataset : [num_traj, timesteps, statedim] Input , Output (both test and train)
 
         '''
-        self.train_data = self.data[:int(self.train_size * self.data.shape[0])]
-        self.test_data  = self.data[int(self.train_size * self.data.shape[0]):]
+        self.train_data = self.data[:int(self.train_size * self.lp_data.shape[0])]
+        self.test_data  = self.data[int(self.train_size * self.lp_data.shape[0]):]
+
+        self.train_num_trajs = self.train_data.shape[0]
+        self.test_num_trajs  = self.test_data.shape[0]
 
         print("Train_Shape: ", self.train_data.shape)
         print("Test_Shape: " , self.test_data.shape)
         
-        self.train_dataset = SequenceDataset(self.train_data, self.device)
-        self.test_dataset  = SequenceDataset(self.test_data , self.device)
+        self.train_dataset    = SequenceDataset(self.train_data, self.device)
+        self.test_dataset     = SequenceDataset(self.test_data , self.device)
         self.train_dataloader = DataLoader(self.train_dataset  , batch_size=self.batch_size, shuffle = True)
         self.test_dataloader  = DataLoader(self.test_dataset   , batch_size=self.batch_size, shuffle = False)
 
@@ -139,38 +141,55 @@ class MZA_Experiment():
         Reuires: dataloader, model, loss_function, optimizer
         '''
 
-        num_batches = len(data_loader)
+        num_batches = len(self.train_dataloader)
         total_loss  = 0
         self.model.train()
 
 
-        for Phi_seq, Phi_nn in data_loader:
-            Phi_seq = torch.movedim(X,-1,1)  #move traj axis next to bs axis
-            Phi_seq = torch.flatten(X, start_dim = 0, end_dim = 2) #flattening batchsize seqlen [bs*num_traj*seqlen, obsdim]
-            Phi_nn  = torch.movedim(y,-1,1)
-            Phi_nn  = torch.flatten(y, start_dim = 0, end_dim = 1) #[bs*num_traj, obsdim]
+        for Phi_seq, Phi_nn in self.train_dataloader:
+            
+            #move traj axis to the leftmost
+            Phi_seq = torch.movedim(Phi_seq,-1,0)  
+            Phi_n   = torch.squeeze(Phi_seq[:,:,-1,...])
+            Phi_nn  = torch.movedim(Phi_nn,-1,0)
+
+            #flattening batchsize seqlen
+            Phi_seq = torch.flatten(Phi_seq, start_dim = 0, end_dim = 2) #[num_traj*bs*seqlen, statedim]
+            Phi_n   = torch.flatten(Phi_n, start_dim=0, end_sim = 1)     #[num_traj*bs, statedim]
+            Phi_nn  = torch.flatten(Phi_nn, start_dim = 0, end_dim = 1)  #[num_traj*bs, statedim]
 
             #obtain observables
             x_seq, Phi_seq_hat = self.model.autoencoder(Phi_seq)
-            x_nn, Phi_nn_hat = self.model.autoencoder(Phi_nn)
+            x_nn, _   = self.model.autoencoder(Phi_nn)
 
             #reordering tensors in desired form
-            x_seq = x_seq.reshape(self.batch_size, self.num_trajs, self.seq_len, self.num_obs)
-            x_seq = torch.movedim(x_seq, 1, 0) #[num_trajs bs seqlen obsdim]
-            Phi_seq_hat = Phi_seq_hat.reshape(self.batch_size, self.num_trajs, self.seq_len, *self.statedim)
-            Phi_seq_hat = torch.movedim(Phi_seq_hat, 1, 0) #[num_trajs bs seqlen statedim]
+            x_seq = x_seq.reshape(self.train_num_trajs*self.batch_size, self.seq_len, self.num_obs) #[num_trajs*bs seqlen obsdim]
+            x_n   = torch.squeeze(x_seq[:,-1,:]) 
+            # x_seq = torch.movedim(x_seq, 1, 0) #[num_trajs bs seqlen obsdim]
+            Phi_seq_hat = Phi_seq_hat.reshape(self.train_num_trajs*self.batch_size, self.seq_len, *self.statedim) #[num_trajs*bs seqlen statedim]
+            Phi_n_hat   = torch.squeeze(Phi_seq_hat[:, -1, :]) 
+            # Phi_seq_hat = torch.movedim(Phi_seq_hat, 1, 0) #[num_trajs bs seqlen statedim]
 
-            x_nn  = x_nn.reshape(self.batch_size, self.num_trajs, self.num_obs)
-            x_nn = torch.movedim(x_nn, 1, 0)
-            Phi_nn = Phi_nn.reshape(self.batch_size, self.num_trajs, *self.statedim)
-            Phi_nn = torch.movedim(Phi_nn, 1, 0)
+            x_nn  = x_nn.reshape(self.train_num_trajs*self.batch_size, self.num_obs) #[num_trajs*bs obsdim]
+            # x_nn = torch.movedim(x_nn, 1, 0) #[num_trajs bs obsdim]
+            # Phi_nn_hat = Phi_nn_hat.reshape(self.batch_size, self.train_num_trajs, *self.statedim) #[nums_trajs*bs statedim]
+            # Phi_nn_hat = torch.movedim(Phi_nn_hat, 1, 0) #[nums_trajs bs statedim]
             
-            output = model(X)
-            loss   = loss_function(output, y)
+            #Evolving in Time
+            x_nn_hat = self.model.koopman(x_n) + self.seqmodel(x_seq)
+            Phi_nn_hat = self.model.autoencoder.recover(x_nn_hat)
 
-            optimizer.zero_grad()
+            #Calculating loss
+            mseLoss       = nn.MSELoss()
+            ObsEvo_Loss   = mseLoss(x_nn_hat, x_nn)
+            Autoencoder_Loss = mseLoss(Phi_n_hat, Phi_n)
+            StateEvo_Loss = mseLoss(Phi_nn_hat, Phi_nn)
+
+            loss = ObsEvo_Loss + Autoencoder_Loss + StateEvo_Loss
+
+            self.optimizer.zero_grad()
             loss.backward()
-            optimizer.step()
+            self.optimizer.step()
 
             total_loss += loss.item()
 
@@ -189,7 +208,7 @@ class MZA_Experiment():
 
             for ix_epoch in range(self.nepochs):
 
-                train_loss = train_model(train_dataloader, model, loss_function, optimizer=self.optimizer)
+                train_loss = self.train_loss_bp()
                 test_loss  = test_model(val_dataloader, model, loss_function)
                 print(f"Epoch {ix_epoch}  ")
                 print(f"Train loss: {train_loss} Test loss: {test_loss}")
@@ -217,8 +236,7 @@ class MZA_Experiment():
         #Creating Model
         self.model = MZANetwork(self.__dict__, Autoencoder, Koopman, LSTM_Model).to(self.device)
 
-        loss_function = nn.MSELoss()
-        self.optimizer     = torch.optim.Adam(model.parameters(), lr = args.lr)#, weight_decay=1e-5)
+        self.optimizer = torch.optim.Adam(self.model.parameters(), lr = self.learning_rate)#, weight_decay=1e-5)
         # writer = SummaryWriter(exp_dir+'/'+exp_name+'/'+'log/') #Tensorboard writer
 
         #Saving Initial Model
