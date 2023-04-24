@@ -7,25 +7,24 @@ from utils.PreProc_Data.DataProc import SequenceDataset
 class MZANetwork(nn.Module):
     def __init__(self, exp_args : dict, 
                        autoencoder : object,
-                       seqmodel : object,
-                       koopman  : object,
-                       state_dim : tuple):
+                       koopman : object,
+                       seqmodel  : object):
         super(MZANetwork, self).__init__()
         
-
+        print(exp_args.keys())
+        
         self.args        = exp_args
-        self.state_dim   = state_dim
-        self.autoencoder = autoencoder(input_size = self.args.state_dim, latent_size = self.args.num_obs)
-        self.koopman     = koopman(latent_size = self.args.num_obs, device = self.args.device)
-        self.seqmodel    = seqmodel(N = self.args.num_obs, input_size = self.args.num_obs, 
-                                    hidden_size = self.args.num_hidden_units, num_layers = self.args.num_layers, 
-                                    seq_length = self.args.seq_len, device = self.args.device).to(self.args.device)
+        self.autoencoder = autoencoder(input_size = self.args["statedim"], latent_size = self.args["num_obs"])
+        self.koopman     = koopman(latent_size = self.args["num_obs"], device = self.args["device"])
+        self.seqmodel    = seqmodel(N = self.args["num_obs"], input_size = self.args["num_obs"], 
+                                    hidden_size = self.args["num_hidden_units"], num_layers = self.args["num_layers"], 
+                                    seq_length = self.args["seq_len"], device = self.args["device"]).to(self.args["device"])
 
     # def forward(self, Phi_n):
     #     """
     #     Phi_n [bs statedim]
     #     """
-    
+
 
     def get_observables(self, Phi):
 
