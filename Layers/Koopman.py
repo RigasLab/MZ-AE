@@ -15,7 +15,7 @@ class Koopman(nn.Module):
         self.kMatrixUT   = nn.Parameter(0.01*torch.randn(int(self.latent_size*(self.latent_size-1)/2))).to(self.device)
         # self.kMatrix = nn.Parameter(torch.rand(latent_size, latent_size))
         
-        print('Koopman Parameters: {}'.format(self._num_parameters()))
+        # print('Koopman Parameters: {}'.format(self._num_parameters()))
 
     def forward(self, x_n):
         '''

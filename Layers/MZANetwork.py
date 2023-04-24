@@ -11,7 +11,6 @@ class MZANetwork(nn.Module):
                        seqmodel  : object):
         super(MZANetwork, self).__init__()
         
-        print(exp_args.keys())
         
         self.args        = exp_args
         self.autoencoder = autoencoder(input_size = self.args["statedim"], latent_size = self.args["num_obs"])
