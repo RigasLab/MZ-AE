@@ -56,6 +56,8 @@ class MZA_Experiment():
         self.data_dir    = args.data_dir
         self.no_save_model = args.no_save_model
 
+        self.args = args
+
     def make_directories(self):
         '''
         Makes Experiment Directory
@@ -291,6 +293,17 @@ class MZA_Experiment():
         self.log = csv.DictWriter(self.logf, self.metrics)
         self.log.writeheader()
 
+    def save_args(self):
+
+        #saving args
+        with open(self.exp_dir+'/'+self.exp_name+"/args", 'wb') as f:
+            args_dict = self.args.__dict__
+            # #adding data_args
+            # args_dict["data_args"] = data_args
+            pickle.dump(args_dict, f)
+            print("Saved Args")
+
+
     def main_train(self):
 
         #Making Experiment Directory
@@ -307,42 +320,32 @@ class MZA_Experiment():
         self.optimizer = torch.optim.Adam(self.model.parameters(), lr = self.learning_rate)#, weight_decay=1e-5)
         # writer = SummaryWriter(exp_dir+'/'+exp_name+'/'+'log/') #Tensorboard writer
 
-
         #Saving Initial Model
         if self.no_save_model:
-            torch.save(self.model, exp_dir+'/'+exp_name+'/'+exp_name)
+            torch.save(self.model, self.exp_dir+'/'+self.exp_name+'/'+self.exp_name)
 
         #saving args
-        with open(exp_dir+'/'+exp_name+"/args", 'wb') as f:
-            args_dict = args.__dict__
-            #adding data_args
-            args_dict["data_args"] = data_args
-            pickle.dump(args_dict, f)
-            print("Saved Args")
+        self.save_args()
             
-
         # Logging Data
-            metrics = ["epoch","train_loss","test_loss"]
-            logf = open(exp_dir + '/' + exp_name + "/out_log/log", "w")
-            log = csv.DictWriter(logf, metrics)
-            log.writeheader()
+        self.log_data()
 
         #Training Model
         self.training_loop()
 
-        #Saving Model
-        if args.no_save_model:
-            torch.save(model, exp_dir+'/'+exp_name+'/'+exp_name)
-            print("model saved in "+ exp_dir+'/'+exp_name+'/'+exp_name)
+        # #Saving Model
+        # if args.no_save_model:
+        #     torch.save(model, exp_dir+'/'+exp_name+'/'+exp_name)
+        #     print("model saved in "+ exp_dir+'/'+exp_name+'/'+exp_name)
 
-        #evaluating model
-        train_dataloader = DataLoader(train_dataset  , batch_size = batch_size, shuffle = False)
-        train_pred = predict(train_dataloader, model, device = device).cpu().numpy()
-        test_pred  = predict(test_dataloader, model, device = device).cpu().numpy()
+        # #evaluating model
+        # train_dataloader = DataLoader(train_dataset  , batch_size = batch_size, shuffle = False)
+        # train_pred = predict(train_dataloader, model, device = device).cpu().numpy()
+        # test_pred  = predict(test_dataloader, model, device = device).cpu().numpy()
 
-        #saving predicted data
-        if args.no_save_model:
-            pred_dict = {"test_pred": test_pred, "test_target": test_data[...,1], "train_pred": train_pred, "train_target": train_data[...,1]}
-            np.save(exp_dir+'/'+exp_name+"/pred_data.npy", pred_dict)
-            print("saved predicted data")
+        # #saving predicted data
+        # if args.no_save_model:
+        #     pred_dict = {"test_pred": test_pred, "test_target": test_data[...,1], "train_pred": train_pred, "train_target": train_data[...,1]}
+        #     np.save(exp_dir+'/'+exp_name+"/pred_data.npy", pred_dict)
+        #     print("saved predicted data")
 
