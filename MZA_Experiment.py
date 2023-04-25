@@ -452,3 +452,57 @@ class MZA_Experiment():
 
         return x_nn_hat, Phi_nn_hat#avg_loss, avg_ObsEvo_Loss, avg_Autoencoder_Loss, avg_StateEvo_Loss, avg_koop_ptg, avg_seqmodel_ptg
 
+
+
+
+
+    def predict_multistep(self, initial_conditions, timesteps):
+
+            '''
+            Input
+            -----
+            initial_conditions (torch tensor): [num_trajs, statedim]
+            timesteps (int): Number timesteps for prediction
+
+            Returns
+            x (torch tensor): [num_trajs timesteps obsdim] observable vetcor
+            Phi (torch tensor): [num_trajs teimsteps statedim] state vector
+            '''
+
+            self.model.eval()
+            Phi_n  = initial_conditions  
+            x_n, _ = self.model.autoencoder(Phi_n)    #[num_trajs obsdim]
+            
+            x = x_n[None,...]  #[timesteps num_trajs obsdim]
+            Phi = Phi_n[None, ...] #[timesteps num_trajs statedim]
+
+            for n in range(timesteps):
+
+                non_time_dims = (1,)*(x.ndim-1)   #dims apart from timestep in tuple form (1,1...)
+        
+                if n >= self.seq_len:
+                    i_start = n - self.seq_len + 1
+                    x_seq_n = x[i_start:(n+1), ...]
+                elif n==0:
+                    padding = x[0].repeat(self.seq_len - 1, *non_time_dims)
+                    x_seq_n = x[0:(n+1), ...]
+                    x_seq_n = torch.cat((padding, x_seq_n), 0)
+                else:
+                    padding = x[0].repeat(self.seq_len - n, *non_time_dims)
+                    x_seq_n = x[1:(n+1), ...]
+                    x_seq_n = torch.cat((padding, x_seq_n), 0)
+                
+                x_seq_n = torch.movedim(x_seq_n, 1, 0) #[num_trajs seq_len obsdim]
+                
+                koop_out     = self.model.koopman(x[n])
+                seqmodel_out = self.model.seqmodel(x_seq_n)
+                x_nn         = koop_out + seqmodel_out
+                Phi_nn       = self.model.autoencoder.recover(x_nn)
+
+                x   = torch.cat((x,x_nn[None,...]), 0)
+                Phi = torch.cat((Phi,Phi_nn[None,...]), 0)
+
+            x = torch.movedim(x, 1, 0) #[num_trajs timesteps obsdim]
+            Phi = torch.movedim(Phi, 1, 0) #[num_trajs timesteps statedim]
+
+            return x, Phi

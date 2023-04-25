@@ -16,7 +16,7 @@ class SequenceDataset(Dataset):
             data = data.astype("float32")
 
         #shifting the traj axis to the back for creating sequences
-        self.statedata = np.moveaxis(statedata, 0, -1)
+        self.statedata = np.moveaxis(statedata, 0, -1)    #[timesteps, statedim, num_traj]
         # self.X   = torch.tensor(obsdata, device=self.device).float()
         self.Phi = torch.tensor(self.statedata, device=self.device).float()
 
