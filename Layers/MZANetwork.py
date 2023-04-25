@@ -25,6 +25,7 @@ class MZANetwork(nn.Module):
     #     """
 
 
+
     def get_observables(self, Phi):
 
         """

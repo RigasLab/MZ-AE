@@ -68,7 +68,6 @@ class StackedSequenceDataset(Dataset):
         self.stacked_Phi_seq, self.stacked_Phi_nn  = self.stack_data()
 
 
-            
     def __len__(self):
         return self.stacked_Phi_seq.shape[0]
 
@@ -88,8 +87,8 @@ class StackedSequenceDataset(Dataset):
         Returns stacked sequences of Data for state variables
         Returns
         -------
-        stacked_Phi_seq : [num_trajs*timesteps, seq_len, statedim] sequence of State Variables
-        stacked_Phi_nn  : [num_trajs*timesteps, statedim]   observable at next time step
+        stacked_Phi_seq : [timesteps*num_trajs, seq_len, statedim] sequence of State Variables
+        stacked_Phi_nn  : [timesteps*num_trajs, statedim]   observable at next time step
         '''
         
         return self.stacked_Phi_seq[i], self.stacked_Phi_nn[i]
