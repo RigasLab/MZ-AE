@@ -157,8 +157,6 @@ class MZA_Experiment():
             
             #flattening batchsize seqlen
             Phi_seq = torch.flatten(Phi_seq, start_dim = 0, end_dim = 1) #[bs*seqlen, statedim]
-            # Phi_n   = torch.flatten(Phi_n, start_dim=0, end_sim = 1)     #[num_traj*bs, statedim]
-            # Phi_nn  = torch.flatten(Phi_nn, start_dim = 0, end_dim = 1)  #[num_traj*bs, statedim]
 
             #obtain observables
             x_seq, Phi_seq_hat = self.model.autoencoder(Phi_seq)
@@ -230,15 +228,13 @@ class MZA_Experiment():
             
             #flattening batchsize seqlen
             Phi_seq = torch.flatten(Phi_seq, start_dim = 0, end_dim = 1) #[bs*seqlen, statedim]
-            # Phi_n   = torch.flatten(Phi_n, start_dim=0, end_sim = 1)     #[num_traj*bs, statedim]
-            # Phi_nn  = torch.flatten(Phi_nn, start_dim = 0, end_dim = 1)  #[num_traj*bs, statedim]
 
             #obtain observables
             x_seq, Phi_seq_hat = self.model.autoencoder(Phi_seq)
             x_nn , _   = self.model.autoencoder(Phi_nn)
 
             #reshaping tensors in desired form
-            adaptive_bs = int(x_seq.shape[0]/self.seq_len)   #adaptive batchsize due to change in size for the last batch
+            adaptive_bs = int(x_seq.shape[0]/self.seq_len)    #adaptive batchsize due to change in size for the last batch
             x_seq = x_seq.reshape(adaptive_bs, self.seq_len, self.num_obs) #[bs seqlen obsdim]
             x_n   = torch.squeeze(x_seq[:,-1,:])  #[bs obsdim]
             
@@ -310,6 +306,9 @@ class MZA_Experiment():
                 if (ix_epoch%self.nsave == 0):
                     #saving weights
                     torch.save(self.model.state_dict(), self.exp_dir+'/'+ self.exp_name+"/model_weights/at_epoch{epoch}".format(epoch=ix_epoch))
+            
+            #saving weights
+            torch.save(self.model.state_dict(), self.exp_dir+'/'+ self.exp_name+"/model_weights/at_epoch{epoch}".format(epoch=ix_epoch))
             # writer.close()
             self.logf.close()
     
@@ -370,17 +369,6 @@ class MZA_Experiment():
         if self.no_save_model:
             torch.save(self.model, self.exp_dir+'/'+self.exp_name+'/'+self.exp_name)
             print("model saved in "+ self.exp_dir+'/'+self.exp_name+'/'+self.exp_name)
-
-        # #evaluating model
-        # train_dataloader = DataLoader(train_dataset  , batch_size = batch_size, shuffle = False)
-        # train_pred = predict(train_dataloader, model, device = device).cpu().numpy()
-        # test_pred  = predict(test_dataloader, model, device = device).cpu().numpy()
-
-        # #saving predicted data
-        # if args.no_save_model:
-        #     pred_dict = {"test_pred": test_pred, "test_target": test_data[...,1], "train_pred": train_pred, "train_target": train_data[...,1]}
-        #     np.save(exp_dir+'/'+exp_name+"/pred_data.npy", pred_dict)
-        #     print("saved predicted data")
 
 
     def predict_onestep(self, dataloader):
