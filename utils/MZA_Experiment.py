@@ -223,37 +223,37 @@ class MZA_Experiment():
     
 
     def training_loop(self):
-            '''
-            Requires:
-            model, optimizer, train_dataloader, val_dataloader, device
-            '''
-            print("Device: ", self.device)
-            print("Untrained Test\n--------")
-            test_loss, test_ObsEvo_Loss, test_Autoencoder_Loss, test_StateEvo_Loss, test_koop_ptg, test_seqmodel_ptg = self.train_test_loss("Test", self.test_dataloader)
-            print(f"Test Loss: {test_loss}, ObsEvo : {test_ObsEvo_Loss}, Auto : {test_Autoencoder_Loss}, StateEvo : {test_StateEvo_Loss}")
+        '''
+        Requires:
+        model, optimizer, train_dataloader, val_dataloader, device
+        '''
+        print("Device: ", self.device)
+        print("Untrained Test\n--------")
+        test_loss, test_ObsEvo_Loss, test_Autoencoder_Loss, test_StateEvo_Loss, test_koop_ptg, test_seqmodel_ptg = self.train_test_loss("Test", self.test_dataloader)
+        print(f"Test Loss: {test_loss}, ObsEvo : {test_ObsEvo_Loss}, Auto : {test_Autoencoder_Loss}, StateEvo : {test_StateEvo_Loss}")
 
-            for ix_epoch in range(self.nepochs):
+        for ix_epoch in range(self.nepochs):
 
-                train_loss, train_ObsEvo_Loss, train_Autoencoder_Loss, train_StateEvo_Loss, train_koop_ptg, train_seqmodel_ptg = self.train_test_loss("Train")
-                test_loss, test_ObsEvo_Loss, test_Autoencoder_Loss, test_StateEvo_Loss, test_koop_ptg, test_seqmodel_ptg  = self.train_test_loss("Test", self.test_dataloader)
-                print(f"Epoch {ix_epoch}  ")
-                print(f"Train Loss: {train_loss}, ObsEvo : {train_ObsEvo_Loss}, Auto : {train_Autoencoder_Loss}, StateEvo : {train_StateEvo_Loss} \
-                      \n Test Loss: {test_loss}, ObsEvo : {test_ObsEvo_Loss}, Auto : {test_Autoencoder_Loss}, StateEvo : {test_StateEvo_Loss}")
-                self.log.writerow({"epoch":ix_epoch,"Train_Loss":train_loss, "Train_ObsEvo_Loss":train_ObsEvo_Loss, "Train_Autoencoder_Loss":train_Autoencoder_Loss, "Train_StateEvo_Loss":train_StateEvo_Loss,\
-                                                    "Test_Loss":test_loss, "Test_ObsEvo_Loss":test_ObsEvo_Loss, "Test_Autoencoder_Loss":test_Autoencoder_Loss, "Test_StateEvo_Loss":test_StateEvo_Loss,\
-                                                    "Train_koop_ptg": train_koop_ptg, "Train_seqmodel_ptg": train_seqmodel_ptg,\
-                                                    "Test_koop_ptg": test_koop_ptg, "Test_seqmodel_ptg": test_seqmodel_ptg})
-                self.logf.flush()
-                # writer.add_scalars('tt',{'train': train_loss, 'test': test_loss}, ix_epoch)
+            train_loss, train_ObsEvo_Loss, train_Autoencoder_Loss, train_StateEvo_Loss, train_koop_ptg, train_seqmodel_ptg = self.train_test_loss("Train")
+            test_loss, test_ObsEvo_Loss, test_Autoencoder_Loss, test_StateEvo_Loss, test_koop_ptg, test_seqmodel_ptg  = self.train_test_loss("Test", self.test_dataloader)
+            print(f"Epoch {ix_epoch}  ")
+            print(f"Train Loss: {train_loss}, ObsEvo : {train_ObsEvo_Loss}, Auto : {train_Autoencoder_Loss}, StateEvo : {train_StateEvo_Loss} \
+                    \n Test Loss: {test_loss}, ObsEvo : {test_ObsEvo_Loss}, Auto : {test_Autoencoder_Loss}, StateEvo : {test_StateEvo_Loss}")
+            self.log.writerow({"epoch":ix_epoch,"Train_Loss":train_loss, "Train_ObsEvo_Loss":train_ObsEvo_Loss, "Train_Autoencoder_Loss":train_Autoencoder_Loss, "Train_StateEvo_Loss":train_StateEvo_Loss,\
+                                                "Test_Loss":test_loss, "Test_ObsEvo_Loss":test_ObsEvo_Loss, "Test_Autoencoder_Loss":test_Autoencoder_Loss, "Test_StateEvo_Loss":test_StateEvo_Loss,\
+                                                "Train_koop_ptg": train_koop_ptg, "Train_seqmodel_ptg": train_seqmodel_ptg,\
+                                                "Test_koop_ptg": test_koop_ptg, "Test_seqmodel_ptg": test_seqmodel_ptg})
+            self.logf.flush()
+            # writer.add_scalars('tt',{'train': train_loss, 'test': test_loss}, ix_epoch)
 
-                if (ix_epoch%self.nsave == 0):
-                    #saving weights
-                    torch.save(self.model.state_dict(), self.exp_dir+'/'+ self.exp_name+"/model_weights/at_epoch{epoch}".format(epoch=ix_epoch))
-            
-            #saving weights
-            torch.save(self.model.state_dict(), self.exp_dir+'/'+ self.exp_name+"/model_weights/at_epoch{epoch}".format(epoch=ix_epoch))
-            # writer.close()
-            self.logf.close()
+            if (ix_epoch%self.nsave == 0):
+                #saving weights
+                torch.save(self.model.state_dict(), self.exp_dir+'/'+ self.exp_name+"/model_weights/at_epoch{epoch}".format(epoch=ix_epoch))
+        
+        #saving weights
+        torch.save(self.model.state_dict(), self.exp_dir+'/'+ self.exp_name+"/model_weights/at_epoch{epoch}".format(epoch=ix_epoch))
+        # writer.close()
+        self.logf.close()
     
     def log_data(self):
 
@@ -314,126 +314,4 @@ class MZA_Experiment():
             print("model saved in "+ self.exp_dir+'/'+self.exp_name+'/'+self.exp_name)
 
 
-    def predict_onestep(self, dataloader):
 
-        '''
-        Requires: dataloader, model
-        '''
-
-        # num_batches = len(dataloader)
-        # total_loss, total_ObsEvo_Loss, total_Autoencoder_Loss, total_StateEvo_Loss  = 0,0,0,0
-        # total_koop_ptg, total_seqmodel_ptg = 0,0
-        self.model.eval()
-
-        for Phi_seq, Phi_nn in dataloader:
-            
-
-            Phi_n   = torch.squeeze(Phi_seq[:,-1,...])  #[bs statedim]
-            
-            #flattening batchsize seqlen
-            Phi_seq = torch.flatten(Phi_seq, start_dim = 0, end_dim = 1) #[bs*seqlen, statedim]
-            # Phi_n   = torch.flatten(Phi_n, start_dim=0, end_sim = 1)     #[num_traj*bs, statedim]
-            # Phi_nn  = torch.flatten(Phi_nn, start_dim = 0, end_dim = 1)  #[num_traj*bs, statedim]
-
-            #obtain observables
-            x_seq, Phi_seq_hat = self.model.autoencoder(Phi_seq)
-            x_nn , _   = self.model.autoencoder(Phi_nn)
-
-            #reshaping tensors in desired form
-            adaptive_bs = int(x_seq.shape[0]/self.seq_len)   #adaptive batchsize due to change in size for the last batch
-            x_seq = x_seq.reshape(adaptive_bs, self.seq_len, self.num_obs) #[bs seqlen obsdim]
-            x_n   = torch.squeeze(x_seq[:,-1,:])  #[bs obsdim]
-            
-            sd = (self.statedim,) if str(type(self.statedim)) == "<class 'int'>" else self.statedim
-            Phi_seq_hat = Phi_seq_hat.reshape(adaptive_bs, self.seq_len, *sd) #[bs seqlen statedim]
-            Phi_n_hat   = torch.squeeze(Phi_seq_hat[:, -1, :]) 
-            
-            #Evolving in Time
-            koop_out     = self.model.koopman(x_n)
-            seqmodel_out = self.model.seqmodel(x_seq)
-            x_nn_hat     = koop_out + seqmodel_out
-            Phi_nn_hat   = self.model.autoencoder.recover(x_nn_hat)
-
-            # mean_ko, mean_so  = torch.mean(abs(koop_out)), torch.mean(abs(seqmodel_out))
-            # koop_ptg = mean_ko/(mean_ko+mean_so)
-            # seq_ptg  = mean_so/(mean_ko+mean_so)
-
-            # #Calculating loss
-            # mseLoss          = nn.MSELoss()
-            # ObsEvo_Loss      = mseLoss(x_nn_hat, x_nn)
-            # Autoencoder_Loss = mseLoss(Phi_n_hat, Phi_n)
-            # StateEvo_Loss    = mseLoss(Phi_nn_hat, Phi_nn)
-
-            # loss = ObsEvo_Loss + Autoencoder_Loss + StateEvo_Loss
-
-            # total_loss             += loss.item()
-            # total_ObsEvo_Loss      += ObsEvo_Loss.item()
-            # total_Autoencoder_Loss += Autoencoder_Loss.item()
-            # total_StateEvo_Loss    += StateEvo_Loss.item()
-            # total_koop_ptg         += koop_ptg
-            # total_seqmodel_ptg     += seq_ptg
-
-        # avg_loss             = total_loss / num_batches
-        # avg_ObsEvo_Loss      = total_ObsEvo_Loss / num_batches
-        # avg_Autoencoder_Loss = total_Autoencoder_Loss / num_batches
-        # avg_StateEvo_Loss    = total_StateEvo_Loss / num_batches
-        # avg_koop_ptg         = total_koop_ptg / num_batches
-        # avg_seqmodel_ptg     = total_seqmodel_ptg / num_batches
-
-
-        return x_nn_hat, Phi_nn_hat#avg_loss, avg_ObsEvo_Loss, avg_Autoencoder_Loss, avg_StateEvo_Loss, avg_koop_ptg, avg_seqmodel_ptg
-
-
-
-
-
-    def predict_multistep(self, initial_conditions, timesteps):
-
-            '''
-            Input
-            -----
-            initial_conditions (torch tensor): [num_trajs, statedim]
-            timesteps (int): Number timesteps for prediction
-
-            Returns
-            x (torch tensor): [num_trajs timesteps obsdim] observable vetcor
-            Phi (torch tensor): [num_trajs teimsteps statedim] state vector
-            '''
-
-            self.model.eval()
-            Phi_n  = initial_conditions  
-            x_n, _ = self.model.autoencoder(Phi_n)    #[num_trajs obsdim]
-            
-            x = x_n[None,...]  #[timesteps num_trajs obsdim]
-            Phi = Phi_n[None, ...] #[timesteps num_trajs statedim]
-
-            for n in range(timesteps):
-
-                non_time_dims = (1,)*(x.ndim-1)   #dims apart from timestep in tuple form (1,1...)
-        
-                if n >= self.seq_len:
-                    i_start = n - self.seq_len + 1
-                    x_seq_n = x[i_start:(n+1), ...]
-                elif n==0:
-                    padding = x[0].repeat(self.seq_len - 1, *non_time_dims)
-                    x_seq_n = x[0:(n+1), ...]
-                    x_seq_n = torch.cat((padding, x_seq_n), 0)
-                else:
-                    padding = x[0].repeat(self.seq_len - n, *non_time_dims)
-                    x_seq_n = x[1:(n+1), ...]
-                    x_seq_n = torch.cat((padding, x_seq_n), 0)
-                
-                x_seq_n = torch.movedim(x_seq_n, 1, 0) #[num_trajs seq_len obsdim]
-                
-                koop_out     = self.model.koopman(x[n])
-                seqmodel_out = self.model.seqmodel(x_seq_n)
-                x_nn         = koop_out + seqmodel_out
-                Phi_nn       = self.model.autoencoder.recover(x_nn)
-
-                x   = torch.cat((x,x_nn[None,...]), 0)
-                Phi = torch.cat((Phi,Phi_nn[None,...]), 0)
-
-            x = torch.movedim(x, 1, 0) #[num_trajs timesteps obsdim]
-            Phi = torch.movedim(Phi, 1, 0) #[num_trajs timesteps statedim]
-
-            return x, Phi
