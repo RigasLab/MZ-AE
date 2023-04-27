@@ -14,8 +14,11 @@ class Eval_MZA(MZA_Experiment):
 
     def __init__(self, exp_dir, exp_name):
 
+        
         args = pickle.load(open(exp_dir + "/" + exp_name + "/args","rb"))
         super().__init__(args)
+        self.exp_dir = exp_dir
+        self.exp_name = exp_name
 
     def load_weights(self, epoch_num):
 
@@ -86,8 +89,11 @@ class Eval_MZA(MZA_Experiment):
             
             #Evolving in Time
             koop_out     = self.model.koopman(x_n)
-            seqmodel_out = self.model.seqmodel(x_seq)
-            x_nn_hat     = koop_out + seqmodel_out
+            if self.deactivate_seqmodel:
+                x_nn_hat     = koop_out 
+            else:
+                seqmodel_out = self.model.seqmodel(x_seq)
+                x_nn_hat     = koop_out + seqmodel_out 
             Phi_nn_hat   = self.model.autoencoder.recover(x_nn_hat)
 
             # mean_ko, mean_so  = torch.mean(abs(koop_out)), torch.mean(abs(seqmodel_out))
@@ -181,6 +187,14 @@ class Eval_MZA(MZA_Experiment):
                 seqmodel_out = self.model.seqmodel(x_seq_n)
                 x_nn         = koop_out + seqmodel_out
                 Phi_nn       = self.model.autoencoder.recover(x_nn)
+
+                koop_out     = self.model.koopman(x[n])
+                if self.deactivate_seqmodel:
+                    x_nn     = koop_out 
+                else:
+                    seqmodel_out = self.model.seqmodel(x_seq_n)
+                    x_nn         = koop_out + seqmodel_out 
+                    Phi_nn       = self.model.autoencoder.recover(x_nn)
 
                 x   = torch.cat((x,x_nn[None,...]), 0)
                 Phi = torch.cat((Phi,Phi_nn[None,...]), 0)

@@ -15,7 +15,8 @@ class MZANetwork(nn.Module):
         self.args        = exp_args
         self.autoencoder = autoencoder(input_size = self.args["statedim"], latent_size = self.args["num_obs"])
         self.koopman     = koopman(latent_size = self.args["num_obs"], device = self.args["device"])
-        self.seqmodel    = seqmodel(N = self.args["num_obs"], input_size = self.args["num_obs"], 
+        if not self.args["deactivate_seqmodel"]:
+            self.seqmodel    = seqmodel(N = self.args["num_obs"], input_size = self.args["num_obs"], 
                                     hidden_size = self.args["num_hidden_units"], num_layers = self.args["num_layers"], 
                                     seq_length = self.args["seq_len"], device = self.args["device"]).to(self.args["device"])
 

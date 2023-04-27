@@ -194,10 +194,10 @@ class MZA_Experiment():
             #Evolving in Time
             koop_out     = self.model.koopman(x_n)
             if self.deactivate_seqmodel:
+                x_nn_hat     = koop_out 
+            else:
                 seqmodel_out = self.model.seqmodel(x_seq)
                 x_nn_hat     = koop_out + seqmodel_out 
-            else:
-                x_nn_hat     = koop_out
             Phi_nn_hat   = self.model.autoencoder.recover(x_nn_hat)
 
             #Calculating contribution
@@ -307,7 +307,6 @@ class MZA_Experiment():
         #Creating Model
         if not load_model:
             self.model = MZANetwork(self.__dict__, Autoencoder, Koopman, LSTM_Model).to(self.device)
-        
         self.optimizer = torch.optim.Adam(self.model.parameters(), lr = self.learning_rate)#, weight_decay=1e-5)
         # writer = SummaryWriter(exp_dir+'/'+exp_name+'/'+'log/') #Tensorboard writer
 
