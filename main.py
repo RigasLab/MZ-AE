@@ -15,7 +15,7 @@ if __name__ == "__main__":
     parser.add_argument('--lr',      type = float, default=1e-4)
     parser.add_argument('--nepochs', type = int,   default=100)
     parser.add_argument('--nlayers', type = int,   default=1)
-
+    parser.add_argument('--deactivate_seqmodel', action = 'store_true', help = "deactivates the seqmodel for prediction")
     #LSTM Params ARGS
     parser.add_argument('--nhu',     type = int,   default=40)
     parser.add_argument('--seq_len', type = int,   default=64)

@@ -37,6 +37,7 @@ class MZA_Experiment():
             self.num_obs = args.num_obs
 
             #RNN Parameters
+            self.deactivate_seqmodel = args.deactivate_seqmodel
             self.num_layers       = args.nlayers
             self.num_hidden_units = args.nhu
 
@@ -54,6 +55,11 @@ class MZA_Experiment():
             self.no_save_model = args.no_save_model
 
             self.args = args
+
+            if self.deactivate_seqmodel:
+                print("Deactivating Seqmodel")
+            
+            torch.cuda.empty_cache()
         
         else:
             for k, v in args.items():
@@ -84,7 +90,7 @@ class MZA_Experiment():
 
         
         self.lp_data   = np.load(self.data_dir)
-        self.lp_data   = self.lp_data[:,:,:2]
+        self.lp_data   = self.lp_data[:10000,:,:2]
         
         print("Data Shape: ", self.lp_data.shape)
 
@@ -102,32 +108,34 @@ class MZA_Experiment():
         # data[...,1] = (data[...,1] - np.mean(data[...,1]))/np.std(data[...,1])
 
     
-    def create_dataset(self):
+    def create_dataset(self, mode = "Both"):
 
         '''
         Creates non sequence dataset for state variables and divides into test, train and val dataset
         Requires
         --------
         lp_data: [num_traj, timesteps, statedim] state variables
+        mode   : "Train" for only train dataset, "Test" for only test dataset, "Both" for both datset
 
         Returns
         -------
         Dataset : [num_traj, timesteps, statedim] Input , Output (both test and train)
 
         '''
-        self.train_data = self.lp_data[:int(self.train_size * self.lp_data.shape[0])]
-        self.test_data  = self.lp_data[int(self.train_size * self.lp_data.shape[0]):]
-
-        self.train_num_trajs = self.train_data.shape[0]
-        self.test_num_trajs  = self.test_data.shape[0]
-
-        print("Train_Shape: ", self.train_data.shape)
-        print("Test_Shape: " , self.test_data.shape)
+        if mode == "Train" or mode == "Both":
+            
+            self.train_data = self.lp_data[:int(self.train_size * self.lp_data.shape[0])]
+            self.train_num_trajs = self.train_data.shape[0]
+            print("Train_Shape: ", self.train_data.shape)
+            self.train_dataset    = StackedSequenceDataset(self.train_data, self.device, self.seq_len)
+            self.train_dataloader = DataLoader(self.train_dataset  , batch_size=self.batch_size, shuffle = True)
         
-        self.train_dataset    = StackedSequenceDataset(self.train_data, self.device, self.seq_len)
-        self.test_dataset     = StackedSequenceDataset(self.test_data , self.device, self.seq_len)
-        self.train_dataloader = DataLoader(self.train_dataset  , batch_size=self.batch_size, shuffle = True)
-        self.test_dataloader  = DataLoader(self.test_dataset   , batch_size=self.batch_size, shuffle = False)
+        if mode == "Test" or mode == "Both":
+            self.test_data  = self.lp_data[int(self.train_size * self.lp_data.shape[0]):]
+            self.test_num_trajs  = self.test_data.shape[0]
+            print("Test_Shape: " , self.test_data.shape)
+            self.test_dataset     = StackedSequenceDataset(self.test_data , self.device, self.seq_len)
+            self.test_dataloader  = DataLoader(self.test_dataset   , batch_size=self.batch_size, shuffle = False)
 
         #print the dataset shape
         # X,y = next(iter(test_dataloader))
@@ -182,14 +190,17 @@ class MZA_Experiment():
             
             #Evolving in Time
             koop_out     = self.model.koopman(x_n)
-            seqmodel_out = self.model.seqmodel(x_seq)
-            x_nn_hat     = koop_out + seqmodel_out 
+            if self.deactivate_seqmodel:
+                seqmodel_out = self.model.seqmodel(x_seq)
+                x_nn_hat     = koop_out + seqmodel_out 
+            else:
+                x_nn_hat     = koop_out
             Phi_nn_hat   = self.model.autoencoder.recover(x_nn_hat)
 
             #Calculating contribution
-            mean_ko, mean_so  = torch.mean(abs(koop_out)), torch.mean(abs(seqmodel_out))
-            koop_ptg = mean_ko/(mean_ko+mean_so)
-            seq_ptg  = mean_so/(mean_ko+mean_so)
+            # mean_ko, mean_so  = torch.mean(abs(koop_out)), torch.mean(abs(seqmodel_out))
+            # koop_ptg = mean_ko/(mean_ko+mean_so)
+            # seq_ptg  = mean_so/(mean_ko+mean_so)
 
             #Calculating loss
             mseLoss       = nn.MSELoss()
@@ -208,8 +219,8 @@ class MZA_Experiment():
             total_ObsEvo_Loss +=  ObsEvo_Loss.item()
             total_Autoencoder_Loss += Autoencoder_Loss.item()
             total_StateEvo_Loss += StateEvo_Loss.item()
-            total_koop_ptg         += koop_ptg
-            total_seqmodel_ptg     += seq_ptg
+            total_koop_ptg         += 0#koop_ptg
+            total_seqmodel_ptg     += 0#seq_ptg
 
 
         avg_loss             = total_loss / num_batches
