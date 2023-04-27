@@ -47,17 +47,20 @@ class MZA_Experiment():
             self.norm_input       = args.norm_input         #if input should be normalised
 
             #Directory Parameters
-            self.nsave         = args.nsave              #should save the model or not
+            self.nsave         = args.nsave              #after how many epochs to save
             self.info          = args.info               #extra info in the saved driectory name
             self.exp_dir       = args.exp_dir
             self.exp_name      = "sl{sl}_nhu{nhu}_numobs{numobs}_bs{bs}_{info}".format(sl = args.seq_len, nhu = args.nhu, numobs = args.num_obs, bs=args.bs, info=args.info)
             self.data_dir      = args.data_dir
             self.no_save_model = args.no_save_model
+            self.load_epoch    = args.load_epoch
+            if self.load_epoch != 0:
+                self.exp_name = args.exp_name
 
             self.args = args
 
             if self.deactivate_seqmodel:
-                print("Deactivating Seqmodel")
+                print("Training without Seqmodel")
             
             torch.cuda.empty_cache()
         
@@ -243,7 +246,7 @@ class MZA_Experiment():
         test_loss, test_ObsEvo_Loss, test_Autoencoder_Loss, test_StateEvo_Loss, test_koop_ptg, test_seqmodel_ptg = self.train_test_loss("Test", self.test_dataloader)
         print(f"Test Loss: {test_loss}, ObsEvo : {test_ObsEvo_Loss}, Auto : {test_Autoencoder_Loss}, StateEvo : {test_StateEvo_Loss}")
 
-        for ix_epoch in range(self.nepochs):
+        for ix_epoch in range(self.load_epoch, self.load_epoch + self.nepochs):
 
             train_loss, train_ObsEvo_Loss, train_Autoencoder_Loss, train_StateEvo_Loss, train_koop_ptg, train_seqmodel_ptg = self.train_test_loss("Train")
             test_loss, test_ObsEvo_Loss, test_Autoencoder_Loss, test_StateEvo_Loss, test_koop_ptg, test_seqmodel_ptg  = self.train_test_loss("Test", self.test_dataloader)
@@ -273,7 +276,7 @@ class MZA_Experiment():
                                ,"Test_Loss","Test_ObsEvo_Loss","Test_Autoencoder_Loss","Test_StateEvo_Loss"\
                                ,"Train_koop_ptg", "Train_seqmodel_ptg"\
                                ,"Test_koop_ptg", "Test_seqmodel_ptg"]
-        self.logf = open(self.exp_dir + '/' + self.exp_name + "/out_log/log", "w")
+        self.logf = open(self.exp_dir + '/' + self.exp_name + "/out_log/log", "a")
         self.log = csv.DictWriter(self.logf, self.metrics)
         self.log.writeheader()
 
@@ -290,7 +293,7 @@ class MZA_Experiment():
             print("Saved Args")
 
 
-    def main_train(self):
+    def main_train(self, load_model = False):
 
         #Making Experiment Directory
         self.make_directories()
@@ -302,16 +305,19 @@ class MZA_Experiment():
         self.create_dataset()
 
         #Creating Model
-        self.model = MZANetwork(self.__dict__, Autoencoder, Koopman, LSTM_Model).to(self.device)
+        if not load_model:
+            self.model = MZANetwork(self.__dict__, Autoencoder, Koopman, LSTM_Model).to(self.device)
+        
         self.optimizer = torch.optim.Adam(self.model.parameters(), lr = self.learning_rate)#, weight_decay=1e-5)
         # writer = SummaryWriter(exp_dir+'/'+exp_name+'/'+'log/') #Tensorboard writer
 
-        #Saving Initial Model
-        if self.no_save_model:
-            torch.save(self.model, self.exp_dir+'/'+self.exp_name+'/'+self.exp_name)
+        if not load_model:
+            #Saving Initial Model
+            if self.no_save_model:
+                torch.save(self.model, self.exp_dir+'/'+self.exp_name+'/'+self.exp_name)
 
-        #saving args
-        self.save_args()
+            #saving args
+            self.save_args()
             
         # Initiating Data Logger
         self.log_data()
@@ -321,7 +327,7 @@ class MZA_Experiment():
 
         #Saving Model
         if self.no_save_model:
-            torch.save(self.model, self.exp_dir+'/'+self.exp_name+'/'+self.exp_name)
+            # torch.save(self.model, self.exp_dir+'/'+self.exp_name+'/'+self.exp_name)
             print("model saved in "+ self.exp_dir+'/'+self.exp_name+'/'+self.exp_name)
 
 
