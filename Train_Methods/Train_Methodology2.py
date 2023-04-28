@@ -1,9 +1,7 @@
 import torch
 import torch.nn as nn
-import matplotlib.pyplot as plt
 
-
-class Train_Methodology():
+class Train_Methodology2():
 
     def train_test_loss(self, mode = "Train", dataloader = None):
         '''
@@ -113,6 +111,7 @@ class Train_Methodology():
                                                 "Train_koop_ptg": train_koop_ptg, "Train_seqmodel_ptg": train_seqmodel_ptg,\
                                                 "Test_koop_ptg": test_koop_ptg, "Test_seqmodel_ptg": test_seqmodel_ptg})
             self.logf.flush()
+            # writer.add_scalars('tt',{'train': train_loss, 'test': test_loss}, ix_epoch)
 
             if (ix_epoch%self.nsave == 0):
                 #saving weights

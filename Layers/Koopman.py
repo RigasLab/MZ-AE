@@ -11,10 +11,12 @@ class Koopman(nn.Module):
         self.device = device
         # Learned koopman operator
         # Learns skew-symmetric matrix with a diagonal
-        self.kMatrixDiag = nn.Parameter(torch.rand(self.latent_size)).to(self.device)
-        self.kMatrixUT   = nn.Parameter(0.01*torch.randn(int(self.latent_size*(self.latent_size-1)/2))).to(self.device)
+        self.kMatrixDiag = nn.Parameter(torch.rand(self.latent_size), requires_grad=True)#.to(self.device)
+        self.kMatrixUT   = nn.Parameter(0.01*torch.randn(int(self.latent_size*(self.latent_size-1)/2)))#.to(self.device)
         # self.kMatrix = nn.Parameter(torch.rand(latent_size, latent_size))
         
+        # self.kMatrixDiag.requires_grad = True
+        # self.kMatrixUT.requires_grad = True
         # print('Koopman Parameters: {}'.format(self._num_parameters()))
 
     def forward(self, x_n):
@@ -29,7 +31,7 @@ class Koopman(nn.Module):
         '''
         # assert g.size(-1) == self.kMatrix.size(0), 'Observables should have dim {}'.format(self.kMatrix.size(0))
         # Build Koopman matrix (skew-symmetric with diagonal)
-        kMatrix = Variable(torch.Tensor(self.latent_size, self.latent_size)).to(self.kMatrixUT.device)
+        kMatrix = Variable(torch.Tensor(self.latent_size, self.latent_size)).to(self.device)
 
         utIdx = torch.triu_indices(self.latent_size, self.latent_size, offset=1)
         diagIdx = torch.stack([torch.arange(0,self.latent_size,dtype=torch.long).unsqueeze(0), \

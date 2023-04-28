@@ -40,13 +40,14 @@ class MZA_Experiment(DynSystem_Data, Train_Methodology):
 
             #RNN Parameters
             self.deactivate_seqmodel = args.deactivate_seqmodel
-            self.num_layers       = args.nlayers
-            self.num_hidden_units = args.nhu
+            self.num_layers          = args.nlayers
+            self.num_hidden_units    = args.nhu
 
             #Model Training # Model Hyper-parameters
             self.learning_rate    = args.lr              
             self.nepochs          = args.nepochs
             self.norm_input       = args.norm_input         #if input should be normalised
+            self.npredsteps       = args.npredsteps
 
             #Directory Parameters
             self.nsave         = args.nsave              #after how many epochs to save
@@ -120,6 +121,7 @@ class MZA_Experiment(DynSystem_Data, Train_Methodology):
         #Creating Model
         if not load_model:
             self.model = MZANetwork(self.__dict__, Autoencoder, Koopman, LSTM_Model).to(self.device)
+            # print(self.model.parameters)
         self.optimizer = torch.optim.Adam(self.model.parameters(), lr = self.learning_rate)#, weight_decay=1e-5)
         # writer = SummaryWriter(exp_dir+'/'+exp_name+'/'+'log/') #Tensorboard writer
 
