@@ -170,7 +170,6 @@ class MZA_Experiment():
         total_koop_ptg, total_seqmodel_ptg = 0,0
         
 
-
         for Phi_seq, Phi_nn in dataloader:
             
              
