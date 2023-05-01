@@ -183,10 +183,10 @@ class Eval_MZA(MZA_Experiment):
                 
                 x_seq_n = torch.movedim(x_seq_n, 1, 0) #[num_trajs seq_len obsdim]
                 
-                koop_out     = self.model.koopman(x[n])
-                seqmodel_out = self.model.seqmodel(x_seq_n)
-                x_nn         = koop_out + seqmodel_out
-                Phi_nn       = self.model.autoencoder.recover(x_nn)
+                # koop_out     = self.model.koopman(x[n])
+                # seqmodel_out = self.model.seqmodel(x_seq_n)
+                # x_nn         = koop_out + seqmodel_out
+                # Phi_nn       = self.model.autoencoder.recover(x_nn)
 
                 koop_out     = self.model.koopman(x[n])
                 if self.deactivate_seqmodel:
@@ -194,7 +194,7 @@ class Eval_MZA(MZA_Experiment):
                 else:
                     seqmodel_out = self.model.seqmodel(x_seq_n)
                     x_nn         = koop_out + seqmodel_out 
-                    Phi_nn       = self.model.autoencoder.recover(x_nn)
+                Phi_nn       = self.model.autoencoder.recover(x_nn)
 
                 x   = torch.cat((x,x_nn[None,...]), 0)
                 Phi = torch.cat((Phi,Phi_nn[None,...]), 0)

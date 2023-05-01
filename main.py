@@ -11,6 +11,7 @@ if __name__ == "__main__":
 
     #Training Params
     parser.add_argument('--load_epoch', type = int, default = 0 ,help = "loads model at a particular epoch for training")
+    parser.add_argument('--dynsys', type = str, default = "Duffing")
 
     #training Params ARGS
     parser.add_argument('--lr',      type = float, default=1e-4)

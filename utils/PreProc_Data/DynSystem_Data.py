@@ -19,8 +19,15 @@ class DynSystem_Data:
         '''
         
         self.lp_data   = np.load(self.data_dir)
-        self.lp_data   = self.lp_data[:10000,:,:2]
+
+        if self.dynsys == "Duffing":
+            self.lp_data = self.lp_data[:10000,:,:2]
         
+        elif self.dynsys == "KS": 
+            self.lp_data = self.lp_data[:,::1000,:]
+            self.lp_data = self.lp_data[:,self.ntransients:,:]
+
+            
         print("Data Shape: ", self.lp_data.shape)
 
         #additional data parameters

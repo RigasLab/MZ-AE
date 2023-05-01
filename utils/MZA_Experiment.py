@@ -30,6 +30,8 @@ class MZA_Experiment(DynSystem_Data, Train_Methodology):
         
         #Data Parameters
         if str(type(args)) != "<class 'dict'>":
+
+            self.dynsys = args.dynsys
             self.train_size  = args.train_size
             self.batch_size  = args.bs
             self.ntransients = args.ntransients
