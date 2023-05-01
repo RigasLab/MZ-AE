@@ -32,6 +32,7 @@ if __name__ == "__main__":
     parser.add_argument('--bs',          type = int,   default = 16)
     parser.add_argument('--train_size',  type = float, default = 0.8)
     parser.add_argument('--norm_input',  action = 'store_true',  help = "normalises input")
+    parser.add_argument('--time_sample', type = int, default = 100, help = "time sampling size")
 
     #Directory Params ARGS
     parser.add_argument('--exp_dir',    type = str, default = "Trained_Models")
