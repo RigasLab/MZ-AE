@@ -1,11 +1,7 @@
 import torch
 from torch.utils.data import Dataset
 import numpy as np
-'''
-Dataset works with Training Methodology1 
-This method is straightforward adding of Koopman and RNN output without ensurinig
-that RNN only trains on the converged rsiduals of the Koopman
-'''
+
 class SequenceDataset(Dataset):
     def __init__(self, statedata, device, sequence_length=5):
         '''
@@ -31,11 +27,10 @@ class SequenceDataset(Dataset):
     def __getitem__(self, i):
         '''
         Creates sequence of Data for state variables
-        Does not inlcude current timestep in the sequence 
-
         Returns
         -------
         Phi_seq : [num_traj, seq_len, statedim] sequence of State Variables
+        Phi_n   : [num_traj, statedim]   observable at current time step
         Phi_nn  : [num_traj, statedim]   observable at next time step
         '''
         non_time_dims = (1,)*(self.statedata.ndim-1)   #dims apart from timestep in tuple form (1,1...)
@@ -55,31 +50,10 @@ class SequenceDataset(Dataset):
         
         Phi_seq = torch.movedim(phi, -1, 0)
         Phi_nn  = torch.movedim(self.Phi[i+1], -1, 0)
+        Phi_n   = torch.movedim(self.Phi[i], -1, 0)
 
-        return Phi_seq, Phi_nn
-    
-       #
-       #inlcudes current timestep in the sequence as well
-       
-        # non_time_dims = (1,)*(self.statedata.ndim-1)   #dims apart from timestep in tuple form (1,1...)
-        # if i==len(self)-1:
-        #     i = len(self)-2
-        # if i >= self.sequence_length:
-        #     i_start = i - self.sequence_length + 1
-        #     phi = self.Phi[i_start:(i+1), ...]
-        # elif i==0:
-        #     padding = self.Phi[0].repeat(self.sequence_length - 1, *non_time_dims)
-        #     phi = self.Phi[0:(i+1), ...]
-        #     phi = torch.cat((padding, phi), 0)
-        # else:
-        #     padding = self.Phi[0].repeat(self.sequence_length - i, *non_time_dims)
-        #     phi = self.Phi[1:(i+1), ...]
-        #     phi = torch.cat((padding, phi), 0)
+        return Phi_seq, Phi_n, Phi_nn
         
-        # Phi_seq = torch.movedim(phi, -1, 0)
-        # Phi_nn  = torch.movedim(self.Phi[i+1], -1, 0)
-
-        # return Phi_seq, Phi_nn
 
 
     
@@ -89,28 +63,32 @@ class StackedSequenceDataset(Dataset):
         Input
         -----
         statedata (numpy array) [num_traj, timesteps, statedim]
-        device
-        sequence_length
+
+        args_dict: requires -> device, num_obs, sequence_length
         '''
 
         self.device = args_dict["device"]
+        self.num_obs = args_dict["num_obs"] 
         self.sequence_length = args_dict["seq_len"]
         self.seqdataset = SequenceDataset(statedata, self.device, self.sequence_length)
-        self.stacked_Phi_seq, self.stacked_Phi_nn  = self.stack_data()
+        self.stacked_Phi_seq, self.stacked_Phi_n, self.stacked_Phi_nn  = self.stack_data()
 
+        #residuals for RNN to train on
+        self.residuals = np.zeros((len(self),self.num_obs))
 
     def __len__(self):
         return self.stacked_Phi_seq.shape[0]
 
     def stack_data(self):
         it = iter(self.seqdataset)
-        Phi_seq, Phi_nn = next(it)
+        Phi_seq, Phi_n, Phi_nn = next(it)
         for i, data in enumerate(self.seqdataset):
             if (i!=0):
-                Phi_seq = torch.cat((Phi_seq, data[0]), dim = 0)
-                Phi_nn  = torch.cat((Phi_nn, data[1]), dim = 0)
+                Phi_seq  = torch.cat((Phi_seq, data[0]), dim = 0)
+                Phi_n    = torch.cat((Phi_nn, data[1]), dim = 0)
+                Phi_nn   = torch.cat((Phi_nn, data[2]), dim = 0)
         
-        return Phi_seq, Phi_nn
+        return Phi_seq, Phi_n, Phi_nn
 
 
     def __getitem__(self, i):
@@ -119,10 +97,12 @@ class StackedSequenceDataset(Dataset):
         Returns
         -------
         stacked_Phi_seq : [timesteps*num_trajs, seq_len, statedim] sequence of State Variables
+        stacked_Phi_n   : [timesteps*num_trajs, statedim]   observable at current time step
         stacked_Phi_nn  : [timesteps*num_trajs, statedim]   observable at next time step
+        i               : (int) Data index for storing residuals for RNN
         '''
         
-        return self.stacked_Phi_seq[i], self.stacked_Phi_nn[i]
+        return self.stacked_Phi_seq[i], self.stacked_Phi_n[i], self.stacked_Phi_nn[i], i
 
 
 #############################################################

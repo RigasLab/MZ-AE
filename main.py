@@ -44,37 +44,40 @@ if __name__ == "__main__":
 
     # parser.add_argument('--divert_op', type = )
     args = parser.parse_args()
+    mza = MZA_Experiment(args)
+    mza.main_train()
 
-    #Running without loading
-    if args.load_epoch == 0:
-        mza = MZA_Experiment(args)
-        mza.main_train()
+
+    # #Running without loading
+    # if args.load_epoch == 0:
+    #     mza = MZA_Experiment(args)
+    #     mza.main_train()
     
-    #Retraining Loaded Data
-    else:
-        #checking for model
-        dirlist = os.listdir(args.exp_dir+'/'+ args.exp_name+"/model_weights")
-        epochlist = [int(wfname[8:]) for wfname in dirlist]
+    # #Retraining Loaded Data
+    # else:
+    #     #checking for model
+    #     dirlist = os.listdir(args.exp_dir+'/'+ args.exp_name+"/model_weights")
+    #     epochlist = [int(wfname[8:]) for wfname in dirlist]
         
-        if(args.load_epoch in epochlist):
+    #     if(args.load_epoch in epochlist):
             
-            print(f"Training from epoch {args.load_epoch}")
-            #creating experiment
-            loaded_args = pickle.load(open(args.exp_dir + "/" + args.exp_name + "/args","rb"))
+    #         print(f"Training from epoch {args.load_epoch}")
+    #         #creating experiment
+    #         loaded_args = pickle.load(open(args.exp_dir + "/" + args.exp_name + "/args","rb"))
             
-            # print(loaded_args.keys())
-            mza  = MZA_Experiment(loaded_args)
-            mza.load_epoch = args.load_epoch
+    #         # print(loaded_args.keys())
+    #         mza  = MZA_Experiment(loaded_args)
+    #         mza.load_epoch = args.load_epoch
             
-            #Loading Weights
-            PATH = args.exp_dir+'/'+ args.exp_name+"/model_weights/at_epoch{epoch}".format(epoch=args.load_epoch)
-            mza.model.load_state_dict(torch.load(PATH))
+    #         #Loading Weights
+    #         PATH = args.exp_dir+'/'+ args.exp_name+"/model_weights/at_epoch{epoch}".format(epoch=args.load_epoch)
+    #         mza.model.load_state_dict(torch.load(PATH))
 
-            #Training
-            mza.main_train(load_model = True)
+    #         #Training
+    #         mza.main_train(load_model = True)
 
-        else:
-            print(f"weights file at epoch_{args.load_epoch} does NOT exist") 
+    #     else:
+    #         print(f"weights file at epoch_{args.load_epoch} does NOT exist") 
                 
 
         

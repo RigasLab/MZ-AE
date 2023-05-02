@@ -1,5 +1,5 @@
 import torch
-import csv, pickle
+import csv, pickle, copy
 # from torch.utils.data import DataLoader
 
 from Layers.RNN_Model import LSTM_Model
@@ -103,13 +103,22 @@ class MZA_Experiment(DynSystem_Data, Train_Methodology):
 
         #saving args
         with open(self.exp_dir+'/'+self.exp_name+"/args", 'wb') as f:
-            args_dict = self.__dict__
+            args_dict = copy.deepcopy(self.__dict__)
+
+            #deleting some high memory args
+            print(args_dict.keys())
+            del args_dict['lp_data']
+            del args_dict['train_data']
+            del args_dict['test_data']
+            del args_dict['train_dataset']
+            del args_dict['test_dataset']
+            del args_dict['train_dataloader']
+            del args_dict['test_dataloader']
             # #adding data_args
             # args_dict["data_args"] = data_args
             pickle.dump(args_dict, f)
             print("Saved Args")
 
-    
     def main_train(self, load_model = False):
 
         #Making Experiment Directory
@@ -124,6 +133,8 @@ class MZA_Experiment(DynSystem_Data, Train_Methodology):
         #Creating Model
         if not load_model:
             self.model = MZANetwork(self.__dict__, Autoencoder, Koopman, LSTM_Model).to(self.device)
+            # 
+            
             # print(self.model.parameters)
         self.optimizer = torch.optim.Adam(self.model.parameters(), lr = self.learning_rate)#, weight_decay=1e-5)
         # writer = SummaryWriter(exp_dir+'/'+exp_name+'/'+'log/') #Tensorboard writer

@@ -66,7 +66,9 @@ class Train_Methodology():
             Autoencoder_Loss = mseLoss(Phi_n_hat, Phi_n)
             StateEvo_Loss = mseLoss(Phi_nn_hat, Phi_nn)
 
-            loss = ObsEvo_Loss + Autoencoder_Loss + StateEvo_Loss
+            l1_norm = torch.norm(self.model.koopman.state_dict()["kMatrix"], p=1)
+
+            loss = ObsEvo_Loss + Autoencoder_Loss + StateEvo_Loss + l1_norm
 
             if mode == "Train":
                 self.optimizer.zero_grad()

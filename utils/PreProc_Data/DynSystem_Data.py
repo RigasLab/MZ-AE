@@ -63,14 +63,14 @@ class DynSystem_Data:
             self.train_data = self.lp_data[:int(self.train_size * self.lp_data.shape[0])]
             self.train_num_trajs = self.train_data.shape[0]
             print("Train_Shape: ", self.train_data.shape)
-            self.train_dataset    = StackedSequenceDataset(self.train_data, self.device, self.seq_len)
+            self.train_dataset    = StackedSequenceDataset(self.train_data, self.__dict__)
             self.train_dataloader = DataLoader(self.train_dataset  , batch_size=self.batch_size, shuffle = True)
         
         if mode == "Test" or mode == "Both":
             self.test_data  = self.lp_data[int(self.train_size * self.lp_data.shape[0]):]
             self.test_num_trajs  = self.test_data.shape[0]
             print("Test_Shape: " , self.test_data.shape)
-            self.test_dataset     = StackedSequenceDataset(self.test_data , self.device, self.seq_len)
+            self.test_dataset     = StackedSequenceDataset(self.test_data , self.__dict__)
             self.test_dataloader  = DataLoader(self.test_dataset   , batch_size=self.batch_size, shuffle = False)
 
         #print the dataset shape
