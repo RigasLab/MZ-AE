@@ -58,16 +58,26 @@ class DynSystem_Data:
         Dataset : [num_traj, timesteps, statedim] Input , Output (both test and train)
 
         '''
-        if mode == "Train" or mode == "Both":
+        if mode == "Both" or mode == "Train":
             
-            self.train_data = self.lp_data[:int(self.train_size * self.lp_data.shape[0])]
+            if self.dynsys == "KS":
+                self.train_data = self.lp_data[:,:int(self.train_size * self.lp_data.shape[1])]
+            else:
+                self.train_data = self.lp_data[:int(self.train_size * self.lp_data.shape[0])]
+
             self.train_num_trajs = self.train_data.shape[0]
             print("Train_Shape: ", self.train_data.shape)
             self.train_dataset    = StackedSequenceDataset(self.train_data, self.__dict__)
             self.train_dataloader = DataLoader(self.train_dataset  , batch_size=self.batch_size, shuffle = True)
         
-        if mode == "Test" or mode == "Both":
-            self.test_data  = self.lp_data[int(self.train_size * self.lp_data.shape[0]):]
+        print("out of train")
+        if mode == "Both" or mode == "Test":
+            
+            if self.dynsys == "KS":
+                self.test_data  = self.lp_data[:,int(self.train_size * self.lp_data.shape[1]):]
+            else:
+                self.test_data  = self.lp_data[int(self.train_size * self.lp_data.shape[0]):]
+            
             self.test_num_trajs  = self.test_data.shape[0]
             print("Test_Shape: " , self.test_data.shape)
             self.test_dataset     = StackedSequenceDataset(self.test_data , self.__dict__)

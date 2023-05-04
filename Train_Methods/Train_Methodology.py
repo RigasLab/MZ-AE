@@ -3,6 +3,8 @@ import torch.nn as nn
 import matplotlib.pyplot as plt
 
 
+
+
 class Train_Methodology():
 
     def train_test_loss(self, mode = "Train", dataloader = None):
@@ -68,12 +70,13 @@ class Train_Methodology():
 
             l1_norm = torch.norm(self.model.koopman.state_dict()["kMatrix"], p=1)
 
-            loss = ObsEvo_Loss + Autoencoder_Loss + StateEvo_Loss + l1_norm
+            loss = ObsEvo_Loss + Autoencoder_Loss + StateEvo_Loss + (1e-3)*l1_norm
 
             if mode == "Train":
                 self.optimizer.zero_grad()
                 loss.backward()
                 self.optimizer.step()
+
 
             total_loss += loss.item()
             total_ObsEvo_Loss +=  ObsEvo_Loss.item()
@@ -106,6 +109,14 @@ class Train_Methodology():
         for ix_epoch in range(self.load_epoch, self.load_epoch + self.nepochs):
 
             train_loss, train_ObsEvo_Loss, train_Autoencoder_Loss, train_StateEvo_Loss, train_koop_ptg, train_seqmodel_ptg = self.train_test_loss("Train")
+            
+            #learning rate customization
+            if not self.deactivate_lrscheduler:
+                before_lr = self.optimizer.param_groups[0]["lr"]
+                self.scheduler.step()
+                after_lr = self.optimizer.param_groups[0]["lr"]
+                print("Epoch %d: SGD lr %.6f -> %.6f" % (ix_epoch, before_lr, after_lr))
+
             test_loss, test_ObsEvo_Loss, test_Autoencoder_Loss, test_StateEvo_Loss, test_koop_ptg, test_seqmodel_ptg  = self.train_test_loss("Test", self.test_dataloader)
             print(f"Epoch {ix_epoch}  ")
             print(f"Train Loss: {train_loss}, ObsEvo : {train_ObsEvo_Loss}, Auto : {train_Autoencoder_Loss}, StateEvo : {train_StateEvo_Loss} \

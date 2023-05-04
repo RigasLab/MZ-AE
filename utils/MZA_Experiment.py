@@ -9,6 +9,8 @@ from Layers.Koopman import Koopman
 
 from Train_Methods.Train_Methodology import Train_Methodology
 from utils.PreProc_Data.DynSystem_Data import DynSystem_Data
+from torch.optim.lr_scheduler import StepLR
+
 
 # from utils.train_test import train_model, test_model, predict
 from utils.make_dir import mkdirs
@@ -47,7 +49,8 @@ class MZA_Experiment(DynSystem_Data, Train_Methodology):
             self.num_hidden_units    = args.nhu
 
             #Model Training # Model Hyper-parameters
-            self.learning_rate    = args.lr              
+            self.learning_rate    = args.lr      
+            self.deactivate_lrscheduler = args.deactivate_lrscheduler        
             self.nepochs          = args.nepochs
             self.norm_input       = args.norm_input         #if input should be normalised
             self.npredsteps       = args.npredsteps
@@ -127,16 +130,19 @@ class MZA_Experiment(DynSystem_Data, Train_Methodology):
         #Loading and visualising data
         self.load_and_preproc_data()
 
-        #Creating Statevariable Dataset
+        # #Creating Statevariable Dataset
         self.create_dataset()
 
         #Creating Model
         if not load_model:
             self.model = MZANetwork(self.__dict__, Autoencoder, Koopman, LSTM_Model).to(self.device)
-            # 
             
             # print(self.model.parameters)
         self.optimizer = torch.optim.Adam(self.model.parameters(), lr = self.learning_rate)#, weight_decay=1e-5)
+        if not self.deactivate_lrscheduler:
+            self.scheduler = StepLR(self.optimizer, 
+                    step_size = 20, # Period of learning rate decay
+                    gamma = 0.3) # Multiplicative factor of learning rate decay
         # writer = SummaryWriter(exp_dir+'/'+exp_name+'/'+'log/') #Tensorboard writer
 
         if not load_model:
