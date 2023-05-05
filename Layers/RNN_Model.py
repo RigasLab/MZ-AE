@@ -8,17 +8,17 @@ class LSTM_Model(nn.Module):
         self.N = N  # output_size
         self.num_layers  = num_layers  # number of layers
         self.input_size  = input_size  # input size
-        self.hidden_size = hidden_size  # hidden state
-        self.seq_length  = seq_length  # sequence length
+        self.hidden_size = hidden_size # hidden state
+        self.seq_length  = seq_length - 1  # sequence length one less than input  
 
         self.lstm = nn.LSTM(input_size=input_size, hidden_size=hidden_size,
                             num_layers=num_layers, batch_first=True)  # lstm
-        self.fc_1 = nn.Linear(hidden_size, 128)  # fully connected 1
-        self.bn1  = nn.BatchNorm1d(128)
-        self.fc_2 = nn.Linear(128,64)
-        self.bn2  = nn.BatchNorm1d(64)
+        self.fc_1 = nn.Linear(hidden_size, 64)  # fully connected 1
+        self.bn1  = nn.BatchNorm1d(32)
+        self.fc_2 = nn.Linear(64,32)
+        self.bn2  = nn.BatchNorm1d(32)
         self.dp   = nn.Dropout(p=0.5)
-        self.fc   = nn.Linear(64, N)  # fully connected last layer
+        self.fc   = nn.Linear(32, N)  # fully connected last layer
 
         self.relu = nn.ReLU()
 

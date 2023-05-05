@@ -38,48 +38,48 @@ class SequenceDataset(Dataset):
         Phi_seq : [num_traj, seq_len, statedim] sequence of State Variables
         Phi_nn  : [num_traj, statedim]   observable at next time step
         '''
-        non_time_dims = (1,)*(self.statedata.ndim-1)   #dims apart from timestep in tuple form (1,1...)
-        if i==len(self)-1:
-            i = len(self)-2
-        if i >= self.sequence_length:
-            i_start = i - self.sequence_length 
-            phi = self.Phi[i_start:(i), ...]
-        elif i==0:
-            padding = self.Phi[0].repeat(self.sequence_length - 1, *non_time_dims)
-            phi = self.Phi[0:(i+1), ...]
-            phi = torch.cat((padding, phi), 0)
-        else:
-            padding = self.Phi[0].repeat(self.sequence_length - i + 1, *non_time_dims)
-            phi = self.Phi[1:(i), ...]
-            phi = torch.cat((padding, phi), 0)
-        
-        Phi_seq = torch.movedim(phi, -1, 0)
-        Phi_nn  = torch.movedim(self.Phi[i+1], -1, 0)
-
-        return Phi_seq, Phi_nn
-    
-       #
-       #inlcudes current timestep in the sequence as well
-       
         # non_time_dims = (1,)*(self.statedata.ndim-1)   #dims apart from timestep in tuple form (1,1...)
         # if i==len(self)-1:
         #     i = len(self)-2
         # if i >= self.sequence_length:
-        #     i_start = i - self.sequence_length + 1
-        #     phi = self.Phi[i_start:(i+1), ...]
+        #     i_start = i - self.sequence_length 
+        #     phi = self.Phi[i_start:(i), ...]
         # elif i==0:
         #     padding = self.Phi[0].repeat(self.sequence_length - 1, *non_time_dims)
         #     phi = self.Phi[0:(i+1), ...]
         #     phi = torch.cat((padding, phi), 0)
         # else:
-        #     padding = self.Phi[0].repeat(self.sequence_length - i, *non_time_dims)
-        #     phi = self.Phi[1:(i+1), ...]
+        #     padding = self.Phi[0].repeat(self.sequence_length - i + 1, *non_time_dims)
+        #     phi = self.Phi[1:(i), ...]
         #     phi = torch.cat((padding, phi), 0)
         
         # Phi_seq = torch.movedim(phi, -1, 0)
         # Phi_nn  = torch.movedim(self.Phi[i+1], -1, 0)
 
         # return Phi_seq, Phi_nn
+    
+       #
+       #inlcudes current timestep in the sequence as well
+       
+        non_time_dims = (1,)*(self.statedata.ndim-1)   #dims apart from timestep in tuple form (1,1...)
+        if i==len(self)-1:
+            i = len(self)-2
+        if i >= self.sequence_length:
+            i_start = i - self.sequence_length + 1
+            phi = self.Phi[i_start:(i+1), ...]
+        elif i==0:
+            padding = self.Phi[0].repeat(self.sequence_length - 1, *non_time_dims)
+            phi = self.Phi[0:(i+1), ...]
+            phi = torch.cat((padding, phi), 0)
+        else:
+            padding = self.Phi[0].repeat(self.sequence_length - i, *non_time_dims)
+            phi = self.Phi[1:(i+1), ...]
+            phi = torch.cat((padding, phi), 0)
+        
+        Phi_seq = torch.movedim(phi, -1, 0)
+        Phi_nn  = torch.movedim(self.Phi[i+1], -1, 0)
+
+        return Phi_seq, Phi_nn
 
 
     
@@ -121,7 +121,6 @@ class StackedSequenceDataset(Dataset):
         stacked_Phi_seq : [timesteps*num_trajs, seq_len, statedim] sequence of State Variables
         stacked_Phi_nn  : [timesteps*num_trajs, statedim]   observable at next time step
         '''
-        
         return self.stacked_Phi_seq[i], self.stacked_Phi_nn[i]
 
 

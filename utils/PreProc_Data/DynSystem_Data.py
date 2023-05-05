@@ -32,7 +32,7 @@ class DynSystem_Data:
 
         #additional data parameters
         self.statedim  = self.lp_data.shape[2:]
-        self.statedim = self.statedim[0] if len(self.statedim) == 1 else self.statedim
+        self.statedim  = self.statedim[0] if len(self.statedim) == 1 else self.statedim
         
 
         #Normalising Data

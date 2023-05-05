@@ -56,8 +56,8 @@ class MZA_Experiment(DynSystem_Data, Train_Methodology):
             self.npredsteps       = args.npredsteps
 
             #Directory Parameters
-            self.nsave         = args.nsave              #after how many epochs to save
-            self.info          = args.info               #extra info in the saved driectory name
+            self.nsave         = args.nsave                 #after how many epochs to save
+            self.info          = args.info                  #extra info in the saved driectory name
             self.exp_dir       = args.exp_dir
             self.exp_name      = "sl{sl}_nhu{nhu}_numobs{numobs}_bs{bs}_{info}".format(sl = args.seq_len, nhu = args.nhu, numobs = args.num_obs, bs=args.bs, info=args.info)
             self.data_dir      = args.data_dir

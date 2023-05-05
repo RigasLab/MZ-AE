@@ -41,12 +41,15 @@ class Train_Methodology():
             x_nn , _   = self.model.autoencoder(Phi_nn)
 
             #reshaping tensors in desired form
-            x_seq = x_seq.reshape(int(x_seq.shape[0]/self.seq_len), self.seq_len, self.num_obs) #[bs seqlen obsdim]
-            x_n   = torch.squeeze(x_seq[:,-1,:])  #[bs obsdim]
-            
             sd = (self.statedim,) if str(type(self.statedim)) == "<class 'int'>" else self.statedim
             Phi_seq_hat = Phi_seq_hat.reshape(int(Phi_seq_hat.shape[0]/self.seq_len), self.seq_len, *sd) #[bs seqlen statedim]
             Phi_n_hat   = torch.squeeze(Phi_seq_hat[:, -1, :]) 
+            
+            x_seq = x_seq.reshape(int(x_seq.shape[0]/self.seq_len), self.seq_len, self.num_obs) #[bs seqlen obsdim]
+            x_n   = torch.squeeze(x_seq[:,-1,:])  #[bs obsdim] 
+            x_seq = x_seq[:,:-1,:] #removing the current timestep from sequence The sequence length is one less than input
+            
+            
             
             #Evolving in Time
             koop_out     = self.model.koopman(x_n)
