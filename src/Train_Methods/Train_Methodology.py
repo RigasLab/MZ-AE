@@ -30,7 +30,6 @@ class Train_Methodology():
 
         for Phi_seq, Phi_nn in dataloader:
             
-             
             Phi_n   = torch.squeeze(Phi_seq[:,-1,...])  #[bs statedim]
             
             #flattening batchsize seqlen
@@ -48,7 +47,6 @@ class Train_Methodology():
             x_seq = x_seq.reshape(int(x_seq.shape[0]/self.seq_len), self.seq_len, self.num_obs) #[bs seqlen obsdim]
             x_n   = torch.squeeze(x_seq[:,-1,:])  #[bs obsdim] 
             x_seq = x_seq[:,:-1,:] #removing the current timestep from sequence The sequence length is one less than input
-            
             
             
             #Evolving in Time
@@ -75,7 +73,7 @@ class Train_Methodology():
             kMatrix = self.model.koopman.getKoopmanMatrix(requires_grad = True)
             l1_norm = torch.norm(kMatrix, p=1)
 
-            loss = ObsEvo_Loss + Autoencoder_Loss + StateEvo_Loss + (1e-3)*l1_norm
+            loss = ObsEvo_Loss + 10*Autoencoder_Loss + StateEvo_Loss + (1e-3)*l1_norm
 
             if mode == "Train":
                 self.optimizer.zero_grad()

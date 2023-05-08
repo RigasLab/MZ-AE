@@ -97,7 +97,7 @@ class MZA_Experiment(DynSystem_Data, Train_Methodology):
                                ,"Test_Loss","Test_ObsEvo_Loss","Test_Autoencoder_Loss","Test_StateEvo_Loss"\
                                ,"Train_koop_ptg", "Train_seqmodel_ptg"\
                                ,"Test_koop_ptg", "Test_seqmodel_ptg"]
-        self.logf = open(self.exp_dir + '/' + self.exp_name + "/out_log/log", "a")
+        self.logf = open(self.exp_dir + '/' + self.exp_name + "/out_log/log", "w")
         self.log = csv.DictWriter(self.logf, self.metrics)
         self.log.writeheader()
 

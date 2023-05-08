@@ -26,6 +26,9 @@ class DynSystem_Data:
         elif self.dynsys == "KS": 
             self.lp_data = self.lp_data[:,::self.time_sample,:]
             self.lp_data = self.lp_data[:,self.ntransients:,:]
+        
+        elif self.dynsys == "2DCyl":
+            self.lp_data = self.lp_data
 
             
         print("Data Shape: ", self.lp_data.shape)
@@ -60,7 +63,7 @@ class DynSystem_Data:
         '''
         if mode == "Both" or mode == "Train":
             
-            if self.dynsys == "KS":
+            if self.dynsys == "KS" or self.dynsys == "2DCyl":
                 self.train_data = self.lp_data[:,:int(self.train_size * self.lp_data.shape[1])]
             else:
                 self.train_data = self.lp_data[:int(self.train_size * self.lp_data.shape[0])]
@@ -73,7 +76,7 @@ class DynSystem_Data:
         print("out of train")
         if mode == "Both" or mode == "Test":
             
-            if self.dynsys == "KS":
+            if self.dynsys == "KS" or self.dynsys == "2DCyl":
                 self.test_data  = self.lp_data[:,int(self.train_size * self.lp_data.shape[1]):]
             else:
                 self.test_data  = self.lp_data[int(self.train_size * self.lp_data.shape[0]):]
