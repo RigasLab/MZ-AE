@@ -1,5 +1,5 @@
 import torch, pickle, os
-from utils.MZA_Experiment import MZA_Experiment
+from src.MZA_Experiment import MZA_Experiment
 
 
 torch.manual_seed(99)
@@ -26,7 +26,7 @@ if __name__ == "__main__":
     parser.add_argument('--seq_len', type = int,   default=8)
 
     #AUTOENCODER Params ARGS
-    parser.add_argument('--num_obs', type = int,   default=64)
+    parser.add_argument('--num_obs', type = int,   default=50)
     
     #Data Params ARGS
     parser.add_argument('--ntransients', type = int,   default = 100)
@@ -36,7 +36,7 @@ if __name__ == "__main__":
     parser.add_argument('--time_sample', type = int, default = 10, help = "time sampling size")
 
     #Directory Params ARGS
-    parser.add_argument('--exp_dir',    type = str, default = "Trained_Models")
+    parser.add_argument('--exp_dir',    type = str, default = "Trained_Models/Testcode")
     parser.add_argument('--exp_name',   type = str, default = "")
     parser.add_argument('--data_dir',   type = str, default = "Data/Duffing/duffing.npy") 
     parser.add_argument('--nsave',      type = int,   default = 10)
@@ -51,7 +51,7 @@ if __name__ == "__main__":
     # mza.main_train()
 
 
-    #Running without loading
+    #Running from scratch
     if args.load_epoch == 0:
         mza = MZA_Experiment(args)
         mza.main_train()
