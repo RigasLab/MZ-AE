@@ -139,7 +139,7 @@ class MZA_Experiment(DynSystem_Data, Train_Methodology):
             self.model = MZANetwork(self.__dict__, Autoencoder, Koopman, LSTM_Model).to(self.device)
             
             # print(self.model.parameters)
-        self.optimizer = torch.optim.Adam(self.model.parameters(), lr = self.learning_rate)#, weight_decay=1e-5)
+        self.optimizer = torch.optim.Adam(self.model.parameters(), lr = self.learning_rate, weight_decay=1e-5)
         if not self.deactivate_lrscheduler:
             self.scheduler = StepLR(self.optimizer, 
                     step_size = 20, # Period of learning rate decay

@@ -34,7 +34,6 @@ class Train_Methodology():
             
             #flattening batchsize seqlen
             Phi_seq = torch.flatten(Phi_seq, start_dim = 0, end_dim = 1) #[bs*seqlen, statedim]
-
             #obtain observables
             x_seq, Phi_seq_hat = self.model.autoencoder(Phi_seq)
             x_nn , _   = self.model.autoencoder(Phi_nn)
@@ -47,7 +46,6 @@ class Train_Methodology():
             x_seq = x_seq.reshape(int(x_seq.shape[0]/self.seq_len), self.seq_len, self.num_obs) #[bs seqlen obsdim]
             x_n   = torch.squeeze(x_seq[:,-1,:])  #[bs obsdim] 
             x_seq = x_seq[:,:-1,:] #removing the current timestep from sequence The sequence length is one less than input
-            
             
             #Evolving in Time
             koop_out     = self.model.koopman(x_n)
@@ -70,10 +68,10 @@ class Train_Methodology():
             StateEvo_Loss = mseLoss(Phi_nn_hat, Phi_nn)
 
             #calculating l1 norm of the matrix
-            kMatrix = self.model.koopman.getKoopmanMatrix(requires_grad = True)
+            kMatrix = self.model.koopman.getKoopmanMatrix(requires_grad = False)
             l1_norm = torch.norm(kMatrix, p=1)
 
-            loss = ObsEvo_Loss + 10*Autoencoder_Loss + StateEvo_Loss + (1e-3)*l1_norm
+            loss = ObsEvo_Loss + 100*(Autoencoder_Loss + StateEvo_Loss) #+ 0.1*torch.mean(torch.abs(self.model.koopman.kMatrixDiag)) + 0.1*torch.mean(torch.abs(self.model.koopman.kMatrixUT))#(1e-9)*l1_norm
 
             if mode == "Train":
                 self.optimizer.zero_grad()

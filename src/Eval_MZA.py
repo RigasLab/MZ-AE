@@ -34,7 +34,7 @@ class Eval_MZA(MZA_Experiment):
 
         Returns
         -------
-        StateMSE
+        StateMSE [timesteps]
         '''
         mseLoss     = nn.MSELoss(reduction = 'none')
         StateMSE    = mseLoss(Phi, Phi_hat) #[num_trajs timesteps statedim]
@@ -93,9 +93,12 @@ class Eval_MZA(MZA_Experiment):
             else:
                 seqmodel_out = self.model.seqmodel(x_seq)
                 x_nn_hat     = koop_out + seqmodel_out 
+            
             Phi_nn_hat   = self.model.autoencoder.recover(x_nn_hat)
-            seqmodel_out = self.model.autoencoder.recover(seqmodel_out)
-            koop_out = self.model.autoencoder.recover(koop_out)
+
+            if not self.deactivate_seqmodel:
+                seqmodel_out = self.model.autoencoder.recover(seqmodel_out)
+                koop_out = self.model.autoencoder.recover(koop_out)
 
             # mean_ko, mean_so  = torch.mean(abs(koop_out)), torch.mean(abs(seqmodel_out))
             # koop_ptg = mean_ko/(mean_ko+mean_so)
@@ -134,20 +137,23 @@ class Eval_MZA(MZA_Experiment):
         re_Phi_nn    = Phi_nn.reshape(int(Phi_nn.shape[0]/num_trajs), num_trajs, *Phi_nn.shape[1:])
         Phi_nn       = torch.movedim(re_Phi_nn, 1, 0) #[num_trajs timesteps statedim]
 
-        koop_out    = koop_out.reshape(int(koop_out.shape[0]/num_trajs), num_trajs, *koop_out.shape[1:])
-        koop_out    = torch.movedim(koop_out, 1, 0) #[num_trajs timesteps statedim]
+        if not self.deactivate_seqmodel:
+            koop_out    = koop_out.reshape(int(koop_out.shape[0]/num_trajs), num_trajs, *koop_out.shape[1:])
+            koop_out    = torch.movedim(koop_out, 1, 0) #[num_trajs timesteps statedim]
 
-        seqmodel_out = seqmodel_out.reshape(int(seqmodel_out.shape[0]/num_trajs), num_trajs, *seqmodel_out.shape[1:])
-        seqmodel_out = torch.movedim(seqmodel_out, 1, 0) #[num_trajs timesteps statedim]
+            seqmodel_out = seqmodel_out.reshape(int(seqmodel_out.shape[0]/num_trajs), num_trajs, *seqmodel_out.shape[1:])
+            seqmodel_out = torch.movedim(seqmodel_out, 1, 0) #[num_trajs timesteps statedim]
 
         StateEvo_Loss = Eval_MZA.state_mse(Phi_nn, Phi_nn_hat)
         # mseLoss          = nn.MSELoss(reduction = 'none')
         # StateEvo_Loss    = mseLoss(Phi_nn_hat, Phi_nn) #[num_trajs timesteps statedim]
         # StateEvo_Loss    = torch.mean(StateEvo_Loss, dim = (0,*tuple(range(2,StateEvo_Loss.ndim)))) #[timesteps]
 
-        return x_nn_hat.detach(), Phi_nn_hat.detach(), Phi_nn.detach(), StateEvo_Loss.detach(), koop_out.detach(), seqmodel_out.detach()#avg_loss, avg_ObsEvo_Loss, avg_Autoencoder_Loss, avg_StateEvo_Loss, avg_koop_ptg, avg_seqmodel_ptg
+        if not self.deactivate_seqmodel:
+            return x_nn_hat.detach(), Phi_nn_hat.detach(), Phi_nn.detach(), StateEvo_Loss.detach(), koop_out.detach(), seqmodel_out.detach()#avg_loss, avg_ObsEvo_Loss, avg_Autoencoder_Loss, avg_StateEvo_Loss, avg_koop_ptg, avg_seqmodel_ptg
 
-
+        else:
+            return x_nn_hat.detach(), Phi_nn_hat.detach(), Phi_nn.detach(), StateEvo_Loss.detach()
 
     # def get_initial_conditions_from_data(self, )
 
@@ -174,7 +180,6 @@ class Eval_MZA(MZA_Experiment):
             for n in range(timesteps):
 
                 non_time_dims = (1,)*(x.ndim-1)   #dims apart from timestep in tuple form (1,1,...)
-        
                 if n >= self.seq_len:
                     i_start = n - self.seq_len + 1
                     x_seq_n = x[i_start:(n+1), ...]
