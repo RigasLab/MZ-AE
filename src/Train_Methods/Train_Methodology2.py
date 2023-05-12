@@ -37,8 +37,8 @@ class Train_Methodology2():
         for Phi_seq, Phi_n, Phi_nn, indices in dataloader:
             
             #obtain observables
-            x_nn , _   = self.model.autoencoder(Phi_nn)
-            x_n  , Phi_n_hat   = self.model.autoencoder(Phi_n)
+            x_nn , _         = self.model.autoencoder(Phi_nn)
+            x_n  , Phi_n_hat = self.model.autoencoder(Phi_n)
 
             #reshaping tensors in desired form
             # x_seq = x_seq.reshape(int(x_seq.shape[0]/self.seq_len), self.seq_len, self.num_obs) #[bs seqlen obsdim]

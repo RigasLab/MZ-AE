@@ -19,10 +19,22 @@
 
 # python main.py --dynsys 2DCyl --lr 5e-5 --nepochs 2000 --train_size 0.99 --info lr5e-5 --nhu 40 --seq_len 37 --data_dir Data/2DCylinder/cyl_data_10_2.npy --exp_dir Trained_Models/2DCyl_Num_seqlentest_ts10_2_localtest --num_obs 4 --deactivate_lrscheduler
 
-# python main.py --dynsys 2DCyl --lr 5e-5 --nepochs 2000 --train_size 0.99 --info lr5e-5 --nhu 40 --seq_len 49 --data_dir Data/2DCylinder/cyl_data_10_2.npy --exp_dir Trained_Models/2DCyl_Num_seqlentest_ts10_2_localtest --num_obs 4 --deactivate_lrscheduler
+##2D cyl nhu test
+python main.py --load_epoch 340 --exp_dir Trained_Models/2DCyl_nhutest_ts10_2_localtest --load_exp_name sl8_nhu8_numobs2_bs16_lr5e-5
+# python main.py --dynsys 2DCyl --lr 5e-5 --nepochs 2000 --train_size 0.99 --info lr5e-5 --nhu 8 --data_dir Data/2DCylinder/cyl_data_10_2.npy --exp_dir Trained_Models/2DCyl_nhutest_ts10_2_localtest --num_obs 2 --deactivate_lrscheduler
 
+python main.py --dynsys 2DCyl --lr 5e-5 --nepochs 2000 --train_size 0.99 --info lr5e-5 --nhu 16 --data_dir Data/2DCylinder/cyl_data_10_2.npy --exp_dir Trained_Models/2DCyl_nhutest_ts10_2_localtest --num_obs 2 --deactivate_lrscheduler
 
-python main.py --dynsys KS --lr 5e-5 --nepochs 2000 --train_size 0.8 --info lr5e-5 --nhu 40 --deactivate_seqmodel --data_dir Data/KS/ks_N128_dt0.025_L3.4297890236303448.npy --exp_dir Trained_Models/KS_Numobs_N128_dt0.025_L21.55_localtest --num_obs 32 --deactivate_lrscheduler
+python main.py --dynsys 2DCyl --lr 5e-5 --nepochs 2000 --train_size 0.99 --info lr5e-5 --nhu 32 --data_dir Data/2DCylinder/cyl_data_10_2.npy --exp_dir Trained_Models/2DCyl_nhutest_ts10_2_localtest --num_obs 2 --deactivate_lrscheduler
+
+python main.py --dynsys 2DCyl --lr 5e-5 --nepochs 2000 --train_size 0.99 --info lr5e-5 --nhu 40 --data_dir Data/2DCylinder/cyl_data_10_2.npy --exp_dir Trained_Models/2DCyl_nhutest_ts10_2_localtest --num_obs 2 --deactivate_lrscheduler
+
+python main.py --dynsys 2DCyl --lr 5e-5 --nepochs 2000 --train_size 0.99 --info lr5e-5 --nhu 64 --data_dir Data/2DCylinder/cyl_data_10_2.npy --exp_dir Trained_Models/2DCyl_nhutest_ts10_2_localtest --num_obs 2 --deactivate_lrscheduler
+
+python main.py --dynsys 2DCyl --lr 5e-5 --nepochs 2000 --train_size 0.99 --info lr5e-5 --nhu 128 --data_dir Data/2DCylinder/cyl_data_10_2.npy --exp_dir Trained_Models/2DCyl_nhutest_ts10_2_localtest --num_obs 2 --deactivate_lrscheduler
+
+##KS Experiments
+# python main.py --dynsys KS --lr 5e-5 --nepochs 2000 --train_size 0.8 --info lr5e-5 --nhu 40 --deactivate_seqmodel --data_dir Data/KS/ks_N128_dt0.025_L3.4297890236303448.npy --exp_dir Trained_Models/KS_Numobs_N128_dt0.025_L21.55_localtest --num_obs 32 --deactivate_lrscheduler
 
 
 

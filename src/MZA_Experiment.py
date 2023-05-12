@@ -63,7 +63,7 @@ class MZA_Experiment(DynSystem_Data, Train_Methodology):
             self.no_save_model = args.no_save_model
             self.load_epoch    = args.load_epoch
             if self.load_epoch != 0:
-                self.exp_name = args.exp_name
+                self.exp_name = args.load_exp_name
 
             self.args = args
 
@@ -90,14 +90,18 @@ class MZA_Experiment(DynSystem_Data, Train_Methodology):
         mkdirs(directories)
     
     
-    def log_data(self):
+    def log_data(self, load_model = False):
 
         # Logging Data
         self.metrics = ["epoch","Train_Loss","Train_ObsEvo_Loss","Train_Autoencoder_Loss","Train_StateEvo_Loss"\
                                ,"Test_Loss","Test_ObsEvo_Loss","Test_Autoencoder_Loss","Test_StateEvo_Loss"\
                                ,"Train_koop_ptg", "Train_seqmodel_ptg"\
                                ,"Test_koop_ptg", "Test_seqmodel_ptg"]
-        self.logf = open(self.exp_dir + '/' + self.exp_name + "/out_log/log", "w")
+        if load_model:
+            self.logf = open(self.exp_dir + '/' + self.exp_name + "/out_log/log", "a")
+        else:
+            self.logf = open(self.exp_dir + '/' + self.exp_name + "/out_log/log", "w")
+
         self.log = csv.DictWriter(self.logf, self.metrics)
         self.log.writeheader()
 
@@ -155,7 +159,7 @@ class MZA_Experiment(DynSystem_Data, Train_Methodology):
             self.save_args()
             
         # Initiating Data Logger
-        self.log_data()
+        self.log_data(load_model)
 
         #Training Model
         self.training_loop()

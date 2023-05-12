@@ -37,7 +37,7 @@ if __name__ == "__main__":
 
     #Directory Params ARGS
     parser.add_argument('--exp_dir',    type = str, default = "Trained_Models/Testcode")
-    parser.add_argument('--exp_name',   type = str, default = "")
+    parser.add_argument('--load_exp_name',   type = str, default = "")
     parser.add_argument('--data_dir',   type = str, default = "Data/Duffing/duffing.npy") 
     parser.add_argument('--nsave',      type = int,   default = 10)
     parser.add_argument('--no_save_model', action = 'store_false',  help = "doesn't save model")
@@ -59,21 +59,21 @@ if __name__ == "__main__":
     #Retraining Loaded Data
     else:
         #checking for model
-        dirlist = os.listdir(args.exp_dir+'/'+ args.exp_name+"/model_weights")
+        dirlist = os.listdir(args.exp_dir+'/'+ args.load_exp_name+"/model_weights")
         epochlist = [int(wfname[8:]) for wfname in dirlist]
         
         if(args.load_epoch in epochlist):
             
             print(f"Training from epoch {args.load_epoch}")
             #creating experiment
-            loaded_args = pickle.load(open(args.exp_dir + "/" + args.exp_name + "/args","rb"))
+            loaded_args = pickle.load(open(args.exp_dir + "/" + args.load_exp_name + "/args","rb"))
             
             # print(loaded_args.keys())
             mza  = MZA_Experiment(loaded_args)
             mza.load_epoch = args.load_epoch
             
             #Loading Weights
-            PATH = args.exp_dir+'/'+ args.exp_name+"/model_weights/at_epoch{epoch}".format(epoch=args.load_epoch)
+            PATH = args.exp_dir+'/'+ args.load_exp_name+"/model_weights/at_epoch{epoch}".format(epoch=args.load_epoch)
             mza.model.load_state_dict(torch.load(PATH))
 
             #Training

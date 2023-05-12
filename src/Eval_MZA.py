@@ -4,6 +4,7 @@ import pickle
 import matplotlib.pyplot as plt
 import pandas as pd
 import numpy as np
+import statsmodels.api as sm
 from src.MZA_Experiment import MZA_Experiment
 from torch.utils.data import DataLoader
 
@@ -42,6 +43,42 @@ class Eval_MZA(MZA_Experiment):
         StateMSE    = torch.mean(StateMSE, dim = (0,*tuple(range(2, StateMSE.ndim)))) #[timesteps]
 
         return StateMSE
+
+    @staticmethod
+    def CCF(data1, data2, plot=False):
+        '''
+        Calculates Cross Correlation Function
+
+        Input
+        -----
+        data1 (ndarray): [num_trajs timesteps statedim]   
+        data2 (ndarray): [num_trajs timesteps statedim]
+
+        Returns
+        -------
+        CCF (ndarray): [um_trajs timesteps statedim] 
+        '''
+
+        #calculate cross correlation
+        ccf = sm.tsa.stattools.ccf(data1, data2, adjusted=False)
+
+        # # Variance
+        # var1 = np.var(data[:, 0])
+        # var2 = np.var(data[:, 1])
+        # # Normalized data
+        # ndata1 = data[:, 0] - np.mean(data[:, 0])
+        # ndata2 = data[:, 1] - np.mean(data[:, 1])
+
+        # corr = np.correlate(ndata1, ndata2, 'full')[len(ndata1) - 1:]
+        # corr = corr / np.sqrt(var1 * var2) / len(ndata1)
+
+        # if plot:
+        #     # plt.plot(np.linspace(corr.shape[0] * self.dt, corr.shape[0]), corr)
+        #     plt.plot(corr)
+        #     plt.xlabel("Timeunits")
+        #     plt.ylabel("CCF")
+
+        return ccf
     
     # def predict_dataset()
     def predict_onestep(self, dataset, num_trajs):
@@ -75,7 +112,7 @@ class Eval_MZA(MZA_Experiment):
 
             #obtain observables
             x_seq, Phi_seq_hat = self.model.autoencoder(Phi_seq)
-            # x_nn , _   = self.model.autoencoder(Phi_nn)
+            x_nn , _   = self.model.autoencoder(Phi_nn)
 
             #reshaping tensors in desired form
             adaptive_bs = int(x_seq.shape[0]/self.seq_len)   #adaptive batchsize due to change in size for the last batch
@@ -100,34 +137,6 @@ class Eval_MZA(MZA_Experiment):
                 seqmodel_out = self.model.autoencoder.recover(seqmodel_out)
                 koop_out = self.model.autoencoder.recover(koop_out)
 
-            # mean_ko, mean_so  = torch.mean(abs(koop_out)), torch.mean(abs(seqmodel_out))
-            # koop_ptg = mean_ko/(mean_ko+mean_so)
-            # seq_ptg  = mean_so/(mean_ko+mean_so)
-
-            # #Calculating loss
-            # mseLoss          = nn.MSELoss()
-            # ObsEvo_Loss      = mseLoss(x_nn_hat, x_nn)
-            # Autoencoder_Loss = mseLoss(Phi_n_hat, Phi_n)
-            # StateEvo_Loss    = mseLoss(Phi_nn_hat, Phi_nn)
-
-            # loss = ObsEvo_Loss + Autoencoder_Loss + StateEvo_Loss
-
-            # total_loss             += loss.item()
-            # total_ObsEvo_Loss      += ObsEvo_Loss.item()
-            # total_Autoencoder_Loss += Autoencoder_Loss.item()
-            # total_StateEvo_Loss    += StateEvo_Loss.item()
-            # total_koop_ptg         += koop_ptg
-            # total_seqmodel_ptg     += seq_ptg
-
-        # avg_loss             = total_loss / num_batches
-        # avg_ObsEvo_Loss      = total_ObsEvo_Loss / num_batches
-        # avg_Autoencoder_Loss = total_Autoencoder_Loss / num_batches
-        # avg_StateEvo_Loss    = total_StateEvo_Loss / num_batches
-        # avg_koop_ptg         = total_koop_ptg / num_batches
-        # avg_seqmodel_ptg     = total_seqmodel_ptg / num_batches
-
-        
-
         re_x_nn_hat  = x_nn_hat.reshape(int(x_nn_hat.shape[0]/num_trajs), num_trajs, *x_nn_hat.shape[1:])
         x_nn_hat     = torch.movedim(re_x_nn_hat, 1, 0) #[num_trajs timesteps obsdim]
 
@@ -136,6 +145,10 @@ class Eval_MZA(MZA_Experiment):
 
         re_Phi_nn    = Phi_nn.reshape(int(Phi_nn.shape[0]/num_trajs), num_trajs, *Phi_nn.shape[1:])
         Phi_nn       = torch.movedim(re_Phi_nn, 1, 0) #[num_trajs timesteps statedim]
+
+        re_x_nn    = x_nn.reshape(int(x_nn.shape[0]/num_trajs), num_trajs, *x_nn.shape[1:])
+        x_nn       = torch.movedim(re_x_nn, 1, 0) #[num_trajs timesteps statedim]
+
 
         if not self.deactivate_seqmodel:
             koop_out    = koop_out.reshape(int(koop_out.shape[0]/num_trajs), num_trajs, *koop_out.shape[1:])
@@ -150,10 +163,11 @@ class Eval_MZA(MZA_Experiment):
         # StateEvo_Loss    = torch.mean(StateEvo_Loss, dim = (0,*tuple(range(2,StateEvo_Loss.ndim)))) #[timesteps]
 
         if not self.deactivate_seqmodel:
-            return x_nn_hat.detach(), Phi_nn_hat.detach(), Phi_nn.detach(), StateEvo_Loss.detach(), koop_out.detach(), seqmodel_out.detach()#avg_loss, avg_ObsEvo_Loss, avg_Autoencoder_Loss, avg_StateEvo_Loss, avg_koop_ptg, avg_seqmodel_ptg
+            return x_nn_hat.detach(), Phi_nn_hat.detach(), x_nn.detach(), Phi_nn.detach(), StateEvo_Loss.detach(), koop_out.detach(), seqmodel_out.detach()
+                   #avg_loss, avg_ObsEvo_Loss, avg_Autoencoder_Loss, avg_StateEvo_Loss, avg_koop_ptg, avg_seqmodel_ptg
 
         else:
-            return x_nn_hat.detach(), Phi_nn_hat.detach(), Phi_nn.detach(), StateEvo_Loss.detach()
+            return x_nn_hat.detach(), Phi_nn_hat.detach(), x_nn.detach(), Phi_nn.detach(), StateEvo_Loss.detach()
 
     # def get_initial_conditions_from_data(self, )
 
