@@ -49,7 +49,7 @@ class Train_Methodology():
             
             #Evolving in Time
             koop_out     = self.model.koopman(x_n)
-            if self.deactivate_seqmodel:
+            if self.deactivate_seqmodel:                 
                 x_nn_hat     = koop_out 
             else:
                 seqmodel_out = self.model.seqmodel(x_seq)
@@ -71,7 +71,7 @@ class Train_Methodology():
             kMatrix = self.model.koopman.getKoopmanMatrix(requires_grad = False)
             l1_norm = torch.norm(kMatrix, p=1)
 
-            loss = 0.01*ObsEvo_Loss + 100*(Autoencoder_Loss + StateEvo_Loss) #+ 0.1*torch.mean(torch.abs(self.model.koopman.kMatrixDiag)) + 0.1*torch.mean(torch.abs(self.model.koopman.kMatrixUT))#(1e-9)*l1_norm
+            loss = ObsEvo_Loss + 100*(Autoencoder_Loss + StateEvo_Loss) #+ 0.1*torch.mean(torch.abs(self.model.koopman.kMatrixDiag)) + 0.1*torch.mean(torch.abs(self.model.koopman.kMatrixUT))#(1e-9)*l1_norm
 
             if mode == "Train":
                 self.optimizer.zero_grad()
