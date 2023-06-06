@@ -8,25 +8,26 @@ class Autoencoder(nn.Module):
         super(Autoencoder, self).__init__()
         self.encoder = nn.Sequential(
             nn.Linear(input_size, 512),
-            nn.ReLU(inplace=True),
+            # nn.Tanh(inplace=True),
+            nn.ReLU(),
             nn.Linear(512, 256),
-            nn.ReLU(inplace=True),
+            nn.ReLU(),
             nn.Linear(256, 128),
-            nn.ReLU(inplace=True),
+            nn.ReLU(),
             nn.Linear(128, 64),
-            nn.ReLU(inplace=True),
+            nn.ReLU(),
             nn.Linear(64, latent_size)
         )
 
         self.decoder = nn.Sequential(
             nn.Linear(latent_size, 64),
-            nn.ReLU(inplace=True),
+            nn.ReLU(),
             nn.Linear(64, 128),
-            nn.ReLU(inplace=True),
+            nn.ReLU(),
             nn.Linear(128, 256),
-            nn.ReLU(inplace=True),
+            nn.ReLU(),
             nn.Linear(256, 512),
-            nn.ReLU(inplace=True),
+            nn.ReLU(),
             nn.Linear(512, input_size)
         )
         # self.encoder = nn.Sequential(

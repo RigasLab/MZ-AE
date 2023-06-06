@@ -28,7 +28,7 @@ class DynSystem_Data:
             self.lp_data = self.lp_data[:,self.ntransients:,:]
         
         elif self.dynsys == "2DCyl":
-            self.lp_data = self.lp_data
+            self.lp_data = self.lp_data[:,self.ntransients:,:]
 
             
         print("Data Shape: ", self.lp_data.shape)

@@ -99,11 +99,12 @@ class MZA_Experiment(DynSystem_Data, Train_Methodology):
                                ,"Test_koop_ptg", "Test_seqmodel_ptg"]
         if load_model:
             self.logf = open(self.exp_dir + '/' + self.exp_name + "/out_log/log", "a")
+            self.log = csv.DictWriter(self.logf, self.metrics)
+
         else:
             self.logf = open(self.exp_dir + '/' + self.exp_name + "/out_log/log", "w")
-
-        self.log = csv.DictWriter(self.logf, self.metrics)
-        self.log.writeheader()
+            self.log = csv.DictWriter(self.logf, self.metrics)
+            self.log.writeheader()
 
         print("Logger Initialised")
 
