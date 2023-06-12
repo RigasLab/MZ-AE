@@ -71,7 +71,7 @@ class Train_Methodology():
             kMatrix = self.model.koopman.getKoopmanMatrix(requires_grad = False)
             l1_norm = torch.norm(kMatrix, p=1)
 
-            loss = 0.1*ObsEvo_Loss + 100*(Autoencoder_Loss + StateEvo_Loss) #+ 0.1*torch.mean(torch.abs(self.model.koopman.kMatrixDiag)) + 0.1*torch.mean(torch.abs(self.model.koopman.kMatrixUT))#(1e-9)*l1_norm
+            loss = ObsEvo_Loss + 100*(Autoencoder_Loss + StateEvo_Loss) #+ 0.1*torch.mean(torch.abs(self.model.koopman.kMatrixDiag)) + 0.1*torch.mean(torch.abs(self.model.koopman.kMatrixUT))#(1e-9)*l1_norm
 
             if mode == "Train":
                 self.optimizer.zero_grad()
@@ -117,6 +117,11 @@ class Train_Methodology():
                 self.scheduler.step()
                 after_lr = self.optimizer.param_groups[0]["lr"]
                 print("Epoch %d: SGD lr %.6f -> %.6f" % (ix_epoch, before_lr, after_lr))
+            
+            #Activating seq_model in between if asked
+            if self.nepoch_actseqmodel!=0:
+                if ix_epoch == self.nepoch_actseqmodel:
+                    self.deactivate_seqmodel = False
 
             test_loss, test_ObsEvo_Loss, test_Autoencoder_Loss, test_StateEvo_Loss, test_koop_ptg, test_seqmodel_ptg  = self.train_test_loss("Test", self.test_dataloader)
             print(f"Epoch {ix_epoch}  ")

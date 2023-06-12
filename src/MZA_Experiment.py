@@ -50,9 +50,10 @@ class MZA_Experiment(DynSystem_Data, Train_Methodology):
             #Model Training # Model Hyper-parameters
             self.learning_rate    = args.lr      
             self.deactivate_lrscheduler = args.deactivate_lrscheduler        
-            self.nepochs          = args.nepochs
-            self.norm_input       = args.norm_input         #if input should be normalised
-            self.npredsteps       = args.npredsteps
+            self.nepochs            = args.nepochs
+            self.norm_input         = args.norm_input         #if input should be normalised
+            self.npredsteps         = args.npredsteps
+            self.nepoch_actseqmodel = args.nepoch_actseqmodel
 
             #Directory Parameters
             self.nsave         = args.nsave                 #after how many epochs to save
