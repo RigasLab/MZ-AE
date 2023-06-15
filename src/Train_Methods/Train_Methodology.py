@@ -53,7 +53,7 @@ class Train_Methodology():
                 x_nn_hat     = koop_out 
             else:
                 seqmodel_out = self.model.seqmodel(x_seq)
-                x_nn_hat     = koop_out + seqmodel_out 
+                x_nn_hat     = koop_out + self.seq_model_weight*seqmodel_out 
             Phi_nn_hat   = self.model.autoencoder.recover(x_nn_hat)
 
             #Calculating contribution
@@ -71,7 +71,7 @@ class Train_Methodology():
             kMatrix = self.model.koopman.getKoopmanMatrix(requires_grad = False)
             l1_norm = torch.norm(kMatrix, p=1)
 
-            loss = ObsEvo_Loss + 100*(Autoencoder_Loss + StateEvo_Loss) #+ 0.1*torch.mean(torch.abs(self.model.koopman.kMatrixDiag)) + 0.1*torch.mean(torch.abs(self.model.koopman.kMatrixUT))#(1e-9)*l1_norm
+            loss = ObsEvo_Loss + 100*(Autoencoder_Loss + StateEvo_Loss) + 0.00001*(torch.norm(abs(Phi_n_hat - Phi_n), float('inf')) + torch.norm(abs(Phi_nn_hat - Phi_nn), float('inf')))#+ 0.1*torch.mean(torch.abs(self.model.koopman.kMatrixDiag)) + 0.1*torch.mean(torch.abs(self.model.koopman.kMatrixUT))#(1e-9)*l1_norm
 
             if mode == "Train":
                 self.optimizer.zero_grad()
@@ -107,10 +107,11 @@ class Train_Methodology():
         test_loss, test_ObsEvo_Loss, test_Autoencoder_Loss, test_StateEvo_Loss, test_koop_ptg, test_seqmodel_ptg = self.train_test_loss("Test", self.test_dataloader)
         print(f"Test Loss: {test_loss}, ObsEvo : {test_ObsEvo_Loss}, Auto : {test_Autoencoder_Loss}, StateEvo : {test_StateEvo_Loss}")
 
+        # min train loss
+        self.min_train_loss = 1000 
+        
         for ix_epoch in range(self.load_epoch, self.load_epoch + self.nepochs):
 
-            train_loss, train_ObsEvo_Loss, train_Autoencoder_Loss, train_StateEvo_Loss, train_koop_ptg, train_seqmodel_ptg = self.train_test_loss("Train")
-            
             #learning rate customization
             if not self.deactivate_lrscheduler:
                 before_lr = self.optimizer.param_groups[0]["lr"]
@@ -122,8 +123,15 @@ class Train_Methodology():
             if self.nepoch_actseqmodel!=0:
                 if ix_epoch == self.nepoch_actseqmodel:
                     self.deactivate_seqmodel = False
+                    for param in self.model.seqmodel.parameters():
+                        param.requires_grad = True
+                    
+                    print("SEQMODEL : ", not self.deactivate_seqmodel)
 
+            train_loss, train_ObsEvo_Loss, train_Autoencoder_Loss, train_StateEvo_Loss, train_koop_ptg, train_seqmodel_ptg = self.train_test_loss("Train")
             test_loss, test_ObsEvo_Loss, test_Autoencoder_Loss, test_StateEvo_Loss, test_koop_ptg, test_seqmodel_ptg  = self.train_test_loss("Test", self.test_dataloader)
+            
+            #printing and saving data
             print(f"Epoch {ix_epoch}  ")
             print(f"Train Loss: {train_loss}, ObsEvo : {train_ObsEvo_Loss}, Auto : {train_Autoencoder_Loss}, StateEvo : {train_StateEvo_Loss} \
                     \n Test Loss: {test_loss}, ObsEvo : {test_ObsEvo_Loss}, Auto : {test_Autoencoder_Loss}, StateEvo : {test_StateEvo_Loss}")
@@ -132,6 +140,11 @@ class Train_Methodology():
                                                 "Train_koop_ptg": train_koop_ptg, "Train_seqmodel_ptg": train_seqmodel_ptg,\
                                                 "Test_koop_ptg": test_koop_ptg, "Test_seqmodel_ptg": test_seqmodel_ptg})
             self.logf.flush()
+
+            
+            if self.min_train_loss > train_loss:
+                self.min_train_loss = train_loss
+                torch.save(self.model.state_dict(), self.exp_dir+'/'+ self.exp_name+"/model_weights/min_train_loss".format(epoch=ix_epoch))
 
             if (ix_epoch%self.nsave == 0):
                 #saving weights

@@ -20,12 +20,14 @@ if __name__ == "__main__":
     parser.add_argument('--nlayers', type = int,   default=1)
     parser.add_argument('--npredsteps', type = int,   default=1)
     parser.add_argument('--deactivate_seqmodel', action = 'store_true', help = "deactivates the seqmodel for prediction")
-    parser.add_argument('--chg_deactivate_seqmodel', action = 'store_true', help = "change deactivate_seqmodel status")
-    # parser.add_argument('--nepoch_actseqmodel', type = int, default = 0, help = "epoch at which to activate seq_model")
+    # parser.add_argument('--chg_deactivate_seqmodel', action = 'store_true', help = "change deactivate_seqmodel status")
+    parser.add_argument('--nepoch_actseqmodel', type = int, default = 0, help = "epoch at which to activate seq_model")
 
     #LSTM Params ARGS
     parser.add_argument('--nhu',     type = int,   default=40)
     parser.add_argument('--seq_len', type = int,   default=8)
+    parser.add_argument('--seq_model_weight', type = float, default = 1.0, help = "sequence model weight")
+
 
     #AUTOENCODER Params ARGS
     parser.add_argument('--num_obs', type = int,   default=50)
@@ -74,14 +76,14 @@ if __name__ == "__main__":
             mza  = MZA_Experiment(loaded_args)
             mza.load_epoch = args.load_epoch
 
-            #to change the deactivate seqmodel status
-            if args.chg_deactivate_seqmodel:
-                mza.deactivate_seqmodel = not mza.deactivate_seqmodel
+            # #to change the deactivate seqmodel status
+            # if args.chg_deactivate_seqmodel:
+            #     mza.deactivate_seqmodel = not mza.deactivate_seqmodel
             
             #Loading Weights
             PATH = args.exp_dir+'/'+ args.load_exp_name+"/model_weights/at_epoch{epoch}".format(epoch=args.load_epoch)
             mza.model.load_state_dict(torch.load(PATH))
-            mza.exp_dir = args.exp_dir
+            # mza.exp_dir = args.exp_dir
             #Training
             mza.main_train(load_model = True)
 

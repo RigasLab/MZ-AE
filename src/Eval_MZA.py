@@ -20,6 +20,13 @@ class Eval_MZA(MZA_Experiment):
         self.exp_dir = exp_dir
         self.exp_name = exp_name
 
+        try:
+            if self.nepoch_actseqmodel != 0:
+                self.deactivate_seqmodel = False
+        except Exception as error:
+            print("An exception occurred:", error)
+            
+
     def load_weights(self, epoch_num):
 
         PATH = self.exp_dir+'/'+ self.exp_name+"/model_weights/at_epoch{epoch}".format(epoch=epoch_num)
@@ -244,6 +251,9 @@ class Eval_MZA(MZA_Experiment):
     def plot_learning_curves(self):
 
         df = pd.read_csv(self.exp_dir+'/'+self.exp_name+"/out_log/log")
+
+        min_trainloss = df.loc[df['Train_Loss'].idxmin(), 'epoch']
+        print("Epoch with Minimum train_error: ", min_trainloss)
 
         #Total Loss
         plt.figure()

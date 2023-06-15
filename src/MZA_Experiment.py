@@ -46,6 +46,7 @@ class MZA_Experiment(DynSystem_Data, Train_Methodology):
             self.deactivate_seqmodel = args.deactivate_seqmodel
             self.num_layers          = args.nlayers
             self.num_hidden_units    = args.nhu
+            self.seq_model_weight    = args.seq_model_weight
 
             #Model Training # Model Hyper-parameters
             self.learning_rate    = args.lr      
