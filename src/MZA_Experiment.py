@@ -53,8 +53,9 @@ class MZA_Experiment(DynSystem_Data, Train_Methodology):
             self.deactivate_lrscheduler = args.deactivate_lrscheduler        
             self.nepochs            = args.nepochs
             self.norm_input         = args.norm_input         #if input should be normalised
-            self.npredsteps         = args.npredsteps
+            # self.npredsteps         = args.npredsteps
             self.nepoch_actseqmodel = args.nepoch_actseqmodel
+            self.pred_horizon       = args.pred_horizon
 
             #Directory Parameters
             self.nsave         = args.nsave                 #after how many epochs to save

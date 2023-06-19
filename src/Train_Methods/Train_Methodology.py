@@ -7,6 +7,53 @@ import matplotlib.pyplot as plt
 
 class Train_Methodology():
 
+    def time_evolution(self, initial_x_n, initial_x_seq, initial_Phi_n):
+
+        """
+        Calculates multistep prediction from koopman and seqmodel while training
+        Inputs
+        ------
+        initial_x_n (torch tensor): [bs obsdim]
+        initial_x_seq (torch tensor): [bs seq_len obsdim]
+        initial_Phi_n (torch tensor): [bs statedim]
+
+        Returns
+        -------
+        x_nn_hat_ph (torch_tensor): [bs pred_horizon obsdim]
+        Phi_nn_hat (torch_tensor): [bs pred_horizon statedim]
+        """
+
+        x_n   = initial_x_n 
+        x_seq = initial_x_seq
+        x_nn_hat_ph = x_n.clone()[:,None,...]   #[bs 1 obsdim]
+        Phi_nn_hat_ph = initial_Phi_n.clone()[:,None,...] #[bs 1 statedim]
+
+        #Evolving in Time
+        for t in range(self.pred_horizon):
+     
+            koop_out     = self.model.koopman(x_n)
+            if self.deactivate_seqmodel:                 
+                x_nn_hat     = koop_out 
+            else:
+                seqmodel_out = self.model.seqmodel(x_seq)
+                x_nn_hat     = koop_out + self.seq_model_weight*seqmodel_out 
+            Phi_nn_hat   = self.model.autoencoder.recover(x_nn_hat)
+            
+            #concatenating prediction
+            x_nn_hat_ph = torch.cat((x_nn_hat_ph,x_nn_hat[:,None,...]), 1)
+            Phi_nn_hat_ph = torch.cat((Phi_nn_hat_ph,Phi_nn_hat[:,None,...]), 1)
+
+            #forming sequence for next step prediction
+            if t != self.pred_horizon-1 : 
+                x_seq = torch.cat((x_seq[:,1:,...],x_n[:,None,...]), 1)
+                x_n = x_nn_hat
+        
+        return x_nn_hat_ph[:,1:,...], Phi_nn_hat_ph[:,1:,...]
+        
+
+
+
+
     def train_test_loss(self, mode = "Train", dataloader = None):
         '''
         One Step Prediction method
@@ -31,30 +78,40 @@ class Train_Methodology():
         for Phi_seq, Phi_nn in dataloader:
             
             Phi_n   = torch.squeeze(Phi_seq[:,-1,...])  #[bs statedim]
+            Phi_n_ph = torch.cat((Phi_n[:,None,...], Phi_nn[:,:-1,...]), 1) #[bs pred_horizon statedim]
             
-            #flattening batchsize seqlen
+            #flattening batchsize seqlen / batchsize pred_horizon
             Phi_seq = torch.flatten(Phi_seq, start_dim = 0, end_dim = 1) #[bs*seqlen, statedim]
+            Phi_nn  = torch.flatten(Phi_nn, start_dim = 0, end_dim = 1) #[bs*pred_horizon, statedim]
             #obtain observables
             x_seq, Phi_seq_hat = self.model.autoencoder(Phi_seq)
             x_nn , _   = self.model.autoencoder(Phi_nn)
 
             #reshaping tensors in desired form
             sd = (self.statedim,) if str(type(self.statedim)) == "<class 'int'>" else self.statedim
+            
+            Phi_nn_ph   = Phi_nn.reshape(int(Phi_nn.shape[0]/self.pred_horizon), self.pred_horizon, *sd) #[bs pred_horizon statedim]
             Phi_seq_hat = Phi_seq_hat.reshape(int(Phi_seq_hat.shape[0]/self.seq_len), self.seq_len, *sd) #[bs seqlen statedim]
-            Phi_n_hat   = torch.squeeze(Phi_seq_hat[:, -1, :]) 
-
+            Phi_n_hat   = torch.squeeze(Phi_seq_hat[:, -1, :])
+             
+            x_nn_ph  = x_nn.reshape(int(x_nn.shape[0]/self.pred_horizon), self.pred_horizon, self.num_obs) #[bs pred_horizon obsdim]
             x_seq = x_seq.reshape(int(x_seq.shape[0]/self.seq_len), self.seq_len, self.num_obs) #[bs seqlen obsdim]
             x_n   = torch.squeeze(x_seq[:,-1,:])  #[bs obsdim] 
-            x_seq = x_seq[:,:-1,:] #removing the current timestep from sequence The sequence length is one less than input
+            x_seq = x_seq[:,:-1,:] #removing the current timestep from sequence. The sequence length is one less than input
             
-            #Evolving in Time
-            koop_out     = self.model.koopman(x_n)
-            if self.deactivate_seqmodel:                 
-                x_nn_hat     = koop_out 
-            else:
-                seqmodel_out = self.model.seqmodel(x_seq)
-                x_nn_hat     = koop_out + self.seq_model_weight*seqmodel_out 
-            Phi_nn_hat   = self.model.autoencoder.recover(x_nn_hat)
+            # #Evolving in Time
+            x_nn_hat_ph, Phi_nn_hat_ph = self.time_evolution(x_n, x_seq, Phi_n)
+
+            Phi_n_hat_ph = torch.cat((Phi_n_hat[:,None,...], Phi_nn_hat_ph[:,:-1,...]), 1)
+
+            
+            # koop_out     = self.model.koopman(x_n)
+            # if self.deactivate_seqmodel:                 
+            #     x_nn_hat     = koop_out 
+            # else:
+            #     seqmodel_out = self.model.seqmodel(x_seq)
+            #     x_nn_hat     = koop_out + self.seq_model_weight*seqmodel_out 
+            # Phi_nn_hat   = self.model.autoencoder.recover(x_nn_hat)
 
             #Calculating contribution
             # mean_ko, mean_so  = torch.mean(abs(koop_out)), torch.mean(abs(seqmodel_out))
@@ -63,15 +120,15 @@ class Train_Methodology():
 
             #Calculating loss
             mseLoss       = nn.MSELoss()
-            ObsEvo_Loss   = mseLoss(x_nn_hat, x_nn)
-            Autoencoder_Loss = mseLoss(Phi_n_hat, Phi_n)
-            StateEvo_Loss = mseLoss(Phi_nn_hat, Phi_nn)
+            ObsEvo_Loss   = mseLoss(x_nn_hat_ph, x_nn_ph)
+            Autoencoder_Loss = mseLoss(Phi_n_hat_ph, Phi_n_ph)
+            StateEvo_Loss = mseLoss(Phi_nn_hat_ph, Phi_nn_ph)
 
             #calculating l1 norm of the matrix
             kMatrix = self.model.koopman.getKoopmanMatrix(requires_grad = False)
-            l1_norm = torch.norm(kMatrix, p=1)
+            # l1_norm = torch.norm(kMatrix, p=1)
 
-            loss = ObsEvo_Loss + 100*(Autoencoder_Loss + StateEvo_Loss) + 0.00001*(torch.norm(abs(Phi_n_hat - Phi_n), float('inf')) + torch.norm(abs(Phi_nn_hat - Phi_nn), float('inf')))#+ 0.1*torch.mean(torch.abs(self.model.koopman.kMatrixDiag)) + 0.1*torch.mean(torch.abs(self.model.koopman.kMatrixUT))#(1e-9)*l1_norm
+            loss = ObsEvo_Loss + 100*(Autoencoder_Loss + StateEvo_Loss) #+ 0.00001*(torch.norm(abs(Phi_n_hat - Phi_n), float('inf')) + torch.norm(abs(Phi_nn_hat - Phi_nn), float('inf')))#+ 0.1*torch.mean(torch.abs(self.model.koopman.kMatrixDiag)) + 0.1*torch.mean(torch.abs(self.model.koopman.kMatrixUT))#(1e-9)*l1_norm
 
             if mode == "Train":
                 self.optimizer.zero_grad()
