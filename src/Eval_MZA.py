@@ -27,9 +27,12 @@ class Eval_MZA(MZA_Experiment):
             print("An exception occurred:", error)
             
 
-    def load_weights(self, epoch_num):
+    def load_weights(self, epoch_num, min_loss = False):
 
-        PATH = self.exp_dir+'/'+ self.exp_name+"/model_weights/at_epoch{epoch}".format(epoch=epoch_num)
+        if min_loss:
+            PATH = self.exp_dir+'/'+ self.exp_name+"/model_weights/min_train_loss".format(epoch=epoch_num)
+        else:
+            PATH = self.exp_dir+'/'+ self.exp_name+"/model_weights/at_epoch{epoch}".format(epoch=epoch_num)
         self.model.load_state_dict(torch.load(PATH))
 
     @staticmethod

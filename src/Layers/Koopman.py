@@ -31,16 +31,18 @@ class Koopman(nn.Module):
             x_nn (torch.Tensor): [bs obsdim] predicted observables at the next time-step
         '''
         # assert g.size(-1) == self.kMatrix.size(0), 'Observables should have dim {}'.format(self.kMatrix.size(0))
-        # Build Koopman matrix (skew-symmetric with diagonal)
         kMatrix = self.kMatrix
-        # kMatrix = Variable(torch.Tensor(self.latent_size, self.latent_size)).to(self.device)
+        # Build Koopman matrix (skew-symmetric with diagonal)
+        
+        # self.kMatrix = Variable(torch.Tensor(self.latent_size, self.latent_size)).to(self.device)
         # utIdx = torch.triu_indices(self.latent_size, self.latent_size, offset=1)
         # diagIdx = torch.stack([torch.arange(0,self.latent_size,dtype=torch.long).unsqueeze(0), \
         #     torch.arange(0,self.latent_size,dtype=torch.long).unsqueeze(0)], dim=0)
-        # kMatrix[utIdx[0], utIdx[1]] = self.kMatrixUT
-        # kMatrix[utIdx[1], utIdx[0]] = -self.kMatrixUT
-        # kMatrix[diagIdx[0], diagIdx[1]] = torch.nn.functional.relu(self.kMatrixDiag)
-        x_nn = torch.bmm(x_n.unsqueeze(1), kMatrix.expand(x_n.size(0), kMatrix.size(0), kMatrix.size(0)))
+        # self.kMatrix[utIdx[0], utIdx[1]] = self.kMatrixUT
+        # self.kMatrix[utIdx[1], utIdx[0]] = -self.kMatrixUT
+        # self.kMatrix[diagIdx[0], diagIdx[1]] = torch.nn.functional.relu(self.kMatrixDiag)
+        x_nn = torch.bmm(x_n.unsqueeze(1), self.kMatrix.expand(x_n.size(0), self.kMatrix.size(0), self.kMatrix.size(0)))
+        
         return x_nn.squeeze(1)
 
     def getKoopmanMatrix(self, requires_grad=False):
