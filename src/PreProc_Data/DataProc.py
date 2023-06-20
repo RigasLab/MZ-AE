@@ -1,6 +1,7 @@
 import torch
 from torch.utils.data import Dataset
 import numpy as np
+
 '''
 Dataset works with Training Methodology1 
 This method is straightforward adding of Koopman and RNN output without ensurinig

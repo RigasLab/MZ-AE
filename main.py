@@ -13,7 +13,7 @@ if __name__ == "__main__":
     parser.add_argument('--load_epoch', type = int, default = 0 ,help = "loads model at a particular epoch for training")
     parser.add_argument('--dynsys', type = str, default = "2DCyl")
     parser.add_argument('--deactivate_lrscheduler', action = 'store_true', help = "deactivates the lrscheduler for prediction")
-    parser.add_argument('--pred_horizon', type = int, default = 20, help = "Number of steps to predict over while calculating loss")
+    parser.add_argument('--pred_horizon', type = int, default = 100, help = "Number of steps to predict over while calculating loss")
 
 
     #training Params ARGS
@@ -35,9 +35,9 @@ if __name__ == "__main__":
     parser.add_argument('--num_obs', type = int,   default=5)
     
     #Data Params ARGS
-    parser.add_argument('--ntransients', type = int,   default = 100)
+    parser.add_argument('--ntransients', type = int,   default = 130)
     parser.add_argument('--bs',          type = int,   default = 16)
-    parser.add_argument('--train_size',  type = float, default = 0.8)
+    parser.add_argument('--train_size',  type = float, default = 0.99)
     parser.add_argument('--norm_input',  action = 'store_true',  help = "normalises input")
     parser.add_argument('--time_sample', type = int, default = 10, help = "time sampling size")
 

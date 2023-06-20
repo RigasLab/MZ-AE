@@ -7,7 +7,7 @@ import matplotlib.pyplot as plt
 
 class Train_Methodology():
 
-    def time_evolution(self, initial_x_n, initial_x_seq, initial_Phi_n):
+    def time_evolution(self, initial_x_n, initial_x_seq, initial_Phi_n, ph_size):
 
         """
         Calculates multistep prediction from koopman and seqmodel while training
@@ -16,6 +16,7 @@ class Train_Methodology():
         initial_x_n (torch tensor): [bs obsdim]
         initial_x_seq (torch tensor): [bs seq_len obsdim]
         initial_Phi_n (torch tensor): [bs statedim]
+        ph_size (int) : variable pred_horizon acccording to future data available
 
         Returns
         -------
@@ -29,7 +30,7 @@ class Train_Methodology():
         Phi_nn_hat_ph = initial_Phi_n.clone()[:,None,...] #[bs 1 statedim]
 
         #Evolving in Time
-        for t in range(self.pred_horizon):
+        for t in range(ph_size):
      
             koop_out     = self.model.koopman(x_n)
             if self.deactivate_seqmodel:                 
@@ -44,9 +45,9 @@ class Train_Methodology():
             Phi_nn_hat_ph = torch.cat((Phi_nn_hat_ph,Phi_nn_hat[:,None,...]), 1)
 
             #forming sequence for next step prediction
-            if t != self.pred_horizon-1 : 
-                x_seq = torch.cat((x_seq[:,1:,...],x_n[:,None,...]), 1)
-                x_n = x_nn_hat
+            # if t != self.pred_horizon-1 : 
+            x_seq = torch.cat((x_seq[:,1:,...],x_n[:,None,...]), 1)
+            x_n = x_nn_hat
         
         return x_nn_hat_ph[:,1:,...], Phi_nn_hat_ph[:,1:,...]
         
@@ -75,35 +76,42 @@ class Train_Methodology():
         total_koop_ptg, total_seqmodel_ptg = 0,0
         
 
-        for Phi_seq, Phi_nn in dataloader:
+        for Phi_seq, Phi_nn_ph in dataloader:
             
-            Phi_n   = torch.squeeze(Phi_seq[:,-1,...])  #[bs statedim]
-            Phi_n_ph = torch.cat((Phi_n[:,None,...], Phi_nn[:,:-1,...]), 1) #[bs pred_horizon statedim]
+            ph_size = Phi_nn_ph.shape[1] # pred_horizon size can vary depending on future steps available in data
+
+            Phi_n   = torch.squeeze(Phi_seq[:,-1,...])  
+            Phi_n = Phi_n[None,...] if (Phi_n.ndim == self.state_ndim) else Phi_n #[bs statedim]
+            Phi_n_ph = torch.cat((Phi_n[:,None,...], Phi_nn_ph[:,:-1,...]), 1)    #[bs ph_size statedim]
             
             #flattening batchsize seqlen / batchsize pred_horizon
             Phi_seq = torch.flatten(Phi_seq, start_dim = 0, end_dim = 1) #[bs*seqlen, statedim]
-            Phi_nn  = torch.flatten(Phi_nn, start_dim = 0, end_dim = 1) #[bs*pred_horizon, statedim]
+            Phi_nn_ph  = torch.flatten(Phi_nn_ph, start_dim = 0, end_dim = 1) #[bs*ph_size, statedim]
             #obtain observables
             x_seq, Phi_seq_hat = self.model.autoencoder(Phi_seq)
-            x_nn , _   = self.model.autoencoder(Phi_nn)
+            x_nn_ph , Phi_nn_hat_ph_nolatentevol = self.model.autoencoder(Phi_nn_ph)
 
             #reshaping tensors in desired form
             sd = (self.statedim,) if str(type(self.statedim)) == "<class 'int'>" else self.statedim
             
-            Phi_nn_ph   = Phi_nn.reshape(int(Phi_nn.shape[0]/self.pred_horizon), self.pred_horizon, *sd) #[bs pred_horizon statedim]
+            Phi_nn_ph   = Phi_nn_ph.reshape(int(Phi_nn_ph.shape[0]/ph_size), ph_size, *sd) #[bs ph_size statedim]
+            Phi_nn_hat_ph_nolatentevol = Phi_nn_hat_ph_nolatentevol.reshape(int(Phi_nn_hat_ph_nolatentevol.shape[0]/ph_size), ph_size, *sd) #[bs pred_horizon statedim]
             Phi_seq_hat = Phi_seq_hat.reshape(int(Phi_seq_hat.shape[0]/self.seq_len), self.seq_len, *sd) #[bs seqlen statedim]
             Phi_n_hat   = torch.squeeze(Phi_seq_hat[:, -1, :])
+            Phi_n_hat = Phi_n_hat[None,...] if (Phi_n_hat.ndim == self.state_ndim) else Phi_n_hat #[bs statedim]
+
+            Phi_n_hat_ph = torch.cat((Phi_n_hat[:,None,...], Phi_nn_hat_ph_nolatentevol[:,:-1,...]), 1)  #obtaining decoded state tensor
              
-            x_nn_ph  = x_nn.reshape(int(x_nn.shape[0]/self.pred_horizon), self.pred_horizon, self.num_obs) #[bs pred_horizon obsdim]
+            x_nn_ph  = x_nn_ph.reshape(int(x_nn_ph.shape[0]/ph_size), ph_size, self.num_obs) #[bs ph_size obsdim]
             x_seq = x_seq.reshape(int(x_seq.shape[0]/self.seq_len), self.seq_len, self.num_obs) #[bs seqlen obsdim]
-            x_n   = torch.squeeze(x_seq[:,-1,:])  #[bs obsdim] 
+            x_n   = torch.squeeze(x_seq[:,-1,:])   
+            x_n   = x_n[None,...] if (x_n.ndim == 1) else x_n #[bs obsdim]
             x_seq = x_seq[:,:-1,:] #removing the current timestep from sequence. The sequence length is one less than input
             
             # #Evolving in Time
-            x_nn_hat_ph, Phi_nn_hat_ph = self.time_evolution(x_n, x_seq, Phi_n)
+            x_nn_hat_ph, Phi_nn_hat_ph = self.time_evolution(x_n, x_seq, Phi_n, ph_size)
 
-            Phi_n_hat_ph = torch.cat((Phi_n_hat[:,None,...], Phi_nn_hat_ph[:,:-1,...]), 1)
-
+            
             
             # koop_out     = self.model.koopman(x_n)
             # if self.deactivate_seqmodel:                 
