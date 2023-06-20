@@ -136,7 +136,7 @@ class Train_Methodology():
             kMatrix = self.model.koopman.getKoopmanMatrix(requires_grad = False)
             # l1_norm = torch.norm(kMatrix, p=1)
 
-            loss = ObsEvo_Loss + 100*(Autoencoder_Loss + StateEvo_Loss) #+ 0.00001*(torch.norm(abs(Phi_n_hat - Phi_n), float('inf')) + torch.norm(abs(Phi_nn_hat - Phi_nn), float('inf')))#+ 0.1*torch.mean(torch.abs(self.model.koopman.kMatrixDiag)) + 0.1*torch.mean(torch.abs(self.model.koopman.kMatrixUT))#(1e-9)*l1_norm
+            loss = 10*ObsEvo_Loss + 100*(Autoencoder_Loss + StateEvo_Loss) #+ 0.00001*(torch.norm(abs(Phi_n_hat - Phi_n), float('inf')) + torch.norm(abs(Phi_nn_hat - Phi_nn), float('inf')))#+ 0.1*torch.mean(torch.abs(self.model.koopman.kMatrixDiag)) + 0.1*torch.mean(torch.abs(self.model.koopman.kMatrixUT))#(1e-9)*l1_norm
 
             if mode == "Train":
                 self.optimizer.zero_grad()

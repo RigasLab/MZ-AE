@@ -66,6 +66,9 @@ if __name__ == "__main__":
     else:
         #checking for model
         dirlist = os.listdir(args.exp_dir+'/'+ args.load_exp_name+"/model_weights")
+        while("min_train_loss" in dirlist):
+            dirlist.remove("min_train_loss")
+        
         epochlist = [int(wfname[8:]) for wfname in dirlist]
         
         if(args.load_epoch in epochlist):

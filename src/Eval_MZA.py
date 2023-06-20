@@ -119,6 +119,7 @@ class Eval_MZA(MZA_Experiment):
             
             #flattening batchsize seqlen
             Phi_seq = torch.flatten(Phi_seq, start_dim = 0, end_dim = 1)   #[bs*seqlen, statedim]
+            Phi_nn = torch.squeeze(Phi_nn)
 
             #obtain observables
             x_seq, Phi_seq_hat = self.model.autoencoder(Phi_seq)
@@ -200,6 +201,7 @@ class Eval_MZA(MZA_Experiment):
             
             x   = x_n[None,...]                       #[timesteps num_trajs obsdim]
             Phi = Phi_n[None, ...]                    #[timesteps num_trajs statedim]
+            # Phi_koop = Phi_n[None, ...]
 
             for n in range(timesteps):
 
@@ -230,14 +232,21 @@ class Eval_MZA(MZA_Experiment):
                     seqmodel_out = self.model.seqmodel(x_seq_n)
                     x_nn         = koop_out + seqmodel_out 
                 Phi_nn = self.model.autoencoder.recover(x_nn)
+                Phi_nn_koop = self.model.autoencoder.recover(koop_out)
 
                 x   = torch.cat((x,x_nn[None,...]), 0)
                 Phi = torch.cat((Phi,Phi_nn[None,...]), 0)
 
+                if n == 0:
+                    Phi_koop = Phi_nn_koop[None,...]
+                else:
+                    Phi_koop = torch.cat((Phi_koop, Phi_nn_koop[None,...]), 0)
+
             x   = torch.movedim(x, 1, 0)   #[num_trajs timesteps obsdim]
             Phi = torch.movedim(Phi, 1, 0) #[num_trajs timesteps statedim]
+            Phi_koop = torch.movedim(Phi_koop, 1, 0) #[num_trajs timesteps-1 statedim]
 
-            return x.detach(), Phi.detach()
+            return x.detach(), Phi.detach(), Phi_koop.detach()
     
     def plot_eigenvectors(self, initial_conditions, timesteps):
 
