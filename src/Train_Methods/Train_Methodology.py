@@ -166,7 +166,7 @@ class Train_Methodology():
             total_loss += loss.item()
             total_KoopEvo_Loss +=  KoopEvo_Loss.item()
             if not self.deactivate_seqmodel:
-                total_Residual_Loss += Residual_Loss.item()
+                total_Residual_Loss += 0#Residual_Loss.item()
             total_Autoencoder_Loss += Autoencoder_Loss.item()
             total_StateEvo_Loss += StateEvo_Loss.item()
             total_koop_ptg         += 0#koop_ptg

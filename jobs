@@ -83,7 +83,7 @@
 
 #Residual test training
 # python main.py --load_epoch 700 --exp_dir Trained_Models/Exp4.0_Transient_2DCyl_MULTISTEP_localtest --load_exp_name sl33_nhu40_numobs5_bs16_lr5e-5_ph100_without_seqmodel --nepochs 3000
-python main.py --dynsys 2DCyl --lr 5e-5 --nepochs 3000 --nsave 50 --train_size 0.99 --info lr5e-5_ph100 --data_dir Data/2DCylinder/processed_data/npyfiles/nektar_cyl_data_20_dt0.25_T200.npy --exp_dir Trained_Models/ResidualTest_localtest --num_obs 5 --ntransients 130 --nhu 40 --seq_len 33 --pred_horizon 10 --deactivate_lrscheduler
+python main.py --dynsys 2DCyl --lr 5e-5 --nepochs 3000 --nsave 50 --train_size 0.99 --info lr5e-5_ph100_seqpen --data_dir Data/2DCylinder/processed_data/npyfiles/nektar_cyl_data_20_dt0.25_T200.npy --exp_dir Trained_Models/ResidualTest_localtest --num_obs 5 --ntransients 130 --nhu 40 --seq_len 33 --pred_horizon 10 --deactivate_lrscheduler
 
 
 ##KS Experiments
