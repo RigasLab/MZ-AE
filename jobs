@@ -78,9 +78,13 @@
 
 
 #Experiment 4.0 Multi Step prediction
-python main.py --load_epoch 700 --exp_dir Trained_Models/Exp4.0_Transient_2DCyl_MULTISTEP_localtest --load_exp_name sl33_nhu40_numobs5_bs16_lr5e-5_ph100_without_seqmodel --nepochs 3000
-
+# python main.py --load_epoch 700 --exp_dir Trained_Models/Exp4.0_Transient_2DCyl_MULTISTEP_localtest --load_exp_name sl33_nhu40_numobs5_bs16_lr5e-5_ph100_without_seqmodel --nepochs 3000
 # python main.py --dynsys 2DCyl --lr 5e-5 --nepochs 3000 --nsave 50 --train_size 0.99 --info lr5e-5_ph100_without_seqmodel --data_dir Data/2DCylinder/processed_data/npyfiles/nektar_cyl_data_20_dt0.25_T200.npy --exp_dir Trained_Models/Exp4.0_Transient_2DCyl_MULTISTEP_localtest --num_obs 5 --ntransients 130 --nhu 40 --seq_len 33 --pred_horizon 100 --deactivate_seqmodel --deactivate_lrscheduler
+
+#Residual test training
+# python main.py --load_epoch 700 --exp_dir Trained_Models/Exp4.0_Transient_2DCyl_MULTISTEP_localtest --load_exp_name sl33_nhu40_numobs5_bs16_lr5e-5_ph100_without_seqmodel --nepochs 3000
+python main.py --dynsys 2DCyl --lr 5e-5 --nepochs 3000 --nsave 50 --train_size 0.99 --info lr5e-5_ph100 --data_dir Data/2DCylinder/processed_data/npyfiles/nektar_cyl_data_20_dt0.25_T200.npy --exp_dir Trained_Models/ResidualTest_localtest --num_obs 5 --ntransients 130 --nhu 40 --seq_len 33 --pred_horizon 10 --deactivate_lrscheduler
+
 
 ##KS Experiments
 # python main.py --dynsys KS --lr 5e-5 --nepochs 2000 --train_size 0.8 --info lr5e-5 --nhu 40 --deactivate_seqmodel --data_dir Data/KS/ks_N128_dt0.025_L3.4297890236303448.npy --exp_dir Trained_Models/KS_Numobs_N128_dt0.025_L21.55_localtest --num_obs 32 --deactivate_lrscheduler

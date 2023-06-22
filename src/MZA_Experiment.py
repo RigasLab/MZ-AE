@@ -96,8 +96,13 @@ class MZA_Experiment(DynSystem_Data, Train_Methodology):
     def log_data(self, load_model = False):
 
         # Logging Data
-        self.metrics = ["epoch","Train_Loss","Train_ObsEvo_Loss","Train_Autoencoder_Loss","Train_StateEvo_Loss"\
-                               ,"Test_Loss","Test_ObsEvo_Loss","Test_Autoencoder_Loss","Test_StateEvo_Loss"\
+        # self.metrics = ["epoch","Train_Loss","Train_ObsEvo_Loss","Train_Autoencoder_Loss","Train_StateEvo_Loss"\
+        #                        ,"Test_Loss","Test_ObsEvo_Loss","Test_Autoencoder_Loss","Test_StateEvo_Loss"\
+        #                        ,"Train_koop_ptg", "Train_seqmodel_ptg"\
+        #                        ,"Test_koop_ptg", "Test_seqmodel_ptg"]
+
+        self.metrics = ["epoch","Train_Loss","Train_KoopEvo_Loss","Train_Residual_Loss","Train_Autoencoder_Loss","Train_StateEvo_Loss"\
+                               ,"Test_Loss","Test_KoopEvo_Loss", "Test_Residual_Loss","Test_Autoencoder_Loss","Test_StateEvo_Loss"\
                                ,"Train_koop_ptg", "Train_seqmodel_ptg"\
                                ,"Test_koop_ptg", "Test_seqmodel_ptg"]
         if load_model:

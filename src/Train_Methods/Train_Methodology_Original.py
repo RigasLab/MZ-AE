@@ -26,39 +26,22 @@ class Train_Methodology():
 
         x_n   = initial_x_n 
         x_seq = initial_x_seq
-        koop_out_ph = x_n.clone()[:,None,...]   #[bs 1 obsdim]
-        if not self.deactivate_seqmodel:
-            seqmodel_out_ph = x_n.clone()[:,None,...]   #[bs 1 obsdim]
         x_nn_hat_ph = x_n.clone()[:,None,...]   #[bs 1 obsdim]
         Phi_nn_hat_ph = initial_Phi_n.clone()[:,None,...] #[bs 1 statedim]
 
         #Evolving in Time
         for t in range(ph_size):
-            
-            #collecting koopman prediction
-            koop_out = self.model.koopman(x_n)
-            if t == 0:
-                koop_out_ph[:,0,...] = koop_out
-            else:
-                koop_out_ph = torch.cat((koop_out_ph, koop_out[:, None, ...]), 1)
-
-            if self.deactivate_seqmodel:
-                x_nn_hat = koop_out
-             #collecting seqmodel prediction
+     
+            koop_out     = self.model.koopman(x_n)
+            if self.deactivate_seqmodel:                 
+                x_nn_hat     = koop_out 
             else:
                 seqmodel_out = self.model.seqmodel(x_seq)
-                if t == 0:                      
-                    seqmodel_out_ph[:,0,...] = seqmodel_out
-                else:
-                    seqmodel_out_ph = torch.cat((seqmodel_out_ph, seqmodel_out[:, None, ...]), 1)
-                
-                x_nn_hat = koop_out + seqmodel_out 
+                x_nn_hat     = koop_out + self.seq_model_weight*seqmodel_out 
+            Phi_nn_hat   = self.model.autoencoder.recover(x_nn_hat)
             
-            Phi_nn_hat = self.model.autoencoder.recover(x_nn_hat)
-            
-
             #concatenating prediction
-            x_nn_hat_ph   = torch.cat((x_nn_hat_ph,x_nn_hat[:,None,...]), 1)
+            x_nn_hat_ph = torch.cat((x_nn_hat_ph,x_nn_hat[:,None,...]), 1)
             Phi_nn_hat_ph = torch.cat((Phi_nn_hat_ph,Phi_nn_hat[:,None,...]), 1)
 
             #forming sequence for next step prediction
@@ -66,10 +49,7 @@ class Train_Methodology():
             x_seq = torch.cat((x_seq[:,1:,...],x_n[:,None,...]), 1)
             x_n = x_nn_hat
         
-        if self.deactivate_seqmodel:
-            return x_nn_hat_ph[:,1:,...], Phi_nn_hat_ph[:,1:,...], koop_out_ph
-        else:
-            return x_nn_hat_ph[:,1:,...], Phi_nn_hat_ph[:,1:,...], koop_out_ph, seqmodel_out_ph
+        return x_nn_hat_ph[:,1:,...], Phi_nn_hat_ph[:,1:,...]
         
 
 
@@ -92,8 +72,7 @@ class Train_Methodology():
             return None
 
         num_batches = len(dataloader)
-        total_loss, total_ObsEvo_Loss, total_Autoencoder_Loss, total_StateEvo_Loss,\
-            total_KoopEvo_Loss, total_Residual_Loss  = 0,0,0,0,0,0
+        total_loss, total_ObsEvo_Loss, total_Autoencoder_Loss, total_StateEvo_Loss  = 0,0,0,0
         total_koop_ptg, total_seqmodel_ptg = 0,0
         
 
@@ -130,32 +109,34 @@ class Train_Methodology():
             x_seq = x_seq[:,:-1,:] #removing the current timestep from sequence. The sequence length is one less than input
             
             # #Evolving in Time
-            if self.deactivate_seqmodel:
-                x_nn_hat_ph, Phi_nn_hat_ph, koop_nn_ph = self.time_evolution(x_n, x_seq, Phi_n, ph_size)
+            x_nn_hat_ph, Phi_nn_hat_ph = self.time_evolution(x_n, x_seq, Phi_n, ph_size)
 
-            else:
-                x_nn_hat_ph, Phi_nn_hat_ph, koop_nn_ph, seqmodel_nn_ph = self.time_evolution(x_n, x_seq, Phi_n, ph_size)
+            
+            
+            # koop_out     = self.model.koopman(x_n)
+            # if self.deactivate_seqmodel:                 
+            #     x_nn_hat     = koop_out 
+            # else:
+            #     seqmodel_out = self.model.seqmodel(x_seq)
+            #     x_nn_hat     = koop_out + self.seq_model_weight*seqmodel_out 
+            # Phi_nn_hat   = self.model.autoencoder.recover(x_nn_hat)
 
-            #calculating residual
-            residual = x_nn_ph - koop_nn_ph
+            #Calculating contribution
+            # mean_ko, mean_so  = torch.mean(abs(koop_out)), torch.mean(abs(seqmodel_out))
+            # koop_ptg = mean_ko/(mean_ko+mean_so)
+            # seq_ptg  = mean_so/(mean_ko+mean_so)
 
             #Calculating loss
             mseLoss       = nn.MSELoss()
-            KoopEvo_Loss   = mseLoss(x_nn_hat_ph, x_nn_ph)
-            if not self.deactivate_seqmodel:
-                Residual_Loss  = 0#mseLoss(seqmodel_nn_ph, residual)
+            ObsEvo_Loss   = mseLoss(x_nn_hat_ph, x_nn_ph)
             Autoencoder_Loss = mseLoss(Phi_n_hat_ph, Phi_n_ph)
             StateEvo_Loss = mseLoss(Phi_nn_hat_ph, Phi_nn_ph)
 
             #calculating l1 norm of the matrix
-            # kMatrix = self.model.koopman.getKoopmanMatrix(requires_grad = False)
+            kMatrix = self.model.koopman.getKoopmanMatrix(requires_grad = False)
             # l1_norm = torch.norm(kMatrix, p=1)
-            if not self.deactivate_seqmodel:
-                loss = (KoopEvo_Loss) + \
-                        100*(Autoencoder_Loss + StateEvo_Loss) + self.seq_model_weight* torch.norm(seqmodel_nn_ph, p = 'fro')**2
-            else:
-                loss = 10*(KoopEvo_Loss + Residual_Loss) + \
-                        100*(Autoencoder_Loss + StateEvo_Loss) #+ 0.00001*(torch.norm(abs(Phi_n_hat - Phi_n), float('inf')) + torch.norm(abs(Phi_nn_hat - Phi_nn), float('inf')))#+ 0.1*torch.mean(torch.abs(self.model.koopman.kMatrixDiag)) + 0.1*torch.mean(torch.abs(self.model.koopman.kMatrixUT))#(1e-9)*l1_norm
+
+            loss = 10*ObsEvo_Loss + 100*(Autoencoder_Loss + StateEvo_Loss) #+ 0.00001*(torch.norm(abs(Phi_n_hat - Phi_n), float('inf')) + torch.norm(abs(Phi_nn_hat - Phi_nn), float('inf')))#+ 0.1*torch.mean(torch.abs(self.model.koopman.kMatrixDiag)) + 0.1*torch.mean(torch.abs(self.model.koopman.kMatrixUT))#(1e-9)*l1_norm
 
             if mode == "Train":
                 self.optimizer.zero_grad()
@@ -164,9 +145,7 @@ class Train_Methodology():
 
 
             total_loss += loss.item()
-            total_KoopEvo_Loss +=  KoopEvo_Loss.item()
-            if not self.deactivate_seqmodel:
-                total_Residual_Loss += Residual_Loss.item()
+            total_ObsEvo_Loss +=  ObsEvo_Loss.item()
             total_Autoencoder_Loss += Autoencoder_Loss.item()
             total_StateEvo_Loss += StateEvo_Loss.item()
             total_koop_ptg         += 0#koop_ptg
@@ -174,22 +153,15 @@ class Train_Methodology():
 
 
         avg_loss             = total_loss / num_batches
-        # avg_ObsEvo_Loss      = total_ObsEvo_Loss / num_batches
-        avg_KoopEvo_Loss     = total_KoopEvo_Loss / num_batches
-        if not self.deactivate_seqmodel:
-            avg_Residual_Loss    = total_Residual_Loss / num_batches
+        avg_ObsEvo_Loss      = total_ObsEvo_Loss / num_batches
         avg_Autoencoder_Loss = total_Autoencoder_Loss / num_batches
         avg_StateEvo_Loss    = total_StateEvo_Loss / num_batches
         avg_koop_ptg         = total_koop_ptg / num_batches
         avg_seqmodel_ptg     = total_seqmodel_ptg / num_batches
 
-        Ldict = {'avg_loss': avg_loss, 'avg_KoopEvo_Loss': avg_KoopEvo_Loss, 'avg_Residual_Loss': 0, \
-                 'avg_Autoencoder_Loss': avg_Autoencoder_Loss, 'avg_StateEvo_Loss': avg_StateEvo_Loss,\
-                 'avg_koop_ptg': avg_koop_ptg, 'avg_seqmodel_ptg': avg_seqmodel_ptg} 
-        if not self.deactivate_seqmodel:
-            Ldict['avg_Residual_Loss'] = avg_Residual_Loss
+        return avg_loss, avg_ObsEvo_Loss, avg_Autoencoder_Loss, avg_StateEvo_Loss, avg_koop_ptg, avg_seqmodel_ptg
 
-        return Ldict
+
     def training_loop(self):
         '''
         Requires:
@@ -197,9 +169,8 @@ class Train_Methodology():
         '''
         print("Device: ", self.device)
         print("Untrained Test\n--------")
-        test_Ldict = self.train_test_loss("Test", self.test_dataloader)
-        # test_loss, test_ObsEvo_Loss, test_Autoencoder_Loss, test_StateEvo_Loss, test_koop_ptg, test_seqmodel_ptg = 
-        print(f"Test Loss: {test_Ldict['avg_loss']}, KoopEvo : {test_Ldict['avg_KoopEvo_Loss']}, Residual : {test_Ldict['avg_Residual_Loss']}, Auto : {test_Ldict['avg_Autoencoder_Loss']}, StateEvo : {test_Ldict['avg_StateEvo_Loss']}")
+        test_loss, test_ObsEvo_Loss, test_Autoencoder_Loss, test_StateEvo_Loss, test_koop_ptg, test_seqmodel_ptg = self.train_test_loss("Test", self.test_dataloader)
+        print(f"Test Loss: {test_loss}, ObsEvo : {test_ObsEvo_Loss}, Auto : {test_Autoencoder_Loss}, StateEvo : {test_StateEvo_Loss}")
 
         # min train loss
         self.min_train_loss = 1000 
@@ -222,23 +193,22 @@ class Train_Methodology():
                     
                     print("SEQMODEL : ", not self.deactivate_seqmodel)
 
-            # train_loss, train_ObsEvo_Loss, train_Autoencoder_Loss, train_StateEvo_Loss, train_koop_ptg, train_seqmodel_ptg = 
-            train_Ldict = self.train_test_loss("Train")
-            test_Ldict  = self.train_test_loss("Test", self.test_dataloader)
-            # test_loss, test_ObsEvo_Loss, test_Autoencoder_Loss, test_StateEvo_Loss, test_koop_ptg, test_seqmodel_ptg  = 
+            train_loss, train_ObsEvo_Loss, train_Autoencoder_Loss, train_StateEvo_Loss, train_koop_ptg, train_seqmodel_ptg = self.train_test_loss("Train")
+            test_loss, test_ObsEvo_Loss, test_Autoencoder_Loss, test_StateEvo_Loss, test_koop_ptg, test_seqmodel_ptg  = self.train_test_loss("Test", self.test_dataloader)
             
             #printing and saving data
-            print(f"Epoch {ix_epoch} ")
-            print(f"Train Loss: {train_Ldict['avg_loss']}, KoopEvo : {train_Ldict['avg_KoopEvo_Loss']}, Residual : {train_Ldict['avg_Residual_Loss']}, Auto : {train_Ldict['avg_Autoencoder_Loss']}, StateEvo : {train_Ldict['avg_StateEvo_Loss']}")
-            self.log.writerow({"epoch":ix_epoch,"Train_Loss":train_Ldict['avg_loss'], "Train_KoopEvo_Loss":train_Ldict['avg_KoopEvo_Loss'], "Train_Residual_Loss":train_Ldict['avg_Residual_Loss'], "Train_Autoencoder_Loss":train_Ldict["avg_Autoencoder_Loss"], "Train_StateEvo_Loss":train_Ldict["avg_StateEvo_Loss"],\
-                                                "Test_Loss":test_Ldict['avg_loss'], "Test_KoopEvo_Loss":test_Ldict['avg_KoopEvo_Loss'], "Test_Residual_Loss":test_Ldict['avg_Residual_Loss'],  "Test_Autoencoder_Loss":test_Ldict["avg_Autoencoder_Loss"], "Test_StateEvo_Loss":test_Ldict["avg_StateEvo_Loss"],\
-                                                "Train_koop_ptg": 0, "Train_seqmodel_ptg": 0,\
-                                                "Test_koop_ptg": 0, "Test_seqmodel_ptg": 0})
+            print(f"Epoch {ix_epoch}  ")
+            print(f"Train Loss: {train_loss}, ObsEvo : {train_ObsEvo_Loss}, Auto : {train_Autoencoder_Loss}, StateEvo : {train_StateEvo_Loss} \
+                    \n Test Loss: {test_loss}, ObsEvo : {test_ObsEvo_Loss}, Auto : {test_Autoencoder_Loss}, StateEvo : {test_StateEvo_Loss}")
+            self.log.writerow({"epoch":ix_epoch,"Train_Loss":train_loss, "Train_ObsEvo_Loss":train_ObsEvo_Loss, "Train_Autoencoder_Loss":train_Autoencoder_Loss, "Train_StateEvo_Loss":train_StateEvo_Loss,\
+                                                "Test_Loss":test_loss, "Test_ObsEvo_Loss":test_ObsEvo_Loss, "Test_Autoencoder_Loss":test_Autoencoder_Loss, "Test_StateEvo_Loss":test_StateEvo_Loss,\
+                                                "Train_koop_ptg": train_koop_ptg, "Train_seqmodel_ptg": train_seqmodel_ptg,\
+                                                "Test_koop_ptg": test_koop_ptg, "Test_seqmodel_ptg": test_seqmodel_ptg})
             self.logf.flush()
 
             
-            if self.min_train_loss > train_Ldict["avg_loss"]:
-                self.min_train_loss = train_Ldict["avg_loss"]
+            if self.min_train_loss > train_loss:
+                self.min_train_loss = train_loss
                 torch.save(self.model.state_dict(), self.exp_dir+'/'+ self.exp_name+"/model_weights/min_train_loss".format(epoch=ix_epoch))
 
             if (ix_epoch%self.nsave == 0):
