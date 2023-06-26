@@ -14,7 +14,7 @@ class Koopman(nn.Module):
         # self.kMatrixDiag = nn.Parameter(torch.rand(self.latent_size), requires_grad=True)#.to(self.device)
         # self.kMatrixUT   = nn.Parameter(torch.randn(int(self.latent_size*(self.latent_size-1)/2)), requires_grad = True)#.to(self.device)
         self.kMatrix = nn.Parameter(torch.empty(latent_size, latent_size))
-        torch.nn.init.xavier_uniform_(self.kMatrix)
+        # torch.nn.init.xavier_uniform_(self.kMatrix)
         
         # self.kMatrixDiag.requires_grad = True
         # self.kMatrixUT.requires_grad = True
@@ -52,16 +52,16 @@ class Koopman(nn.Module):
 
         kMatrix = self.kMatrix
         
-        # kMatrix = Variable(torch.Tensor(self.latent_size, self.latent_size), requires_grad=requires_grad).to(self.kMatrixUT.device)
+        # self.kMatrix = Variable(torch.Tensor(self.latent_size, self.latent_size), requires_grad=requires_grad).to(self.kMatrixUT.device)
 
         # utIdx   = torch.triu_indices(self.latent_size, self.latent_size, offset=1)
         # diagIdx = torch.stack([torch.arange(0, self.latent_size, dtype=torch.long).unsqueeze(0), \
         #     torch.arange(0,self.latent_size,dtype=torch.long).unsqueeze(0)], dim=0)
-        # kMatrix[utIdx[0], utIdx[1]] = self.kMatrixUT
-        # kMatrix[utIdx[1], utIdx[0]] = -self.kMatrixUT
-        # kMatrix[diagIdx[0], diagIdx[1]] = torch.nn.functional.relu(self.kMatrixDiag)
+        # self.kMatrix[utIdx[0], utIdx[1]] = self.kMatrixUT
+        # self.kMatrix[utIdx[1], utIdx[0]] = -self.kMatrixUT
+        # self.kMatrix[diagIdx[0], diagIdx[1]] = torch.nn.functional.relu(self.kMatrixDiag)
 
-        return kMatrix
+        return self.kMatrix
 
     def _num_parameters(self):
         count = 0

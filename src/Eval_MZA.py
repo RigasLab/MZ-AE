@@ -275,14 +275,28 @@ class Eval_MZA(MZA_Experiment):
         plt.xlabel("Epochs")
         plt.savefig(self.exp_dir+'/'+self.exp_name+"/out_log/TotalLoss.png", dpi = 256, facecolor = 'w', bbox_inches='tight')
 
-        #Observable Evolution Loss
+        # #Observable Evolution Loss
+        # plt.figure()
+        # plt.semilogy(df['epoch'],df['Train_ObsEvo_Loss'], label="Train Observable Evolution Loss")
+        # plt.semilogy(df['epoch'], df['Test_ObsEvo_Loss'], label="Test Observable Evolution Loss")
+        # plt.legend()
+        # plt.xlabel("Epochs")
+        # plt.savefig(self.exp_dir+'/'+self.exp_name+"/out_log/ObservableLoss.png", dpi = 256, facecolor = 'w', bbox_inches='tight')
+
+        #KoopEvo Loss
         plt.figure()
-        plt.semilogy(df['epoch'],df['Train_ObsEvo_Loss'], label="Train Observable Evolution Loss")
-        plt.semilogy(df['epoch'], df['Test_ObsEvo_Loss'], label="Test Observable Evolution Loss")
+        plt.semilogy(df['epoch'],df['Train_KoopEvo_Loss'], label="Train KoopEvo Loss")
+        plt.semilogy(df['epoch'], df['Test_KoopEvo_Loss'], label="Test KoopEvo Loss")
         plt.legend()
         plt.xlabel("Epochs")
-        plt.savefig(self.exp_dir+'/'+self.exp_name+"/out_log/ObservableLoss.png", dpi = 256, facecolor = 'w', bbox_inches='tight')
+        # plt.savefig(self.exp_dir+'/'+self.exp_name+"/out_log/AutoencoderLoss.png", dpi = 256, facecolor = 'w', bbox_inches='tight')
 
+        #Residual Loss
+        plt.figure()
+        plt.semilogy(df['epoch'],df['Train_Residual_Loss'], label="Train Residual Loss")
+        plt.semilogy(df['epoch'], df['Test_Residual_Loss'], label="Test Residual Loss")
+        plt.legend()
+        plt.xlabel("Epochs")
         #Autoencoder Loss
         plt.figure()
         plt.semilogy(df['epoch'],df['Train_Autoencoder_Loss'], label="Train Autoencoder Loss")
