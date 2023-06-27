@@ -13,11 +13,11 @@ if __name__ == "__main__":
     parser.add_argument('--load_epoch', type = int, default = 0 ,help = "loads model at a particular epoch for training")
     parser.add_argument('--dynsys', type = str, default = "2DCyl")
     parser.add_argument('--deactivate_lrscheduler', action = 'store_true', help = "deactivates the lrscheduler for prediction")
-    parser.add_argument('--pred_horizon', type = int, default = 100, help = "Number of steps to predict over while calculating loss")
+    parser.add_argument('--pred_horizon', type = int, default = 10, help = "Number of steps to predict over while calculating loss")
 
 
     #training Params ARGS
-    parser.add_argument('--lr',      type = float, default=1e-4)
+    parser.add_argument('--lr',      type = float, default=5e-5)
     parser.add_argument('--nepochs', type = int,   default=100)
     parser.add_argument('--nlayers', type = int,   default=1)
     # parser.add_argument('--npredsteps', type = int,   default=1)
@@ -27,12 +27,12 @@ if __name__ == "__main__":
 
     #LSTM Params ARGS
     parser.add_argument('--nhu',     type = int,   default=40)
-    parser.add_argument('--seq_len', type = int,   default=8)
+    parser.add_argument('--seq_len', type = int,   default=33)
     parser.add_argument('--seq_model_weight', type = float, default = 1.0, help = "sequence model weight")
 
 
     #AUTOENCODER Params ARGS
-    parser.add_argument('--num_obs', type = int,   default=5)
+    parser.add_argument('--num_obs', type = int,   default=8)
     
     #Data Params ARGS
     parser.add_argument('--ntransients', type = int,   default = 130)

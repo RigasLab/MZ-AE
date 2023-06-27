@@ -13,8 +13,9 @@ class Koopman(nn.Module):
         # Learns skew-symmetric matrix with a diagonal
         # self.kMatrixDiag = nn.Parameter(torch.rand(self.latent_size), requires_grad=True)#.to(self.device)
         # self.kMatrixUT   = nn.Parameter(torch.randn(int(self.latent_size*(self.latent_size-1)/2)), requires_grad = True)#.to(self.device)
+        
         self.kMatrix = nn.Parameter(torch.empty(latent_size, latent_size))
-        # torch.nn.init.xavier_uniform_(self.kMatrix)
+        torch.nn.init.xavier_uniform_(self.kMatrix)
         
         # self.kMatrixDiag.requires_grad = True
         # self.kMatrixUT.requires_grad = True
