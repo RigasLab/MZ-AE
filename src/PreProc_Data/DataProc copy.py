@@ -5,7 +5,7 @@ import numpy as np
 
 
 '''
-with MULTI STEP IMPLEMENTATION and zero padding in begining
+with MULTI STEP IMPLEMENTATION and zero padding in beginning
 '''
 class SequenceDataset(Dataset):
     def __init__(self, statedata, device, sequence_length=5, pred_horizon = 1):

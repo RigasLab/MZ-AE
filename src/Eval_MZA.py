@@ -200,6 +200,7 @@ class Eval_MZA(MZA_Experiment):
             x_n, _ = self.model.autoencoder(Phi_n)    #[num_trajs obsdim]
             
             x   = x_n[None,...]                       #[timesteps num_trajs obsdim]
+            
             Phi = Phi_n[None, ...]                    #[timesteps num_trajs statedim]
             # Phi_koop = Phi_n[None, ...]
 
@@ -239,14 +240,22 @@ class Eval_MZA(MZA_Experiment):
 
                 if n == 0:
                     Phi_koop = Phi_nn_koop[None,...]
+                    x_koop   = koop_out[None,...]                    #[timesteps num_trajs obsdim]
+                    x_seq    = seqmodel_out[None,...] if not self.deactivate_seqmodel else 0                #[timesteps num_trajs obsdim]
                 else:
                     Phi_koop = torch.cat((Phi_koop, Phi_nn_koop[None,...]), 0)
+                    x_koop   = torch.cat((x_koop, koop_out[None,...]), 0)
+                    x_seq    = torch.cat((x_seq, seqmodel_out[None,...]), 0) if not self.deactivate_seqmodel else 0
 
             x   = torch.movedim(x, 1, 0)   #[num_trajs timesteps obsdim]
+            x_koop = torch.movedim(x_koop, 1, 0)   #[num_trajs timesteps obsdim]
+            x_seq  = torch.movedim(x_seq, 1, 0) if not self.deactivate_seqmodel else 0   #[num_trajs timesteps obsdim]
             Phi = torch.movedim(Phi, 1, 0) #[num_trajs timesteps statedim]
             Phi_koop = torch.movedim(Phi_koop, 1, 0) #[num_trajs timesteps-1 statedim]
 
-            return x.detach(), Phi.detach(), Phi_koop.detach()
+            x_seq = x_seq.detach() if not self.deactivate_seqmodel else 0
+
+            return x.detach(), Phi.detach(), Phi_koop.detach(), x_koop.detach(), x_seq
     
     def plot_eigenvectors(self, initial_conditions, timesteps):
 
