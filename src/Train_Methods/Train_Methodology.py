@@ -225,7 +225,7 @@ class Train_Methodology():
 
             # train_loss, train_ObsEvo_Loss, train_Autoencoder_Loss, train_StateEvo_Loss, train_koop_ptg, train_seqmodel_ptg = 
             train_Ldict = self.train_test_loss("Train")
--            test_Ldict  = self.train_test_loss("Test", self.test_dataloader)
+            test_Ldict  = self.train_test_loss("Test", self.test_dataloader)
             # test_loss, test_ObsEvo_Loss, test_Autoencoder_Loss, test_StateEvo_Loss, test_koop_ptg, test_seqmodel_ptg  = 
             
             #printing and saving data
