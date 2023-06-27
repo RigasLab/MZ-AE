@@ -87,7 +87,11 @@
 # python main.py --dynsys 2DCyl --lr 5e-5 --nepochs 8000 --nsave 100 --train_size 0.99 --info lr5e-5_ph10_seqw0.00001 --seq_model_weight 0.00001 --pred_horizon 10 --data_dir Data/2DCylinder/processed_data/npyfiles/nektar_cyl_data_20_dt0.25_T200.npy --exp_dir Trained_Models/Exp4.2.5_Transient_2DCyl_MULTISTEP_seqweight --num_obs 5 --ntransients 130 --nhu 40 --seq_len 33 --deactivate_lrscheduler
 # python main.py --dynsys 2DCyl --lr 5e-5 --nepochs 8000 --nsave 100 --train_size 0.99 --info lr5e-5_ph10_TMres_nostateevo --pred_horizon 10 --data_dir Data/2DCylinder/processed_data/npyfiles/nektar_cyl_data_20_dt0.25_T200.npy --exp_dir Trained_Models/Exp4.2.5_Transient_2DCyl_MULTISTEP_seqweight --num_obs 5 --ntransients 130 --nhu 40 --seq_len 33 --deactivate_lrscheduler
 
-python main.py --dynsys 2DCyl --lr 5e-5 --nepochs 8000 --nsave 100 --train_size 0.99 --info lr5e-5_ph10_TMres_nostateevo --pred_horizon 10 --data_dir Data/2DCylinder/processed_data/npyfiles/nektar_cyl_data_20_dt0.25_T200.npy --exp_dir Trained_Models/Exp4.2.5.2_Transient_2DCyl_MULTISTEP_numobstest_nostateevo --num_obs 8 --ntransients 130 --nhu 40 --seq_len 33 --deactivate_lrscheduler
+# python main.py --dynsys 2DCyl --lr 5e-5 --nepochs 8000 --nsave 100 --train_size 0.99 --info lr5e-5_ph10_TMres_nostateevo --pred_horizon 10 --data_dir Data/2DCylinder/processed_data/npyfiles/nektar_cyl_data_20_dt0.25_T200.npy --exp_dir Trained_Models/Exp4.2.5.2_Transient_2DCyl_MULTISTEP_numobstest_nostateevo --num_obs 8 --ntransients 130 --nhu 40 --seq_len 33 --deactivate_lrscheduler
+
+#Linear autoencoder test
+
+python main.py --dynsys 2DCyl --lr 5e-5 --nepochs 8000 --nsave 100 --train_size 0.99 --info lr5e-5_linear_autoencoder_nostateevo --pred_horizon 10 --data_dir Data/2DCylinder/processed_data/npyfiles/nektar_cyl_data_20_dt0.25_T200.npy --exp_dir Trained_Models/Test_Linear_Autoencoder --num_obs 20 --ntransients 130 --nhu 40 --seq_len 33 --linear_autoencoder --deactivate_lrscheduler
 
 
 ##KS Experiments

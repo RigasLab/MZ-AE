@@ -16,10 +16,16 @@ class Eval_MZA(MZA_Experiment):
 
         
         args = pickle.load(open(exp_dir + "/" + exp_name + "/args","rb"))
+
+        #safety measure for new parameters added in model
+        if ("linear_autoencoder" not in args.keys()):
+            args["linear_autoencoder"] = False
+        
         super().__init__(args)
         self.exp_dir = exp_dir
         self.exp_name = exp_name
 
+        
         try:
             if self.nepoch_actseqmodel != 0:
                 self.deactivate_seqmodel = False
@@ -211,11 +217,11 @@ class Eval_MZA(MZA_Experiment):
                     i_start = n - self.seq_len + 1
                     x_seq_n = x[i_start:(n+1), ...]
                 elif n==0:
-                    padding = x[0].repeat(self.seq_len - 1, *non_time_dims)
+                    padding = torch.zeros(x[0].repeat(self.seq_len - 1, *non_time_dims).shape).to(self.device)
                     x_seq_n = x[0:(n+1), ...]
                     x_seq_n = torch.cat((padding, x_seq_n), 0)
                 else:
-                    padding = x[0].repeat(self.seq_len - n, *non_time_dims)
+                    padding = torch.zeros(x[0].repeat(self.seq_len - n, *non_time_dims).shape).to(self.device)
                     x_seq_n = x[1:(n), ...]
                     x_seq_n = torch.cat((padding, x_seq_n), 0)
                 

@@ -33,6 +33,7 @@ if __name__ == "__main__":
 
     #AUTOENCODER Params ARGS
     parser.add_argument('--num_obs', type = int,   default=8)
+    parser.add_argument('--linear_autoencoder', action = 'store_true', help = "use linear autoencoder")
     
     #Data Params ARGS
     parser.add_argument('--ntransients', type = int,   default = 130)

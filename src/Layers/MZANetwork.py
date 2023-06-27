@@ -13,7 +13,7 @@ class MZANetwork(nn.Module):
         
         
         self.args        = exp_args
-        self.autoencoder = autoencoder(input_size = self.args["statedim"], latent_size = self.args["num_obs"])
+        self.autoencoder = autoencoder(input_size = self.args["statedim"], latent_size = self.args["num_obs"], linear_ae = self.args["linear_autoencoder"])
         self.koopman     = koopman(latent_size = self.args["num_obs"], device = self.args["device"])
         if not self.args["deactivate_seqmodel"] or (self.args["nepoch_actseqmodel"] != 0):
             self.seqmodel    = seqmodel(N = self.args["num_obs"], input_size = self.args["num_obs"], 

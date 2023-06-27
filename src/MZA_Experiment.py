@@ -41,6 +41,7 @@ class MZA_Experiment(DynSystem_Data, Train_Methodology):
 
             #Autoncoder Parameters
             self.num_obs = args.num_obs
+            self.linear_autoencoder = args.linear_autoencoder 
 
             #RNN Parameters
             self.deactivate_seqmodel = args.deactivate_seqmodel
@@ -73,6 +74,11 @@ class MZA_Experiment(DynSystem_Data, Train_Methodology):
             #printing out important information
             if self.deactivate_seqmodel:
                 print("Training without Seqmodel")
+            
+            if self.linear_autoencoder:
+                print("Using Linear Autoencoder")
+            else:
+                print("Using Non-Linear Autoencoder")
             
             #emptying gpu cache memory
             torch.cuda.empty_cache()

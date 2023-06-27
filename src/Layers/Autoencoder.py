@@ -4,32 +4,54 @@ from torch.autograd import Variable
 
 class Autoencoder(nn.Module):
 
-    def __init__(self, input_size, latent_size):
+    def __init__(self, input_size, latent_size, linear_ae = False):
         super(Autoencoder, self).__init__()
-        self.encoder = nn.Sequential(
-            nn.Linear(input_size, 512),
-            # nn.Tanh(inplace=True),
-            nn.ReLU(),
-            nn.Linear(512, 256),
-            nn.ReLU(),
-            nn.Linear(256, 128),
-            nn.ReLU(),
-            nn.Linear(128, 64),
-            nn.ReLU(),
-            nn.Linear(64, latent_size)
-        )
 
-        self.decoder = nn.Sequential(
-            nn.Linear(latent_size, 64),
-            nn.ReLU(),
-            nn.Linear(64, 128),
-            nn.ReLU(),
-            nn.Linear(128, 256),
-            nn.ReLU(),
-            nn.Linear(256, 512),
-            nn.ReLU(),
-            nn.Linear(512, input_size)
-        )
+        if not linear_ae:
+            self.encoder = nn.Sequential(
+                nn.Linear(input_size, 512),
+                # nn.Tanh(inplace=True),
+                nn.ReLU(),
+                nn.Linear(512, 256),
+                nn.ReLU(),
+                nn.Linear(256, 128),
+                nn.ReLU(),
+                nn.Linear(128, 64),
+                nn.ReLU(),
+                nn.Linear(64, latent_size)
+            )
+
+            self.decoder = nn.Sequential(
+                nn.Linear(latent_size, 64),
+                nn.ReLU(),
+                nn.Linear(64, 128),
+                nn.ReLU(),
+                nn.Linear(128, 256),
+                nn.ReLU(),
+                nn.Linear(256, 512),
+                nn.ReLU(),
+                nn.Linear(512, input_size)
+            )
+        
+        else:
+            self.encoder = nn.Sequential(
+                nn.Linear(input_size, 512),
+                # nn.Tanh(inplace=True),
+                nn.Linear(512, 256),
+                nn.Linear(256, 128),
+                nn.Linear(128, 64),
+                nn.Linear(64, latent_size)
+            )
+
+            self.decoder = nn.Sequential(
+                nn.Linear(latent_size, 64),
+                nn.Linear(64, 128),
+                nn.Linear(128, 256),
+                nn.Linear(256, 512),
+                nn.Linear(512, input_size)
+            )
+
+
         # self.encoder = nn.Sequential(
         #     nn.Linear(input_size, 100),
         #     nn.ReLU(inplace=True),
