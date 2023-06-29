@@ -217,11 +217,13 @@ class Eval_MZA(MZA_Experiment):
                     i_start = n - self.seq_len + 1
                     x_seq_n = x[i_start:(n+1), ...]
                 elif n==0:
-                    padding = torch.zeros(x[0].repeat(self.seq_len - 1, *non_time_dims).shape).to(self.device)
+                    # padding = torch.zeros(x[0].repeat(self.seq_len - 1, *non_time_dims).shape).to(self.device)
+                    padding = x[0].repeat(self.seq_len - 1, *non_time_dims)
                     x_seq_n = x[0:(n+1), ...]
                     x_seq_n = torch.cat((padding, x_seq_n), 0)
                 else:
-                    padding = torch.zeros(x[0].repeat(self.seq_len - n, *non_time_dims).shape).to(self.device)
+                    # padding = torch.zeros(x[0].repeat(self.seq_len - n, *non_time_dims).shape).to(self.device)
+                    padding = x[0].repeat(self.seq_len - n, *non_time_dims)
                     x_seq_n = x[1:(n), ...]
                     x_seq_n = torch.cat((padding, x_seq_n), 0)
                 

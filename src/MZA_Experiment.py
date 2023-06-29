@@ -43,6 +43,9 @@ class MZA_Experiment(DynSystem_Data, Train_Methodology):
             self.num_obs = args.num_obs
             self.linear_autoencoder = args.linear_autoencoder 
 
+            #Koopman Parameters
+            self.stable_koopman_init = args.stable_koopman_init
+
             #RNN Parameters
             self.deactivate_seqmodel = args.deactivate_seqmodel
             self.num_layers          = args.nlayers
@@ -74,6 +77,9 @@ class MZA_Experiment(DynSystem_Data, Train_Methodology):
             #printing out important information
             if self.deactivate_seqmodel:
                 print("Training without Seqmodel")
+            
+            if self.stable_koopman_init:
+                print("Initializing Stable Koopman")
             
             if self.linear_autoencoder:
                 print("Using Linear Autoencoder")

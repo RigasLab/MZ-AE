@@ -30,6 +30,8 @@ if __name__ == "__main__":
     parser.add_argument('--seq_len', type = int,   default=33)
     parser.add_argument('--seq_model_weight', type = float, default = 1.0, help = "sequence model weight")
 
+    #koopman Params
+    parser.add_argument('--stable_koopman_init', action = 'store_true', help = "creates negative semidefinite koopman")
 
     #AUTOENCODER Params ARGS
     parser.add_argument('--num_obs', type = int,   default=8)

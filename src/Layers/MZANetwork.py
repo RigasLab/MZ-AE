@@ -14,7 +14,7 @@ class MZANetwork(nn.Module):
         
         self.args        = exp_args
         self.autoencoder = autoencoder(input_size = self.args["statedim"], latent_size = self.args["num_obs"], linear_ae = self.args["linear_autoencoder"])
-        self.koopman     = koopman(latent_size = self.args["num_obs"], device = self.args["device"])
+        self.koopman     = koopman(latent_size = self.args["num_obs"], device = self.args["device"], stable_koopman_init = self.args["stable_koopman_init"])
         if not self.args["deactivate_seqmodel"] or (self.args["nepoch_actseqmodel"] != 0):
             self.seqmodel    = seqmodel(N = self.args["num_obs"], input_size = self.args["num_obs"], 
                                     hidden_size = self.args["num_hidden_units"], num_layers = self.args["num_layers"], 
@@ -25,11 +25,12 @@ class MZANetwork(nn.Module):
                     param.requires_grad = False
                 
 
-    # def forward(self, Phi_n):
-    #     """
-    #     Phi_n [bs statedim]
-    #     """
-
+    def _num_parameters(self):
+        count = 0
+        for name, param in self.named_parameters():
+            print(name, param.numel())
+            count += param.numel()
+        return count
 
 
     def get_observables(self, Phi):
