@@ -21,11 +21,21 @@ class Eval_MZA(MZA_Experiment):
         if ("linear_autoencoder" not in args.keys()):
             args["linear_autoencoder"] = False
         
+        if ("stable_koopman_init" not in args.keys()):
+            ski_flag = False
+            args["stable_koopman_init"] = False
+        else:
+            ski_flag = True
+            
+        
         super().__init__(args)
         self.exp_dir = exp_dir
         self.exp_name = exp_name
 
+        if not ski_flag: 
+            self.model.koopman.stable_koopman_init = False
         
+
         try:
             if self.nepoch_actseqmodel != 0:
                 self.deactivate_seqmodel = False

@@ -38,6 +38,7 @@ class MZA_Experiment(DynSystem_Data, Train_Methodology):
             self.ntransients = args.ntransients
             self.seq_len     = args.seq_len
             self.time_sample = args.time_sample
+            self.nenddata = args.nenddata
 
             #Autoncoder Parameters
             self.num_obs = args.num_obs

@@ -236,9 +236,6 @@ class Train_Methodology():
                                                 "Train_koop_ptg": 0, "Train_seqmodel_ptg": 0,\
                                                 "Test_koop_ptg": 0, "Test_seqmodel_ptg": 0})
             self.logf.flush()
-
-            print(self.model.koopman.kMatrix)########################################
-
             
             if self.min_train_loss > train_Ldict["avg_loss"]:
                 self.min_train_loss = train_Ldict["avg_loss"]

@@ -39,6 +39,7 @@ if __name__ == "__main__":
     
     #Data Params ARGS
     parser.add_argument('--ntransients', type = int,   default = 130)
+    parser.add_argument('--nenddata', type = int,   default = None)
     parser.add_argument('--bs',          type = int,   default = 16)
     parser.add_argument('--train_size',  type = float, default = 0.99)
     parser.add_argument('--norm_input',  action = 'store_true',  help = "normalises input")
