@@ -21,6 +21,9 @@ class Eval_MZA(MZA_Experiment):
         if ("linear_autoencoder" not in args.keys()):
             args["linear_autoencoder"] = False
         
+        if ("nenddata" not in args.keys()):
+            args["nenddata"] = None
+        
         if ("stable_koopman_init" not in args.keys()):
             ski_flag = False
             args["stable_koopman_init"] = False

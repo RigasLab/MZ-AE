@@ -51,8 +51,8 @@ class Koopman(nn.Module):
             udIdx = np.where(np.eye(self.latent_size, k=1))
             ldIdx = np.where(np.eye(self.latent_size, k=-1))
 
-            self.kMatrix[dIdx]  = -torch.tanh(self.kMatrixDiag.squeeze())**2
-            self.kMatrix[udIdx] = torch.tanh(self.kMatrixUDiag.squeeze())
+            self.kMatrix[dIdx]  = -torch.nn.functional.relu(self.kMatrixDiag.squeeze())**2
+            self.kMatrix[udIdx] = torch.nn.functional.relu(self.kMatrixUDiag.squeeze())
             self.kMatrix[ldIdx] = -self.kMatrix[udIdx]
             
         # Build Koopman matrix (skew-symmetric with diagonal)
