@@ -72,7 +72,7 @@ class DynSystem_Data:
             self.train_num_trajs = self.train_data.shape[0]
             print("Train_Shape: ", self.train_data.shape)
             self.train_dataset    = StackedSequenceDataset(self.train_data, self.__dict__)
-            self.train_dataloader = DataLoader(self.train_dataset  , batch_size=self.batch_size, shuffle = True)
+            self.train_dataloader = DataLoader(self.train_dataset, batch_size=self.batch_size, shuffle = True)
         
         print("out of train")
         if mode == "Both" or mode == "Test":
@@ -85,7 +85,7 @@ class DynSystem_Data:
             self.test_num_trajs  = self.test_data.shape[0]
             print("Test_Shape: " , self.test_data.shape)
             self.test_dataset     = StackedSequenceDataset(self.test_data , self.__dict__)
-            self.test_dataloader  = DataLoader(self.test_dataset   , batch_size=self.batch_size, shuffle = False)
+            self.test_dataloader  = DataLoader(self.test_dataset, batch_size=self.batch_size, shuffle = False)
 
         #print the dataset shape
         # X,y = next(iter(test_dataloader))

@@ -72,7 +72,7 @@ class Autoencoder(nn.Module):
         # print('Total number of parameters: {}'.format(self._num_parameters()))
 
     def forward(self, Phi_n):
-        x_n  = self.encoder(Phi_n)
+        x_n       = self.encoder(Phi_n)
         Phi_n_hat = self.decoder(x_n)
 
         return x_n, Phi_n_hat

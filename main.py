@@ -7,7 +7,7 @@ import argparse
 
 if __name__ == "__main__":
     #Parsing arguments
-    parser = argparse.ArgumentParser(description='RNN for Lorenz')
+    parser = argparse.ArgumentParser(description='MZAutoencoder')
 
     #Training Params
     parser.add_argument('--load_epoch', type = int, default = 0 ,help = "loads model at a particular epoch for training")
@@ -73,17 +73,40 @@ if __name__ == "__main__":
         while("min_train_loss" in dirlist):
             dirlist.remove("min_train_loss")
         
-        epochlist = [int(wfname[8:]) for wfname in dirlist]
+        epochlist = ([int(wfname[8:]) for wfname in dirlist])
+        epochlist.sort()
+        
+        #loads last epoch from the saved weigths
+        if (args.load_epoch == -1):
+            args.load_epoch = epochlist[-1]
         
         if(args.load_epoch in epochlist):
             
             print(f"Training from epoch {args.load_epoch}")
+
             #creating experiment
             loaded_args = pickle.load(open(args.exp_dir + "/" + args.load_exp_name + "/args","rb"))
             
-            # print(loaded_args.keys())
+            #safety measure for old models without new params (adding new params with default value)
+            args_dict = vars(args)
+            print("New parameters not present in model")          
+            for key, value in args_dict.items():
+                if key not in loaded_args.keys():
+                    if key not in ["lr","nlayers","nhu","bs","load_exp_name","stable_koopman_init"]:
+                        print(key)
+                        loaded_args[key] = value
+            
+            if ("stable_koopman_init" not in loaded_args.keys()):
+                ski_flag = False
+                loaded_args["stable_koopman_init"] = False
+            else:
+                ski_flag = True
+            
             mza  = MZA_Experiment(loaded_args)
             mza.load_epoch = args.load_epoch
+
+            if not ski_flag: 
+                mza.model.koopman.stable_koopman_init = False
 
             # #to change the deactivate seqmodel status
             # if args.chg_deactivate_seqmodel:
@@ -92,7 +115,7 @@ if __name__ == "__main__":
             #Loading Weights
             PATH = args.exp_dir+'/'+ args.load_exp_name+"/model_weights/at_epoch{epoch}".format(epoch=args.load_epoch)
             mza.model.load_state_dict(torch.load(PATH))
-            # mza.exp_dir = args.exp_dir
+            
             #Training
             mza.main_train(load_model = True)
 

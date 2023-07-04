@@ -1,6 +1,7 @@
 import torch
 import torch.nn as nn
 import matplotlib.pyplot as plt
+from time import time
 
 
 
@@ -207,6 +208,8 @@ class Train_Methodology():
         
         for ix_epoch in range(self.load_epoch, self.load_epoch + self.nepochs):
 
+            #start time
+            start_time = time()
             #learning rate customization
             if not self.deactivate_lrscheduler:
                 before_lr = self.optimizer.param_groups[0]["lr"]
@@ -244,7 +247,10 @@ class Train_Methodology():
             if (ix_epoch%self.nsave == 0):
                 #saving weights
                 torch.save(self.model.state_dict(), self.exp_dir+'/'+ self.exp_name+"/model_weights/at_epoch{epoch}".format(epoch=ix_epoch))
-        
+
+            #ending time
+            end_time = time()
+            print("Time Taken: ", end_time - start_time)
         #saving weights
         torch.save(self.model.state_dict(), self.exp_dir+'/'+ self.exp_name+"/model_weights/at_epoch{epoch}".format(epoch=ix_epoch))
         # writer.close()
