@@ -8,77 +8,73 @@ class Autoencoder(nn.Module):
         super(Autoencoder, self).__init__()
 
         self.latent_size = latent_size
+        self.linear_ae   = linear_ae
 
-        #non linear autoencoder
-        
+        #encoder layers
+        self.e_fc1 = nn.Linear(input_size, 512)
+        self.e_fc2 = nn.Linear(512, 256)
+        self.e_fc3 = nn.Linear(256, 128)
+        self.e_fc4 = nn.Linear(128, 64)
+        self.e_fc5 = nn.Linear(64, latent_size)
+
+        #decoder layers
+        self.d_fc1 = nn.Linear(latent_size, 64)
+        self.d_fc2 = nn.Linear(64, 128)
+        self.d_fc3 = nn.Linear(128, 256)
+        self.d_fc4 = nn.Linear(256, 512)
+        self.d_fc5 = nn.Linear(512, input_size)
+
+        #reg layers
+        self.dropout = nn.Dropout(0.25)
+        self.relu    = nn.ReLU()
+
+        # #non linear autoencoder
         # if not linear_ae:
-            
-        # #encoder layers
-        # self.e_fc1 = nn.Linear(input_size, 512)
-        # self.e_fc2 = nn.Linear(512, 256)
-        # self.e_fc3 = nn.Linear(256, 128)
-        # self.e_fc4 = nn.Linear(128, 64)
-        # self.e_fc5 = nn.Linear(64, latent_size)
+        #     self.encoder = nn.Sequential(
+        #         nn.Linear(input_size, 512),
+        #         # torch.nn.Dropout(p=0.5, inplace=False)
+        #         # nn.Tanh(inplace=True),
+        #         nn.ReLU(),
+        #         nn.Linear(512, 256),
+        #         nn.ReLU(),
+        #         nn.Linear(256, 128),
+        #         nn.ReLU(),
+        #         nn.Linear(128, 64),
+        #         nn.ReLU(),
+        #         nn.Linear(64, latent_size)
+        #     )
 
-        # #decoder layers
-        # self.d_fc1 = nn.Linear(latent_size, 64)
-        # self.d_fc2 = nn.Linear(64, 128)
-        # self.d_fc3 = nn.Linear(128, 256)
-        # self.d_fc4 = nn.Linear(256, 512)
-        # self.d_fc5 = nn.Linear(512, input_size)
-
-        # #reg layers
-        # self.dropout = nn.Dropout(0.25)
-
-
-            
-        #non linear autoencoder
-        if not linear_ae:
-            self.encoder = nn.Sequential(
-                nn.Linear(input_size, 512),
-                # torch.nn.Dropout(p=0.5, inplace=False)
-                # nn.Tanh(inplace=True),
-                nn.ReLU(),
-                nn.Linear(512, 256),
-                nn.ReLU(),
-                nn.Linear(256, 128),
-                nn.ReLU(),
-                nn.Linear(128, 64),
-                nn.ReLU(),
-                nn.Linear(64, latent_size)
-            )
-
-            self.decoder = nn.Sequential(
-                nn.Linear(latent_size, 64),
-                nn.ReLU(),
-                nn.Linear(64, 128),
-                nn.ReLU(),
-                nn.Linear(128, 256),
-                nn.ReLU(),
-                nn.Linear(256, 512),
-                nn.ReLU(),
-                nn.Linear(512, input_size)
-            )
+        #     self.decoder = nn.Sequential(
+        #         nn.Linear(latent_size, 64),
+        #         nn.ReLU(),
+        #         nn.Linear(64, 128),
+        #         nn.ReLU(),
+        #         nn.Linear(128, 256),
+        #         nn.ReLU(),
+        #         nn.Linear(256, 512),
+        #         nn.ReLU(),
+        #         nn.Linear(512, input_size)
+        #     )
         
 
         #linear autoencoder
-        else:
-            self.encoder = nn.Sequential(
-                nn.Linear(input_size, 512),
-                # nn.Tanh(inplace=True),
-                nn.Linear(512, 256),
-                nn.Linear(256, 128),
-                nn.Linear(128, 64),
-                nn.Linear(64, latent_size)
-            )
+        # else:
+        #     self.encoder = nn.Sequential(
+        #         nn.Linear(input_size, 512),
+        #         # nn.Tanh(inplace=True),
+        #         nn.Linear(512, 256),
+        #         nn.Linear(256, 128),
+        #         nn.Linear(128, 64),
+        #         nn.Linear(64, latent_size)
+        #     )
 
-            self.decoder = nn.Sequential(
-                nn.Linear(latent_size, 64),
-                nn.Linear(64, 128),
-                nn.Linear(128, 256),
-                nn.Linear(256, 512),
-                nn.Linear(512, input_size)
-            )
+        #     self.decoder = nn.Sequential(
+        #         nn.Linear(latent_size, 64),
+        #         nn.Linear(64, 128),
+        #         nn.Linear(128, 256),
+        #         nn.Linear(256, 512),
+        #         nn.Linear(512, input_size)
+        #     )
 
 
         # self.encoder = nn.Sequential(
@@ -100,6 +96,50 @@ class Autoencoder(nn.Module):
         
         # print('Total number of parameters: {}'.format(self._num_parameters()))
 
+    def encoder(self, x):
+        #non linear encoder
+        if not self.linear_ae:
+            
+            x = self.relu(self.e_fc1(x))
+            x = self.dropout(x)
+            x = self.relu(self.e_fc2(x))
+            x = self.dropout(x)
+            x = self.relu(self.e_fc3(x))
+            x = self.dropout(x)
+            x = self.relu(self.e_fc4(x))
+            x = self.relu(self.e_fc5(x))
+        
+        #linear encoder
+        else:
+            x = self.e_fc1(x)
+            x = self.e_fc2(x)
+            x = self.e_fc3(x)
+            x = self.e_fc4(x)
+            x = self.e_fc5(x)
+        
+        return x
+    
+    def decoder(self, x):
+        #non linear encoder
+        if not self.linear_ae:
+            x = self.relu(self.d_fc1(x))
+            x = self.relu(self.d_fc2(x))
+            x = self.dropout(x)
+            x = self.relu(self.d_fc3(x))
+            x = self.dropout(x)
+            x = self.relu(self.d_fc4(x))
+            x = self.dropout(x)
+            x = self.relu(self.d_fc5(x))
+        
+        #linear encoder
+        else:
+            x = self.d_fc1(x)
+            x = self.d_fc2(x)
+            x = self.d_fc3(x)
+            x = self.d_fc4(x)
+            x = self.d_fc5(x)
+
+        return x
 
     def forward(self, Phi_n):
         x_n       = self.encoder(Phi_n)
