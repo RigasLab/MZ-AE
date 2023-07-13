@@ -10,6 +10,7 @@ class Autoencoder(nn.Module):
         if not linear_ae:
             self.encoder = nn.Sequential(
                 nn.Linear(input_size, 512),
+                # torch.nn.Dropout(p=0.5, inplace=False)
                 # nn.Tanh(inplace=True),
                 nn.ReLU(),
                 nn.Linear(512, 256),

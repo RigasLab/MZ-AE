@@ -103,7 +103,7 @@ class Train_Methodology():
             ph_size = Phi_nn_ph.shape[1] # pred_horizon size can vary depending on future steps available in data
 
             Phi_n   = torch.squeeze(Phi_seq[:,-1,...])  
-            Phi_n = Phi_n[None,...] if (Phi_n.ndim == self.state_ndim) else Phi_n #[bs statedim]
+            Phi_n   = Phi_n[None,...] if (Phi_n.ndim == self.state_ndim) else Phi_n #[bs statedim]
             Phi_n_ph = torch.cat((Phi_n[:,None,...], Phi_nn_ph[:,:-1,...]), 1)    #[bs ph_size statedim]
             
             #flattening batchsize seqlen / batchsize pred_horizon
@@ -192,6 +192,7 @@ class Train_Methodology():
             Ldict['avg_Residual_Loss'] = avg_Residual_Loss
 
         return Ldict
+    
     def training_loop(self):
         '''
         Requires:
