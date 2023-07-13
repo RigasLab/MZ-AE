@@ -7,6 +7,32 @@ class Autoencoder(nn.Module):
     def __init__(self, input_size, latent_size, linear_ae = False):
         super(Autoencoder, self).__init__()
 
+        self.latent_size = latent_size
+
+        #non linear autoencoder
+        
+        # if not linear_ae:
+            
+        # #encoder layers
+        # self.e_fc1 = nn.Linear(input_size, 512)
+        # self.e_fc2 = nn.Linear(512, 256)
+        # self.e_fc3 = nn.Linear(256, 128)
+        # self.e_fc4 = nn.Linear(128, 64)
+        # self.e_fc5 = nn.Linear(64, latent_size)
+
+        # #decoder layers
+        # self.d_fc1 = nn.Linear(latent_size, 64)
+        # self.d_fc2 = nn.Linear(64, 128)
+        # self.d_fc3 = nn.Linear(128, 256)
+        # self.d_fc4 = nn.Linear(256, 512)
+        # self.d_fc5 = nn.Linear(512, input_size)
+
+        # #reg layers
+        # self.dropout = nn.Dropout(0.25)
+
+
+            
+        #non linear autoencoder
         if not linear_ae:
             self.encoder = nn.Sequential(
                 nn.Linear(input_size, 512),
@@ -34,6 +60,8 @@ class Autoencoder(nn.Module):
                 nn.Linear(512, input_size)
             )
         
+
+        #linear autoencoder
         else:
             self.encoder = nn.Sequential(
                 nn.Linear(input_size, 512),
@@ -69,8 +97,9 @@ class Autoencoder(nn.Module):
         #     nn.Linear(100, input_size)
         # )
         
-        self.latent_size = latent_size
+        
         # print('Total number of parameters: {}'.format(self._num_parameters()))
+
 
     def forward(self, Phi_n):
         x_n       = self.encoder(Phi_n)

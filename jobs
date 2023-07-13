@@ -100,7 +100,7 @@
 # python main.py --dynsys 2DCyl --lr 5e-5 --nepochs 100 --nsave 100 --train_size 0.9 --info lr5e-5_linear_autoencoder_nostateevo --pred_horizon 10 --data_dir Data/2DCylinder/processed_data/npyfiles/nektar_cyl_data_20_dt0.25_T200.npy --exp_dir Trained_Models/Test_stablekoopman --num_obs 4 --ntransients 130 --nenddata 250 --nhu 40 --seq_len 33 --deactivate_lrscheduler
 
 ##KS Experiments
-python main.py --dynsys KS --bs 256 --ntransients 10000 --lr 5e-5 --nepochs 2000 --train_size 0.8 --info lr5e-5 --nhu 40 --deactivate_seqmodel --data_dir Data/KS/ks_N128_dt0.025_L3.4297890236303448.npy --exp_dir Trained_Models/KS_Numobs_N128_dt0.025_L21.55_localtest --num_obs 32 --deactivate_lrscheduler
+python main.py --dynsys KS --bs 256 --ntransients 76000 --lr 5e-5 --nepochs 2000 --train_size 0.9 --info lr5e-5 --nhu 40 --data_dir Data/KS/ks_N128_dt0.025_L3.5_maxn800000.npy --exp_dir Trained_Models/KSLocalLargeDataset --num_obs 6 --deactivate_lrscheduler
 
 # python main.py --dynsys KS --lr 5e-5 --nepochs 15000 --nsave 1000 --train_size 0.8 --time_sample 10 --info lr5e-5_linear_autoencoder_nostateevo --pred_horizon 10 --data_dir Data/KS/ks_N128_dt0.025_L3.4297890236303448.npy --exp_dir Trained_Models/Exp6.1_KS_Seq_lentest --num_obs 16 --ntransients 25000 --nhu 40 --seq_len 6 --deactivate_lrscheduler
 

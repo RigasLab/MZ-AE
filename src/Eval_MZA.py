@@ -75,6 +75,27 @@ class Eval_MZA(MZA_Experiment):
         StateMSE    = torch.mean(StateMSE, dim = (0,*tuple(range(2, StateMSE.ndim)))) #[timesteps]
 
         return StateMSE
+    
+    @staticmethod
+    def state_relative_mse(Phi,Phi_hat):
+        '''
+        Input
+        -----
+        Phi (torch tensor): [num_tajs timesteps statedim]
+        Phi_hat (torch tensor): [num_tajs timesteps statedim]
+
+        Returns
+        -------
+        StateMSE [timesteps]
+        '''
+        Phi_sm = Phi.to("cpu")
+        Phi_hat_sm  = Phi_hat.to("cpu")
+        mseLoss     = nn.MSELoss(reduction = 'none')
+        StateMSE    = mseLoss(Phi_sm, Phi_hat_sm) #[num_trajs timesteps statedim]
+        # print(StateMSE.shape)
+        StateMSE    = torch.mean(StateMSE, dim = (0,*tuple(range(2, StateMSE.ndim)))) #[timesteps]
+
+        return StateMSE
 
     @staticmethod 
     def calc_pdf(ke):
@@ -282,13 +303,13 @@ class Eval_MZA(MZA_Experiment):
                     i_start = n - self.seq_len + 1
                     x_seq_n = x[i_start:(n+1), ...]
                 elif n==0:
-                    # padding = torch.zeros(x[0].repeat(self.seq_len - 1, *non_time_dims).shape).to(self.device)
-                    padding = x[0].repeat(self.seq_len - 1, *non_time_dims)
+                    padding = torch.zeros(x[0].repeat(self.seq_len - 1, *non_time_dims).shape).to(self.device)
+                    # padding = x[0].repeat(self.seq_len - 1, *non_time_dims)
                     x_seq_n = x[0:(n+1), ...]
                     x_seq_n = torch.cat((padding, x_seq_n), 0)
                 else:
-                    # padding = torch.zeros(x[0].repeat(self.seq_len - n, *non_time_dims).shape).to(self.device)
-                    padding = x[0].repeat(self.seq_len - n, *non_time_dims)
+                    padding = torch.zeros(x[0].repeat(self.seq_len - n, *non_time_dims).shape).to(self.device)
+                    # padding = x[0].repeat(self.seq_len - n, *non_time_dims)
                     x_seq_n = x[1:(n), ...]
                     x_seq_n = torch.cat((padding, x_seq_n), 0)
                 
