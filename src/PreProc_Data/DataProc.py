@@ -131,7 +131,7 @@ that RNN only trains on the converged rsiduals of the Koopman
 #############################################################
 
 '''
-with MULTI STEP IMPLEMENTATION
+with MULTI STEP IMPLEMENTATION and Zeros while initialising
 '''
 class SequenceDataset(Dataset):
     def __init__(self, statedata, device, sequence_length=5, pred_horizon = 1):
@@ -149,9 +149,8 @@ class SequenceDataset(Dataset):
 
         #shifting the traj axis to the back for creating sequences
         self.statedata = np.moveaxis(statedata, 0, -1)    #[timesteps, statedim, num_traj]
-        # self.X   = torch.tensor(obsdata, device=self.device).float()
-        # self.Phi = torch.tensor(self.statedata, device=self.device).float()
-        self.Phi = torch.tensor(self.statedata, device="cpu").float()
+        self.Phi = torch.tensor(self.statedata, device=self.device).float()
+        # self.Phi = torch.tensor(self.statedata, device="cpu").float()
 
     def __len__(self):
         return self.Phi.shape[0]
@@ -172,11 +171,11 @@ class SequenceDataset(Dataset):
             i_start = i - self.sequence_length + 1
             phi = self.Phi[i_start:(i+1), ...]
         elif i==0:
-            padding = torch.zeros(self.Phi[0].repeat(self.sequence_length - 1, *non_time_dims).shape)#.to(self.device)
+            padding = torch.zeros(self.Phi[0].repeat(self.sequence_length - 1, *non_time_dims).shape).to(self.device)
             phi = self.Phi[0:(i+1), ...]
             phi = torch.cat((padding, phi), 0)
         else:
-            padding = torch.zeros(self.Phi[0].repeat(self.sequence_length - i, *non_time_dims).shape)#.to(self.device)
+            padding = torch.zeros(self.Phi[0].repeat(self.sequence_length - i, *non_time_dims).shape).to(self.device)
             phi = self.Phi[1:(i+1), ...]
             phi = torch.cat((padding, phi), 0)
         
@@ -214,8 +213,6 @@ class StackedSequenceDataset(Dataset):
         self.seqdataset = SequenceDataset(statedata, self.device, self.sequence_length, self.pred_horizon)
         self.stacked_Phi_seq, self.stacked_Phi_nn  = self.stack_data()
 
-        self.stacked_Phi_seq = self.stacked_Phi_seq.detach().cpu()#######
-        self.stacked_Phi_nn  = self.stacked_Phi_nn.detach().cpu()#########
 
     def __len__(self):
         return self.stacked_Phi_seq.shape[0]
@@ -223,15 +220,13 @@ class StackedSequenceDataset(Dataset):
     def stack_data(self):
         it = iter(self.seqdataset)
         Phi_seq, Phi_nn = next(it)
-        Phi_seq, Phi_nn = Phi_seq.to(self.device), Phi_nn.to(self.device)############
         for i, data in enumerate(self.seqdataset):
             if (i > (len(self.seqdataset)-1-self.pred_horizon)):
                 break
             elif (i!=0):
-                Phi_seq = torch.cat((Phi_seq, data[0].to(self.device)), dim = 0) #######
-                Phi_nn  = torch.cat((Phi_nn, data[1].to(self.device)), dim = 0) ###########
-                # Phi_seq = torch.cat((Phi_seq, data[0]), dim = 0)
-                # Phi_nn  = torch.cat((Phi_nn, data[1]), dim = 0)
+                
+                Phi_seq = torch.cat((Phi_seq, data[0]), dim = 0)
+                Phi_nn  = torch.cat((Phi_nn, data[1]), dim = 0)
 
         return Phi_seq, Phi_nn
 
