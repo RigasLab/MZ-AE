@@ -24,6 +24,7 @@ if __name__ == "__main__":
     parser.add_argument('--deactivate_seqmodel', action = 'store_true', help = "deactivates the seqmodel for prediction")
     # parser.add_argument('--chg_deactivate_seqmodel', action = 'store_true', help = "change deactivate_seqmodel status")
     parser.add_argument('--nepoch_actseqmodel', type = int, default = 0, help = "epoch at which to activate seq_model")
+    parser.add_argument('--lambda_ResL',      type = float, default=1.0, help = "Controlling Parameter for Sequence Model prediction")
 
     #LSTM Params ARGS
     parser.add_argument('--nhu',     type = int,   default=40)

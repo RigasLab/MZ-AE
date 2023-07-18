@@ -39,7 +39,6 @@ class Eval_MZA(MZA_Experiment):
         if not ski_flag: 
             self.model.koopman.stable_koopman_init = False
         
-
         try:
             if self.nepoch_actseqmodel != 0:
                 self.deactivate_seqmodel = False
@@ -303,14 +302,14 @@ class Eval_MZA(MZA_Experiment):
                     i_start = n - self.seq_len + 1
                     x_seq_n = x[i_start:(n+1), ...]
                 elif n==0:
-                    padding = torch.zeros(x[0].repeat(self.seq_len - 1, *non_time_dims).shape).to(self.device)
-                    # padding = x[0].repeat(self.seq_len - 1, *non_time_dims)
+                    # padding = torch.zeros(x[0].repeat(self.seq_len - 1, *non_time_dims).shape).to(self.device)
+                    padding = x[0].repeat(self.seq_len - 1, *non_time_dims)
                     x_seq_n = x[0:(n+1), ...]
                     x_seq_n = torch.cat((padding, x_seq_n), 0)
                 else:
-                    padding = torch.zeros(x[0].repeat(self.seq_len - n, *non_time_dims).shape).to(self.device)
-                    # padding = x[0].repeat(self.seq_len - n, *non_time_dims)
-                    x_seq_n = x[1:(n), ...]
+                    # padding = torch.zeros(x[0].repeat(self.seq_len - n, *non_time_dims).shape).to(self.device)
+                    padding = x[0].repeat(self.seq_len - n, *non_time_dims)
+                    x_seq_n = x[1:(n+1), ...]
                     x_seq_n = torch.cat((padding, x_seq_n), 0)
                 
                 x_seq_n = torch.movedim(x_seq_n, 1, 0) #[num_trajs seq_len obsdim]
@@ -351,6 +350,104 @@ class Eval_MZA(MZA_Experiment):
 
             return x.detach(), Phi.detach(), Phi_koop.detach(), x_koop.detach(), x_seq
     
+
+    def jacobian_calc(self, initial_conditions, timesteps):
+
+            '''
+            Computes jacobian of the output wrt input variables
+            Input
+            -----
+            initial_conditions (torch tensor): [num_trajs, statedim]
+            timesteps (int): Number timesteps for prediction
+
+            Returns
+            grad_xn_xseq (torch tensor): [num_trajs timesteps seqlen obsdim] gradient of output observables wrt input observables
+            grad_xn_x (torch tensor): [num_trajs timesteps obsdim]
+            '''
+
+            self.model.train()
+            Phi_n  = initial_conditions.to(self.device) 
+            Phi_n.requires_grad = True 
+
+            x_n, _ = self.model.autoencoder(Phi_n)    #[num_trajs obsdim]
+            
+            x   = x_n[None,...]                       #[timesteps num_trajs obsdim]
+            
+            Phi = Phi_n[None, ...]                    #[timesteps num_trajs statedim]
+            # Phi_koop = Phi_n[None, ...]
+
+            for n in range(timesteps):
+
+                non_time_dims = (1,)*(x.ndim-1)   #dims apart from timestep in tuple form (1,1,...)
+                if n >= self.seq_len:
+                    i_start = n - self.seq_len + 1
+                    x_seq_n = x[i_start:(n+1), ...]
+                elif n==0:
+                    # padding = torch.zeros(x[0].repeat(self.seq_len - 1, *non_time_dims).shape).to(self.device)
+                    padding = x[0].repeat(self.seq_len - 1, *non_time_dims)
+                    x_seq_n = x[0:(n+1), ...]
+                    x_seq_n = torch.cat((padding, x_seq_n), 0)
+                else:
+                    # padding = torch.zeros(x[0].repeat(self.seq_len - n, *non_time_dims).shape).to(self.device)
+                    padding = x[0].repeat(self.seq_len - n, *non_time_dims)
+                    x_seq_n = x[1:(n+1), ...]
+                    x_seq_n = torch.cat((padding, x_seq_n), 0)
+                
+                x_seq_n = torch.movedim(x_seq_n, 1, 0) #[num_trajs seq_len obsdim]
+                x_seq_n = x_seq_n[:,:-1,:]
+                
+
+                # koop_out     = self.model.koopman(x[n])
+                # seqmodel_out = self.model.seqmodel(x_seq_n)
+                # x_nn         = koop_out + seqmodel_out
+                # Phi_nn       = self.model.autoencoder.recover(x_nn)
+
+                koop_out     = self.model.koopman(x[n])
+                if self.deactivate_seqmodel:
+                    x_nn     = koop_out 
+                else:
+                    seqmodel_out = self.model.seqmodel(x_seq_n)
+                    x_nn         = koop_out + seqmodel_out 
+
+                #caculating gradients
+                
+                x_seq_n.retain_grad()   #making x_seq_n a leaf to store gradients
+                x.retain_grad()
+                external_grad = torch.ones((1,self.num_obs)).to(self.device)
+                self.model.zero_grad()
+                x_nn.backward(external_grad, retain_graph = True)
+
+                # print(x_seq_n.grad.shape)
+                
+                Phi_nn = self.model.autoencoder.recover(x_nn)
+            #     Phi_nn_koop = self.model.autoencoder.recover(koop_out)
+
+                x   = torch.cat((x,x_nn[None,...]), 0)
+                Phi = torch.cat((Phi,Phi_nn[None,...]), 0)
+
+                if n == 0:
+                    grad_xn_xseq = x_seq_n.grad[:,None,...]  #[num_traj timesteps seqlen obsdim]
+                    # grad_xn_x   = x[n][None,...]                    #[timesteps num_trajs obsdim]
+                else:
+                    grad_xn_xseq = torch.cat((grad_xn_xseq, x_seq_n.grad[:,None,...]), 1)
+                
+                self.model.grad = None
+                x_seq_n.grad = None
+                x.grad = None
+                    
+
+            # x   = torch.movedim(x, 1, 0)   #[num_trajs timesteps obsdim]
+            # x_koop = torch.movedim(x_koop, 1, 0)   #[num_trajs timesteps obsdim]
+            # x_seq  = torch.movedim(x_seq, 1, 0) if not self.deactivate_seqmodel else 0   #[num_trajs timesteps obsdim]
+            # Phi = torch.movedim(Phi, 1, 0) #[num_trajs timesteps statedim]
+            # Phi_koop = torch.movedim(Phi_koop, 1, 0) #[num_trajs timesteps-1 statedim]
+
+            # x_seq = x_seq.detach() if not self.deactivate_seqmodel else 0
+
+            return grad_xn_xseq.detach()
+    
+
+
     def plot_eigenvectors(self, initial_conditions, timesteps):
 
         kMatrix = self.model.koopman.getKoopmanMatrix()

@@ -156,7 +156,7 @@ class Train_Methodology():
             # l1_norm = torch.norm(kMatrix, p=1)
             # seqnorm = torch.norm(seqmodel_nn_ph, p = 'fro')**2
             if not self.deactivate_seqmodel:
-                loss = (KoopEvo_Loss + Residual_Loss) + \
+                loss = (KoopEvo_Loss + self.lambda_ResL*Residual_Loss) + \
                         100*(Autoencoder_Loss) #+ StateEvo_Loss #+ self.seq_model_weight*seqnorm
             else:
                 loss = 0.1*(KoopEvo_Loss) + \

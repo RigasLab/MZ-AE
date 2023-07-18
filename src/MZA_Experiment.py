@@ -61,6 +61,7 @@ class MZA_Experiment(DynSystem_Data, Train_Methodology):
             # self.npredsteps         = args.npredsteps
             self.nepoch_actseqmodel = args.nepoch_actseqmodel
             self.pred_horizon       = args.pred_horizon
+            self.lambda_ResL        = args.lambda_ResL
 
             #Directory Parameters
             self.nsave         = args.nsave                 #after how many epochs to save
