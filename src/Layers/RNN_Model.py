@@ -23,10 +23,6 @@ class LSTM_Model(nn.Module):
         self.relu = nn.ReLU()
         self.tanh = nn.Tanh()
 
-        # ##attention layer
-        # self.attn = nn.Linear(hidden_size*self.seq_length, self.seq_length)
-        # self.softmax = nn.functional.softmax()
-
     def forward(self, x):
         h_0 = torch.zeros(self.num_layers, x.size(0), self.hidden_size).to(self.device)  # hidden state
         c_0 = torch.zeros(self.num_layers, x.size(0), self.hidden_size).to(self.device)  # internal state
@@ -50,8 +46,9 @@ class LSTM_Model(nn.Module):
 
         return out
 
+## applies attention by taking information from the hidden units and generating attention weights
     
-class LSTM_Model_withAttention(nn.Module):
+class LSTM_Model_Attention(nn.Module):
     def __init__(self, N, input_size, hidden_size, num_layers, seq_length, device):
         super(LSTM_Model, self).__init__()
         self.device = device
@@ -74,8 +71,8 @@ class LSTM_Model_withAttention(nn.Module):
         self.tanh = nn.Tanh()
 
         # ##attention layer
-        # self.attn = nn.Linear(hidden_size*self.seq_length, self.seq_length)
-        # self.softmax = nn.functional.softmax()
+        self.attn = nn.Linear(hidden_size*self.seq_length, self.seq_length)
+        self.softmax = nn.Softmax(dim = -1)
 
     def forward(self, x):
         h_0 = torch.zeros(self.num_layers, x.size(0), self.hidden_size).to(self.device)  # hidden state
@@ -86,7 +83,9 @@ class LSTM_Model_withAttention(nn.Module):
 
         #applying attention
         aw = self.attention(output)
-        
+
+        hn = torch.einsum("bsh,bs->bh",[output,aw])
+
         hn = hn.view(-1, self.hidden_size)  # reshaping the data for Dense layer next
         # hn = self.linear(hn[0]).flatten()
         # hn = hn[-1]
@@ -118,7 +117,7 @@ class LSTM_Model_withAttention(nn.Module):
         attention_in = torch.flatten(output,-2,-1)
 
         theta = self.tanh(self.attn(attention_in))
-        aw = self.softmax(theta, dim = -1)
+        aw = self.softmax(theta)
 
         return aw
         

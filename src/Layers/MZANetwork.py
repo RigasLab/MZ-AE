@@ -66,7 +66,7 @@ class MZANetwork(nn.Module):
 
         x = self.get_observables(Phi)
 
-        dataset = SequenceDataset(Phi, x, self.args.device, sequence_length=self.args.seq_len)
+        dataset    = SequenceDataset(Phi, x, self.args.device, sequence_length=self.args.seq_len)
         dataloader = DataLoader(dataset, batch_size = self.args.batch_size, shuffle = shuffle)
 
         return dataloader, dataset

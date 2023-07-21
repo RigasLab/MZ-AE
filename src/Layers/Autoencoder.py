@@ -6,6 +6,7 @@ import torch
 import torch.nn as nn
 from torch.autograd import Variable
 
+"Autoencoder without seq"
 class Autoencoder(nn.Module):
 
     def __init__(self, input_size, latent_size, linear_ae = False):
@@ -39,7 +40,7 @@ class Autoencoder(nn.Module):
         if not self.linear_ae:
             
             x = self.relu(self.e_fc1(x))
-            x = self.dropout(x)
+            # x = self.dropout(x)
             x = self.relu(self.e_fc2(x))
             # x = self.dropout(x)
             x = self.relu(self.e_fc3(x))
@@ -67,7 +68,7 @@ class Autoencoder(nn.Module):
             x = self.relu(self.d_fc3(x))
             # x = self.dropout(x)
             x = self.relu(self.d_fc4(x))
-            x = self.dropout(x)
+            # x = self.dropout(x)
             x = self.d_fc5(x)
         
         #linear encoder

@@ -172,10 +172,12 @@ class SequenceDataset(Dataset):
             phi = self.Phi[i_start:(i+1), ...]
         elif i==0:
             padding = torch.zeros(self.Phi[0].repeat(self.sequence_length - 1, *non_time_dims).shape).to(self.device)
+            # padding = self.Phi[0].repeat(self.sequence_length - 1, *non_time_dims).to(self.device)
             phi = self.Phi[0:(i+1), ...]
             phi = torch.cat((padding, phi), 0)
         else:
             padding = torch.zeros(self.Phi[0].repeat(self.sequence_length - i, *non_time_dims).shape).to(self.device)
+            # padding = self.Phi[0].repeat(self.sequence_length - 1, *non_time_dims).shape).to(self.device)
             phi = self.Phi[1:(i+1), ...]
             phi = torch.cat((padding, phi), 0)
         
