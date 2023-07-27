@@ -99,9 +99,9 @@ class Train_Methodology():
         
 
         for Phi_seq, Phi_nn_ph in dataloader:
-            # print(Phi_seq.device, Phi_nn_ph.device)
-            # Phi_seq = Phi_seq.to(self.device)##########
-            # Phi_nn_ph = Phi_nn_ph.to(self.device)##########
+            print(Phi_seq.device, Phi_nn_ph.device)
+            Phi_seq = Phi_seq.to(self.device)##########
+            Phi_nn_ph = Phi_nn_ph.to(self.device)##########
             
             ph_size = Phi_nn_ph.shape[1] # pred_horizon size can vary depending on future steps available in data
 

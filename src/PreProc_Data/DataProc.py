@@ -1,5 +1,6 @@
 import torch
 from torch.utils.data import Dataset
+from torch.utils.data import DataLoader
 import numpy as np
 
 '''
@@ -149,8 +150,8 @@ class SequenceDataset(Dataset):
 
         #shifting the traj axis to the back for creating sequences
         self.statedata = np.moveaxis(statedata, 0, -1)    #[timesteps, statedim, num_traj]
-        self.Phi = torch.tensor(self.statedata, device=self.device).float()
-        # self.Phi = torch.tensor(self.statedata, device="cpu").float()
+        # self.Phi = torch.tensor(self.statedata, device=self.device).float()
+        self.Phi = torch.tensor(self.statedata, device="cpu").float()
 
     def __len__(self):
         return self.Phi.shape[0]
@@ -169,16 +170,19 @@ class SequenceDataset(Dataset):
         
         if i >= self.sequence_length:
             i_start = i - self.sequence_length + 1
-            phi = self.Phi[i_start:(i+1), ...]
+            pi = i-i_start
+            inuse_Phi = self.Phi[i_start:i+self.pred_horizon+1].to(self.device)
+            phi = inuse_Phi[0:(pi+1), ...]
         elif i==0:
-            padding = torch.zeros(self.Phi[0].repeat(self.sequence_length - 1, *non_time_dims).shape).to(self.device)
-            # padding = self.Phi[0].repeat(self.sequence_length - 1, *non_time_dims).to(self.device)
-            phi = self.Phi[0:(i+1), ...]
+            inuse_Phi = self.Phi[0:i+self.pred_horizon+1].to(self.device)
+            phi = inuse_Phi[0:(i+1), ...]
+            padding = torch.zeros(inuse_Phi[0].repeat(self.sequence_length - 1, *non_time_dims).shape).to(self.device)
             phi = torch.cat((padding, phi), 0)
         else:
-            padding = torch.zeros(self.Phi[0].repeat(self.sequence_length - i, *non_time_dims).shape).to(self.device)
+            inuse_Phi = self.Phi[0:i+self.pred_horizon+1].to(self.device)
+            padding = torch.zeros(inuse_Phi[0].repeat(self.sequence_length - i, *non_time_dims).shape).to(self.device)
             # padding = self.Phi[0].repeat(self.sequence_length - 1, *non_time_dims).shape).to(self.device)
-            phi = self.Phi[1:(i+1), ...]
+            phi = inuse_Phi[1:(i+1), ...]
             phi = torch.cat((padding, phi), 0)
         
         Phi_seq = torch.movedim(phi, -1, 0)
@@ -195,6 +199,8 @@ class SequenceDataset(Dataset):
         # else:
         Phi_nn  = torch.movedim(self.Phi[i+1:i+self.pred_horizon+1], -1, 0)  #includes all the future timesteps because not at the end of dataset 
 
+        Phi_seq = Phi_seq.to("cpu")
+        Phi_nn  = Phi_nn.to("cpu")
         return Phi_seq, Phi_nn
 
 
@@ -213,6 +219,7 @@ class StackedSequenceDataset(Dataset):
         self.pred_horizon = args_dict["pred_horizon"] 
         self.sequence_length = args_dict["seq_len"]
         self.seqdataset = SequenceDataset(statedata, self.device, self.sequence_length, self.pred_horizon)
+        # self.seqdataloader = DataLoader(self.seqdataset, batch_size=1, shuffle = False, num_workers = 1, pin_memory = True)
         self.stacked_Phi_seq, self.stacked_Phi_nn  = self.stack_data()
 
 
