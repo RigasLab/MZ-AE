@@ -28,7 +28,7 @@ if __name__ == "__main__":
 
     #LSTM Params ARGS
     parser.add_argument('--nhu',     type = int,   default=40)
-    parser.add_argument('--seq_len', type = int,   default=33)
+    parser.add_argument('--seq_len', type = int,   default=5)
     parser.add_argument('--seq_model_weight', type = float, default = 1.0, help = "sequence model weight")
 
     #koopman Params

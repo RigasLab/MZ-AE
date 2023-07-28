@@ -170,6 +170,11 @@ class SequenceDataset(Dataset):
         '''
         non_time_dims = (1,)*(self.statedata.ndim-1)   #dims apart from timestep in tuple form (1,1...)
         
+        if i > (len(self)-1-self.pred_horizon):
+            Phi_seq = torch.zeros((1, self.sequence_length, self.statedata.shape[1]))
+            Phi_nn  = torch.zeros((1, self.pred_horizon, self.statedata.shape[1]))
+            return Phi_seq, Phi_nn
+            # raise StopIteration("End of dataset reached.")
         if i >= self.sequence_length:
             i_start = i - self.sequence_length + 1
             pi = i-i_start
@@ -184,9 +189,9 @@ class SequenceDataset(Dataset):
         else:
             pi = i
             inuse_Phi = self.Phi[0:i+self.pred_horizon+1].to(self.device)
-            padding = torch.zeros(inuse_Phi[0].repeat(self.sequence_length - i, *non_time_dims).shape).to(self.device)
+            padding = torch.zeros(inuse_Phi[0].repeat(self.sequence_length - i-1, *non_time_dims).shape).to(self.device)
             # padding = self.Phi[0].repeat(self.sequence_length - 1, *non_time_dims).shape).to(self.device)
-            phi = inuse_Phi[1:(i+1), ...]
+            phi = inuse_Phi[0:(i+1), ...]
             phi = torch.cat((padding, phi), 0)
         
         Phi_seq = torch.movedim(phi, -1, 0)
@@ -223,21 +228,40 @@ class StackedSequenceDataset(Dataset):
         self.pred_horizon = args_dict["pred_horizon"] 
         self.sequence_length = args_dict["seq_len"]
         self.seqdataset = SequenceDataset(statedata, self.device, self.sequence_length, self.pred_horizon)
-        self.seqdataloader = DataLoader(self.seqdataset, batch_size = 9192, shuffle = False, num_workers = 0)
+        self.seqdataloader = DataLoader(self.seqdataset, batch_size = 1000, shuffle = False, num_workers = 0)
         self.stacked_Phi_seq, self.stacked_Phi_nn  = self.stack_data()
 
 
+    
+
     def __len__(self):
         return self.stacked_Phi_seq.shape[0]
+    
+    def collate_fn(self, batch_ps, batch_pn):
+    
+        t_bps, t_bpn = batch_ps, batch_pn
+        for i in range(t_bps.ndim-1):
+            if i == 0:
+                t_bps = torch.all(t_bps == 0, dim = -1)
+                t_bpn = torch.all(t_bpn == 0, dim = -1)
+            else:
+                t_bps = torch.all(t_bps == True, dim = -1)
+                t_bpn = torch.all(t_bpn == True, dim = -1)
+        
+        return batch_ps[~t_bps], batch_pn[~t_bpn]
 
     def stack_data(self):
-        start_time = time()
+        
         it = iter(self.seqdataloader)
+        start_time = time()
+        Phi_seq, Phi_nn = next(it)
         end_time = time()
         print("Time: ", end_time - start_time)
-        Phi_seq, Phi_nn = next(it)
+
+        Phi_seq, Phi_nn = self.collate_fn(Phi_seq, Phi_nn)
         Phi_seq = torch.flatten(Phi_seq, start_dim = 0, end_dim = 1)  #(batchsize*num traj seqlen statedim)
         Phi_nn = torch.flatten(Phi_nn, start_dim = 0, end_dim = 1) 
+        
         j=0
         for i, data in enumerate(self.seqdataloader):
             
@@ -245,6 +269,7 @@ class StackedSequenceDataset(Dataset):
                 break
             elif (i!=0):
                 data0, data1 = data[0], data[1]
+                data0, data1 = self.collate_fn(data0, data1)
                 data0   = torch.flatten(data0, start_dim = 0, end_dim = 1)
                 data1   = torch.flatten(data1, start_dim = 0, end_dim = 1) 
                 Phi_seq = torch.cat((Phi_seq, data0), dim = 0)
