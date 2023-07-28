@@ -2,6 +2,8 @@ import torch
 from torch.utils.data import Dataset
 from torch.utils.data import DataLoader
 import numpy as np
+from time import time
+
 
 '''
 Dataset works with Training Methodology1 
@@ -174,11 +176,13 @@ class SequenceDataset(Dataset):
             inuse_Phi = self.Phi[i_start:i+self.pred_horizon+1].to(self.device)
             phi = inuse_Phi[0:(pi+1), ...]
         elif i==0:
+            pi = 0
             inuse_Phi = self.Phi[0:i+self.pred_horizon+1].to(self.device)
             phi = inuse_Phi[0:(i+1), ...]
             padding = torch.zeros(inuse_Phi[0].repeat(self.sequence_length - 1, *non_time_dims).shape).to(self.device)
             phi = torch.cat((padding, phi), 0)
         else:
+            pi = i
             inuse_Phi = self.Phi[0:i+self.pred_horizon+1].to(self.device)
             padding = torch.zeros(inuse_Phi[0].repeat(self.sequence_length - i, *non_time_dims).shape).to(self.device)
             # padding = self.Phi[0].repeat(self.sequence_length - 1, *non_time_dims).shape).to(self.device)
@@ -197,7 +201,7 @@ class SequenceDataset(Dataset):
         #     Phi_nn  = torch.movedim(self.Phi[i+1:], -1, 0)                       
         #     Phi_nn  = torch.cat((Phi_nn, rest_fut_Phi), 1)  #includes leftover future timesteps at the end of dataset
         # else:
-        Phi_nn  = torch.movedim(self.Phi[i+1:i+self.pred_horizon+1], -1, 0)  #includes all the future timesteps because not at the end of dataset 
+        Phi_nn  = torch.movedim(inuse_Phi[pi+1:], -1, 0)  #includes all the future timesteps because not at the end of dataset 
 
         Phi_seq = Phi_seq.to("cpu")
         Phi_nn  = Phi_nn.to("cpu")
@@ -219,7 +223,7 @@ class StackedSequenceDataset(Dataset):
         self.pred_horizon = args_dict["pred_horizon"] 
         self.sequence_length = args_dict["seq_len"]
         self.seqdataset = SequenceDataset(statedata, self.device, self.sequence_length, self.pred_horizon)
-        # self.seqdataloader = DataLoader(self.seqdataset, batch_size=1, shuffle = False, num_workers = 1, pin_memory = True)
+        self.seqdataloader = DataLoader(self.seqdataset, batch_size = 9192, shuffle = False, num_workers = 0)
         self.stacked_Phi_seq, self.stacked_Phi_nn  = self.stack_data()
 
 
@@ -227,15 +231,26 @@ class StackedSequenceDataset(Dataset):
         return self.stacked_Phi_seq.shape[0]
 
     def stack_data(self):
-        it = iter(self.seqdataset)
+        start_time = time()
+        it = iter(self.seqdataloader)
+        end_time = time()
+        print("Time: ", end_time - start_time)
         Phi_seq, Phi_nn = next(it)
-        for i, data in enumerate(self.seqdataset):
-            if (i > (len(self.seqdataset)-1-self.pred_horizon)):
+        Phi_seq = torch.flatten(Phi_seq, start_dim = 0, end_dim = 1)  #(batchsize*num traj seqlen statedim)
+        Phi_nn = torch.flatten(Phi_nn, start_dim = 0, end_dim = 1) 
+        j=0
+        for i, data in enumerate(self.seqdataloader):
+            
+            if (j+1 > (len(self.seqdataset)-1-self.pred_horizon)):
                 break
             elif (i!=0):
-                
-                Phi_seq = torch.cat((Phi_seq, data[0]), dim = 0)
-                Phi_nn  = torch.cat((Phi_nn, data[1]), dim = 0)
+                data0, data1 = data[0], data[1]
+                data0   = torch.flatten(data0, start_dim = 0, end_dim = 1)
+                data1   = torch.flatten(data1, start_dim = 0, end_dim = 1) 
+                Phi_seq = torch.cat((Phi_seq, data0), dim = 0)
+                Phi_nn  = torch.cat((Phi_nn, data1), dim = 0)
+            
+            j+=data[0].shape[0]
 
         return Phi_seq, Phi_nn
 
