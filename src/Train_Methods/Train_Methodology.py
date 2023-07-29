@@ -212,6 +212,8 @@ class Train_Methodology():
         # min train loss
         self.min_train_loss = 1000 
         
+        print("################## Starting Training ###############")
+        
         for ix_epoch in range(self.load_epoch, self.load_epoch + self.nepochs):
 
             #start time
