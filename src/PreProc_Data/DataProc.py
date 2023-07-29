@@ -178,18 +178,18 @@ class SequenceDataset(Dataset):
         if i >= self.sequence_length:
             i_start = i - self.sequence_length + 1
             pi = i-i_start
-            inuse_Phi = self.Phi[i_start:i+self.pred_horizon+1].to(self.device)
+            inuse_Phi = self.Phi[i_start:i+self.pred_horizon+1]#.to(self.device)
             phi = inuse_Phi[0:(pi+1), ...]
         elif i==0:
             pi = 0
-            inuse_Phi = self.Phi[0:i+self.pred_horizon+1].to(self.device)
+            inuse_Phi = self.Phi[0:i+self.pred_horizon+1]#.to(self.device)
             phi = inuse_Phi[0:(i+1), ...]
-            padding = torch.zeros(inuse_Phi[0].repeat(self.sequence_length - 1, *non_time_dims).shape).to(self.device)
+            padding = torch.zeros(inuse_Phi[0].repeat(self.sequence_length - 1, *non_time_dims).shape)#.to(self.device)
             phi = torch.cat((padding, phi), 0)
         else:
             pi = i
-            inuse_Phi = self.Phi[0:i+self.pred_horizon+1].to(self.device)
-            padding = torch.zeros(inuse_Phi[0].repeat(self.sequence_length - i-1, *non_time_dims).shape).to(self.device)
+            inuse_Phi = self.Phi[0:i+self.pred_horizon+1]#.to(self.device)
+            padding = torch.zeros(inuse_Phi[0].repeat(self.sequence_length - i-1, *non_time_dims).shape)#.to(self.device)
             # padding = self.Phi[0].repeat(self.sequence_length - 1, *non_time_dims).shape).to(self.device)
             phi = inuse_Phi[0:(i+1), ...]
             phi = torch.cat((padding, phi), 0)
@@ -208,8 +208,8 @@ class SequenceDataset(Dataset):
         # else:
         Phi_nn  = torch.movedim(inuse_Phi[pi+1:], -1, 0)  #includes all the future timesteps because not at the end of dataset 
 
-        Phi_seq = Phi_seq.to("cpu")
-        Phi_nn  = Phi_nn.to("cpu")
+        Phi_seq = Phi_seq#.to("cpu")
+        Phi_nn  = Phi_nn#.to("cpu")
         return Phi_seq, Phi_nn
 
 
@@ -228,7 +228,7 @@ class StackedSequenceDataset(Dataset):
         self.pred_horizon = args_dict["pred_horizon"] 
         self.sequence_length = args_dict["seq_len"]
         self.seqdataset = SequenceDataset(statedata, self.device, self.sequence_length, self.pred_horizon)
-        self.seqdataloader = DataLoader(self.seqdataset, batch_size = 1000, shuffle = False, num_workers = 0)
+        self.seqdataloader = DataLoader(self.seqdataset, batch_size = 100000, shuffle = False, num_workers = 1)
         self.stacked_Phi_seq, self.stacked_Phi_nn  = self.stack_data()
 
 

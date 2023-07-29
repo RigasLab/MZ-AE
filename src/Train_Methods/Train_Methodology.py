@@ -99,7 +99,7 @@ class Train_Methodology():
         
 
         for Phi_seq, Phi_nn_ph in dataloader:
-            print(Phi_seq.device, Phi_nn_ph.device)
+            # print(Phi_seq.device, Phi_nn_ph.device)
             Phi_seq = Phi_seq.to(self.device)##########
             Phi_nn_ph = Phi_nn_ph.to(self.device)##########
             
