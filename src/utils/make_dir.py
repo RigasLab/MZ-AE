@@ -6,5 +6,10 @@ def mkdirs(directories):
     '''
     for directory in directories:
         try:
-            os.mkdir(directory)
+            if not os.path.exists(directory):
+                print("CREATING DIR: ", directory)
+                os.mkdir(directory)
+            else:
+                print("ALREADY EXISTS DIR: ", directory)
+                
         except Exception as e: print(e)

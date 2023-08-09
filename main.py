@@ -39,7 +39,7 @@ if __name__ == "__main__":
     parser.add_argument('--linear_autoencoder', action = 'store_true', help = "use linear autoencoder")
     
     #Data Params ARGS
-    parser.add_argument('--ntransients', type = int,   default = 130)
+    parser.add_argument('--ntransients', type = int,   default = 750000)
     parser.add_argument('--nenddata', type = int,   default = None)
     parser.add_argument('--bs',          type = int,   default = 16)
     parser.add_argument('--train_size',  type = float, default = 0.9)

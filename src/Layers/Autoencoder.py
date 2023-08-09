@@ -103,7 +103,7 @@ class Autoencoder_wseq(nn.Module):
 class Autoencoder(nn.Module):
 
     def __init__(self, input_size, latent_size, linear_ae = False):
-        super(Autoencoder_seq, self).__init__()
+        super(Autoencoder, self).__init__()
 
         self.latent_size = latent_size
 

@@ -119,6 +119,7 @@ class MZA_Experiment(DynSystem_Data, Train_Methodology):
                                ,"Test_Loss","Test_KoopEvo_Loss", "Test_Residual_Loss","Test_Autoencoder_Loss","Test_StateEvo_Loss"\
                                ,"Train_koop_ptg", "Train_seqmodel_ptg"\
                                ,"Test_koop_ptg", "Test_seqmodel_ptg"]
+
         if load_model:
             self.logf = open(self.exp_dir + '/' + self.exp_name + "/out_log/log", "a")
             self.log = csv.DictWriter(self.logf, self.metrics)
@@ -184,7 +185,6 @@ class MZA_Experiment(DynSystem_Data, Train_Methodology):
         # Initiating Data Logger
         self.log_data(load_model)
 
-        print("################## Starting Training ###############")
         #Training Model
         self.training_loop()
 

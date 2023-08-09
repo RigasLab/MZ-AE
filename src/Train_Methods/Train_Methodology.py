@@ -244,10 +244,12 @@ class Train_Methodology():
             print(f"Train Loss: {train_Ldict['avg_loss']}, KoopEvo : {train_Ldict['avg_KoopEvo_Loss']}, Residual : {train_Ldict['avg_Residual_Loss']}, Auto : {train_Ldict['avg_Autoencoder_Loss']}, StateEvo : {train_Ldict['avg_StateEvo_Loss']}")
             print(f"Test Loss: {test_Ldict['avg_loss']}, KoopEvo : {test_Ldict['avg_KoopEvo_Loss']}, Residual : {test_Ldict['avg_Residual_Loss']}, Auto : {test_Ldict['avg_Autoencoder_Loss']}, StateEvo : {test_Ldict['avg_StateEvo_Loss']}")
 
-            self.log.writerow({"epoch":ix_epoch,"Train_Loss":train_Ldict['avg_loss'], "Train_KoopEvo_Loss":train_Ldict['avg_KoopEvo_Loss'], "Train_Residual_Loss":train_Ldict['avg_Residual_Loss'], "Train_Autoencoder_Loss":train_Ldict["avg_Autoencoder_Loss"], "Train_StateEvo_Loss":train_Ldict["avg_StateEvo_Loss"],\
+            writeable_loss = {"epoch":ix_epoch,"Train_Loss":train_Ldict['avg_loss'], "Train_KoopEvo_Loss":train_Ldict['avg_KoopEvo_Loss'], "Train_Residual_Loss":train_Ldict['avg_Residual_Loss'], "Train_Autoencoder_Loss":train_Ldict["avg_Autoencoder_Loss"], "Train_StateEvo_Loss":train_Ldict["avg_StateEvo_Loss"],\
                                                 "Test_Loss":test_Ldict['avg_loss'], "Test_KoopEvo_Loss":test_Ldict['avg_KoopEvo_Loss'], "Test_Residual_Loss":test_Ldict['avg_Residual_Loss'],  "Test_Autoencoder_Loss":test_Ldict["avg_Autoencoder_Loss"], "Test_StateEvo_Loss":test_Ldict["avg_StateEvo_Loss"],\
                                                 "Train_koop_ptg": 0, "Train_seqmodel_ptg": 0,\
-                                                "Test_koop_ptg": 0, "Test_seqmodel_ptg": 0})
+                                                "Test_koop_ptg": 0, "Test_seqmodel_ptg": 0}
+            
+            self.log.writerow(writeable_loss)
             self.logf.flush()
             
             if self.min_train_loss > train_Ldict["avg_loss"]:
