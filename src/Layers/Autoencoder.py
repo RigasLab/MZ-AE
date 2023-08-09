@@ -7,7 +7,7 @@ import torch.nn as nn
 from torch.autograd import Variable
 
 "Autoencoder without seq"
-class Autoencoder(nn.Module):
+class Autoencoder_wseq(nn.Module):
 
     def __init__(self, input_size, latent_size, linear_ae = False):
         super(Autoencoder, self).__init__()
@@ -100,7 +100,7 @@ class Autoencoder(nn.Module):
 
 
 #creates nn network using sequential method
-class Autoencoder_seq(nn.Module):
+class Autoencoder(nn.Module):
 
     def __init__(self, input_size, latent_size, linear_ae = False):
         super(Autoencoder_seq, self).__init__()

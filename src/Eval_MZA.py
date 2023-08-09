@@ -179,7 +179,9 @@ class Eval_MZA(MZA_Experiment):
         for count, (Phi_seq, Phi_nn) in enumerate(dataloader):
             
             # Phi_n   = torch.squeeze(Phi_seq[:,-1,...])  #[bs statedim]
-            
+            Phi_seq = Phi_seq.to(self.device)
+            Phi_nn = Phi_nn.to(self.device)
+
             #flattening batchsize seqlen
             Phi_seq = torch.flatten(Phi_seq, start_dim = 0, end_dim = 1)   #[bs*seqlen, statedim]
             Phi_nn = torch.squeeze(Phi_nn)

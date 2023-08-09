@@ -184,6 +184,7 @@ class MZA_Experiment(DynSystem_Data, Train_Methodology):
         # Initiating Data Logger
         self.log_data(load_model)
 
+        print("################## Starting Training ###############")
         #Training Model
         self.training_loop()
 

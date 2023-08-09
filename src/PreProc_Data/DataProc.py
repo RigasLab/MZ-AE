@@ -228,7 +228,8 @@ class StackedSequenceDataset(Dataset):
         self.pred_horizon = args_dict["pred_horizon"] 
         self.sequence_length = args_dict["seq_len"]
         self.seqdataset = SequenceDataset(statedata, self.device, self.sequence_length, self.pred_horizon)
-        self.seqdataloader = DataLoader(self.seqdataset, batch_size = 100000, shuffle = False, num_workers = 1)
+        batch_size = 100 if args_dict["dynsys"] == "2DCyl" else 100000
+        self.seqdataloader = DataLoader(self.seqdataset, batch_size = batch_size, shuffle = False, num_workers = 1)
         self.stacked_Phi_seq, self.stacked_Phi_nn  = self.stack_data()
 
 
