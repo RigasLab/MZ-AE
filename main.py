@@ -15,6 +15,10 @@ if __name__ == "__main__":
     parser.add_argument('--deactivate_lrscheduler', action = 'store_true', help = "deactivates the lrscheduler for prediction")
     parser.add_argument('--pred_horizon', type = int, default = 10, help = "Number of steps to predict over while calculating loss")
 
+    #Models
+    parser.add_argument('--Seq_Model',   type = str, default = "LSTM_Model")
+    parser.add_argument('--Koop_Model',   type = str, default = "Koopman")
+    parser.add_argument('--AE_Model', type = str, default = "Autoencoder")
 
     #training Params ARGS
     parser.add_argument('--lr',      type = float, default=5e-5)
@@ -39,7 +43,7 @@ if __name__ == "__main__":
     parser.add_argument('--linear_autoencoder', action = 'store_true', help = "use linear autoencoder")
     
     #Data Params ARGS
-    parser.add_argument('--ntransients', type = int,   default = 750000)
+    parser.add_argument('--ntransients', type = int,   default = 770000)
     parser.add_argument('--nenddata', type = int,   default = None)
     parser.add_argument('--bs',          type = int,   default = 16)
     parser.add_argument('--train_size',  type = float, default = 0.9)

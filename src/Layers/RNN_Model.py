@@ -2,23 +2,28 @@ import torch
 from torch import nn
 
 class LSTM_Model(nn.Module):
-    def __init__(self, N, input_size, hidden_size, num_layers, seq_length, device):
+    def __init__(self, args):
         super(LSTM_Model, self).__init__()
-        self.device = device
-        self.N = N  # output_size
-        self.num_layers  = num_layers  # number of layers
-        self.input_size  = input_size  # input size
-        self.hidden_size = hidden_size # hidden state
-        self.seq_length  = seq_length - 1  # sequence length one less than input  
 
-        self.lstm = nn.LSTM(input_size=input_size, hidden_size=hidden_size,
-                            num_layers=num_layers, batch_first=True)  # lstm
-        self.fc_1 = nn.Linear(hidden_size, 64)  # fully connected 1
+        print("RNN_Model: LSTM_Model")
+
+        self.args = args
+                                                                                                        
+        self.device = self.args["device"]
+        self.N = self.args["num_obs"]  # output_size
+        self.num_layers  = self.args["num_layers"]  # number of layers
+        self.input_size  = self.args["num_obs"]  # input size
+        self.hidden_size = self.args["num_hidden_units"] # hidden state
+        self.seq_length  = self.args["seq_len"] - 1  # sequence length one less than input  
+
+        self.lstm = nn.LSTM(input_size=self.input_size, hidden_size=self.hidden_size,
+                            num_layers=self.num_layers, batch_first=True)  # lstm
+        self.fc_1 = nn.Linear(self.hidden_size, 64)  # fully connected 1
         self.bn1  = nn.BatchNorm1d(32)
         self.fc_2 = nn.Linear(64,32)
         self.bn2  = nn.BatchNorm1d(32)
         self.dp   = nn.Dropout(p=0.5)
-        self.fc   = nn.Linear(32, N)  # fully connected last layer
+        self.fc   = nn.Linear(32, self.N)  # fully connected last layer
 
         self.relu = nn.ReLU()
         self.tanh = nn.Tanh()
@@ -49,29 +54,34 @@ class LSTM_Model(nn.Module):
 ## applies attention by taking information from the hidden units and generating attention weights
     
 class LSTM_Model_Attention(nn.Module):
-    def __init__(self, N, input_size, hidden_size, num_layers, seq_length, device):
-        super(LSTM_Model, self).__init__()
-        self.device = device
-        self.N = N  # output_size
-        self.num_layers  = num_layers  # number of layers
-        self.input_size  = input_size  # input size
-        self.hidden_size = hidden_size # hidden state
-        self.seq_length  = seq_length - 1  # sequence length one less than input  
+    def __init__(self, args):
+        super(LSTM_Model_Attention, self).__init__()
 
-        self.lstm = nn.LSTM(input_size=input_size, hidden_size=hidden_size,
-                            num_layers=num_layers, batch_first=True)  # lstm
-        self.fc_1 = nn.Linear(hidden_size, 64)  # fully connected 1
+        print("RNN_Model: LSTM_Model_Attention")
+
+        self.args = args
+
+        self.device = self.args["device"]
+        self.N = self.args["num_obs"]  # output_size
+        self.num_layers  = self.args["num_layers"]  # number of layers
+        self.input_size  = self.args["num_obs"]  # input size
+        self.hidden_size = self.args["num_hidden_units"] # hidden state
+        self.seq_length  = self.args["seq_len"] - 1  # sequence length one less than input  
+
+        self.lstm = nn.LSTM(input_size=self.input_size, hidden_size=self.hidden_size,
+                            num_layers=self.num_layers, batch_first=True)  # lstm
+        self.fc_1 = nn.Linear(self.hidden_size, 64)  # fully connected 1
         self.bn1  = nn.BatchNorm1d(32)
         self.fc_2 = nn.Linear(64,32)
         self.bn2  = nn.BatchNorm1d(32)
         self.dp   = nn.Dropout(p=0.5)
-        self.fc   = nn.Linear(32, N)  # fully connected last layer
+        self.fc   = nn.Linear(32, self.N)  # fully connected last layer
 
         self.relu = nn.ReLU()
         self.tanh = nn.Tanh()
 
         # ##attention layer
-        self.attn = nn.Linear(hidden_size*self.seq_length, self.seq_length)
+        self.attn = nn.Linear(self.hidden_size*self.seq_length, self.seq_length)
         self.softmax = nn.Softmax(dim = -1)
 
     def forward(self, x):

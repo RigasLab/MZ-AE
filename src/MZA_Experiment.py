@@ -2,10 +2,7 @@ import torch
 import csv, pickle, copy
 # from torch.utils.data import DataLoader
 
-from src.Layers.RNN_Model import LSTM_Model
 from src.Layers.MZANetwork import MZANetwork
-from src.Layers.Autoencoder import Autoencoder
-from src.Layers.Koopman import Koopman
 
 from src.Train_Methods.Train_Methodology import Train_Methodology
 from src.PreProc_Data.DynSystem_Data import DynSystem_Data
@@ -40,14 +37,17 @@ class MZA_Experiment(DynSystem_Data, Train_Methodology):
             self.time_sample = args.time_sample
             self.nenddata = args.nenddata
 
-            #Autoncoder Parameters
-            self.num_obs = args.num_obs
+            #Autoncoder Parameters          
+            self.autoencoder_model  = args.AE_Model 
+            self.num_obs            = args.num_obs
             self.linear_autoencoder = args.linear_autoencoder 
 
             #Koopman Parameters
+            self.koop_model = args.Koop_Model
             self.stable_koopman_init = args.stable_koopman_init
 
             #RNN Parameters
+            self.seq_model           = args.Seq_Model
             self.deactivate_seqmodel = args.deactivate_seqmodel
             self.num_layers          = args.nlayers
             self.num_hidden_units    = args.nhu
@@ -157,14 +157,16 @@ class MZA_Experiment(DynSystem_Data, Train_Methodology):
         self.make_directories()
 
         #Loading and visualising data
+        print("##########LOADING DATASET##########")
         self.load_and_preproc_data()
 
         # #Creating Statevariable Dataset
         self.create_dataset()
 
         #Creating Model
+        print("##########SETTING UP MODEL##########")
         if not load_model:
-            self.model = MZANetwork(self.__dict__, Autoencoder, Koopman, LSTM_Model).to(self.device)
+            self.model = MZANetwork(self.__dict__).to(self.device)
             
             # print(self.model.parameters)
         self.optimizer = torch.optim.Adam(self.model.parameters(), lr = self.learning_rate, weight_decay=1e-5)

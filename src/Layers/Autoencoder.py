@@ -2,33 +2,33 @@ import torch
 import torch.nn as nn
 from torch.autograd import Variable
 
-import torch
-import torch.nn as nn
-from torch.autograd import Variable
-
 "Autoencoder without seq"
-class Autoencoder_wseq(nn.Module):
+class Autoencoder(nn.Module):
 
-    def __init__(self, input_size, latent_size, linear_ae = False):
+    def __init__(self, args):
         super(Autoencoder, self).__init__()
 
-        self.latent_size = latent_size
-        self.linear_ae   = linear_ae
+        print("AE_Model: Autoencoder")
+
+        self.args = args
+        self.input_size  = self.args["statedim"] 
+        self.latent_size = self.args["num_obs"] 
+        self.linear_ae   = self.args["linear_autoencoder"]
 
         #encoder layers
-        self.e_fc1 = nn.Linear(input_size, 512)
+        self.e_fc1 = nn.Linear(self.input_size, 512)
         # self.e_fc2 = nn.Linear(512, 512)
         self.e_fc2 = nn.Linear(512, 256)
         self.e_fc3 = nn.Linear(256, 128)
         self.e_fc4 = nn.Linear(128, 64)
-        self.e_fc5 = nn.Linear(64, latent_size)
+        self.e_fc5 = nn.Linear(64, self.latent_size)
 
         #decoder layers
-        self.d_fc1 = nn.Linear(latent_size, 64)
+        self.d_fc1 = nn.Linear(self.latent_size, 64)
         self.d_fc2 = nn.Linear(64, 128)
         self.d_fc3 = nn.Linear(128, 256)
         self.d_fc4 = nn.Linear(256, 512)
-        self.d_fc5 = nn.Linear(512, input_size)
+        self.d_fc5 = nn.Linear(512, self.input_size)
         # self.d_fc6 = nn.Linear(512, input_size)
 
         #reg layers
@@ -100,18 +100,23 @@ class Autoencoder_wseq(nn.Module):
 
 
 #creates nn network using sequential method
-class Autoencoder(nn.Module):
+class Autoencoder_sequential(nn.Module):
 
-    def __init__(self, input_size, latent_size, linear_ae = False):
-        super(Autoencoder, self).__init__()
+    def __init__(self, args):
+        super(Autoencoder_sequential, self).__init__()
 
-        self.latent_size = latent_size
+        print("AE_Model: Autoencoder_sequential")
+
+        self.args = args
+        self.input_size  = self.args["statedim"] 
+        self.latent_size = self.args["num_obs"] 
+        self.linear_ae   = self.args["linear_autoencoder"]
 
         ## For old models where dropout was not possible
         #non linear autoencoder
-        if not linear_ae:
+        if not self.linear_ae:
             self.encoder = nn.Sequential(
-                nn.Linear(input_size, 512),
+                nn.Linear(self.input_size, 512),
                 # torch.nn.Dropout(p=0.5, inplace=False)
                 # nn.Tanh(inplace=True),
                 nn.ReLU(),
@@ -121,11 +126,11 @@ class Autoencoder(nn.Module):
                 nn.ReLU(),
                 nn.Linear(128, 64),
                 nn.ReLU(),
-                nn.Linear(64, latent_size)
+                nn.Linear(64, self.latent_size)
             )
 
             self.decoder = nn.Sequential(
-                nn.Linear(latent_size, 64),
+                nn.Linear(self.latent_size, 64),
                 nn.ReLU(),
                 nn.Linear(64, 128),
                 nn.ReLU(),
@@ -133,26 +138,26 @@ class Autoencoder(nn.Module):
                 nn.ReLU(),
                 nn.Linear(256, 512),
                 nn.ReLU(),
-                nn.Linear(512, input_size)
+                nn.Linear(512, self.input_size)
             )
         
         #linear autoencoder
         else:
             self.encoder = nn.Sequential(
-                nn.Linear(input_size, 512),
+                nn.Linear(self.input_size, 512),
                 # nn.Tanh(inplace=True),
                 nn.Linear(512, 256),
                 nn.Linear(256, 128),
                 nn.Linear(128, 64),
-                nn.Linear(64, latent_size)
+                nn.Linear(64, self.latent_size)
             )
 
             self.decoder = nn.Sequential(
-                nn.Linear(latent_size, 64),
+                nn.Linear(self.latent_size, 64),
                 nn.Linear(64, 128),
                 nn.Linear(128, 256),
                 nn.Linear(256, 512),
-                nn.Linear(512, input_size)
+                nn.Linear(512, self.input_size)
             )
 
 

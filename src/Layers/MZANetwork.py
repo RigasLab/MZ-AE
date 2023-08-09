@@ -3,27 +3,34 @@ import torch.nn as nn
 from torch.utils.data import DataLoader
 from src.PreProc_Data.DataProc import SequenceDataset
 
+import inspect
+
+import src.Layers.Autoencoder as Autoencoder
+import src.Layers.RNN_Model as RNN_Model
+import src.Layers.Koopman as Koopman
 
 class MZANetwork(nn.Module):
-    def __init__(self, exp_args : dict, 
-                       autoencoder : object,
-                       koopman : object,
-                       seqmodel  : object):
+    def __init__(self, exp_args : dict):
         super(MZANetwork, self).__init__()
         
         
         self.args        = exp_args
-        self.autoencoder = autoencoder(input_size = self.args["statedim"], latent_size = self.args["num_obs"], linear_ae = self.args["linear_autoencoder"])
-        self.koopman     = koopman(latent_size = self.args["num_obs"], device = self.args["device"], stable_koopman_init = self.args["stable_koopman_init"])
-        if not self.args["deactivate_seqmodel"] or (self.args["nepoch_actseqmodel"] != 0):
-            self.seqmodel    = seqmodel(N = self.args["num_obs"], input_size = self.args["num_obs"], 
-                                    hidden_size = self.args["num_hidden_units"], num_layers = self.args["num_layers"], 
-                                    seq_length = self.args["seq_len"], device = self.args["device"]).to(self.args["device"])
+        self.select_models()
+                
+    def select_models(self):
+        
+        autoencoder_models = {name: member for name, member in inspect.getmembers(Autoencoder) if inspect.isclass(member)}
+        koop_models        = {name: member for name, member in inspect.getmembers(Koopman) if inspect.isclass(member)}
+        seq_models         = {name: member for name, member in inspect.getmembers(RNN_Model) if inspect.isclass(member)}
 
+        self.autoencoder = autoencoder_models[self.args["autoencoder_model"]](self.args) 
+        self.koopman = koop_models[self.args["koop_model"]](self.args)
+
+        if not self.args["deactivate_seqmodel"] or (self.args["nepoch_actseqmodel"] != 0):
+            self.seqmodel = seq_models[self.args["seq_model"]](self.args).to(self.args["device"])  
             if (self.args["nepoch_actseqmodel"] != 0):
                 for param in self.seqmodel.parameters():
                     param.requires_grad = False
-                
 
     def _num_parameters(self):
         count = 0
@@ -31,6 +38,8 @@ class MZANetwork(nn.Module):
             print(name, param.numel())
             count += param.numel()
         return count
+
+    
 
 
     def get_observables(self, Phi):

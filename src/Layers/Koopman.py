@@ -5,12 +5,16 @@ import torch.nn as nn
 
 class Koopman(nn.Module):
 
-    def __init__(self, latent_size, device, stable_koopman_init = False):
+    def __init__(self, args):
         super(Koopman, self).__init__()
+
+        print("Koop_Model: Koopman")
+
+        self.args = args
+        self.latent_size         = self.args["num_obs"]
+        self.device              = self.args["device"]
+        self.stable_koopman_init = self.args["stable_koopman_init"]
         
-        self.latent_size = latent_size
-        self.device = device
-        self.stable_koopman_init = stable_koopman_init
         # Learned koopman operator
         # Learns skew-symmetric matrix with a diagonal
         # self.kMatrixDiag = nn.Parameter(torch.rand(self.latent_size), requires_grad=True)#.to(self.device)
@@ -25,11 +29,8 @@ class Koopman(nn.Module):
     
         #Complete matrix initialization
         else:
-            self.kMatrix = nn.Parameter(torch.empty(latent_size, latent_size))
+            self.kMatrix = nn.Parameter(torch.empty(self.latent_size, self.latent_size))
             torch.nn.init.xavier_uniform_(self.kMatrix)
-
-
-        
 
         # print('Koopman Parameters: {}'.format(self._num_parameters()))
 
