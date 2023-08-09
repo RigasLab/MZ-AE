@@ -5,32 +5,34 @@ import torch.nn as nn
 
 class Koopman(nn.Module):
 
-    def __init__(self, args):
+    def __init__(self, args, model_eval = False):
         super(Koopman, self).__init__()
 
         print("Koop_Model: Koopman")
 
         self.args = args
-        self.latent_size         = self.args["num_obs"]
-        self.device              = self.args["device"]
-        self.stable_koopman_init = self.args["stable_koopman_init"]
+
+        if not model_eval:
+            self.latent_size         = self.args["num_obs"]
+            self.device              = self.args["device"]
+            self.stable_koopman_init = self.args["stable_koopman_init"]
+            
+            # Learned koopman operator
+            # Learns skew-symmetric matrix with a diagonal
+            # self.kMatrixDiag = nn.Parameter(torch.rand(self.latent_size), requires_grad=True)#.to(self.device)
+            # self.kMatrixUT   = nn.Parameter(torch.randn(int(self.latent_size*(self.latent_size-1)/2)), requires_grad = True)#.to(self.device)
+            
+            #stable matrix initialization
+            if self.stable_koopman_init:
+                self.kMatrixDiag = nn.Parameter(torch.empty(self.latent_size,1))
+                self.kMatrixUDiag = nn.Parameter(torch.empty(self.latent_size-1,1))
+                torch.nn.init.xavier_uniform_(self.kMatrixDiag)
+                torch.nn.init.xavier_uniform_(self.kMatrixUDiag)
         
-        # Learned koopman operator
-        # Learns skew-symmetric matrix with a diagonal
-        # self.kMatrixDiag = nn.Parameter(torch.rand(self.latent_size), requires_grad=True)#.to(self.device)
-        # self.kMatrixUT   = nn.Parameter(torch.randn(int(self.latent_size*(self.latent_size-1)/2)), requires_grad = True)#.to(self.device)
-        
-        #stable matrix initialization
-        if self.stable_koopman_init:
-            self.kMatrixDiag = nn.Parameter(torch.empty(self.latent_size,1))
-            self.kMatrixUDiag = nn.Parameter(torch.empty(self.latent_size-1,1))
-            torch.nn.init.xavier_uniform_(self.kMatrixDiag)
-            torch.nn.init.xavier_uniform_(self.kMatrixUDiag)
-    
-        #Complete matrix initialization
-        else:
-            self.kMatrix = nn.Parameter(torch.empty(self.latent_size, self.latent_size))
-            torch.nn.init.xavier_uniform_(self.kMatrix)
+            #Complete matrix initialization
+            else:
+                self.kMatrix = nn.Parameter(torch.empty(self.latent_size, self.latent_size))
+                torch.nn.init.xavier_uniform_(self.kMatrix)
 
         # print('Koopman Parameters: {}'.format(self._num_parameters()))
 

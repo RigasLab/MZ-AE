@@ -77,6 +77,7 @@ class MZA_Experiment(DynSystem_Data, Train_Methodology):
             self.args = args
 
             #printing out important information
+            print("########## Imp Info ##########")
             if self.deactivate_seqmodel:
                 print("Training without Seqmodel")
             
@@ -157,14 +158,14 @@ class MZA_Experiment(DynSystem_Data, Train_Methodology):
         self.make_directories()
 
         #Loading and visualising data
-        print("##########LOADING DATASET##########")
+        print("########## LOADING DATASET ##########")
         self.load_and_preproc_data()
 
         # #Creating Statevariable Dataset
         self.create_dataset()
 
         #Creating Model
-        print("##########SETTING UP MODEL##########")
+        print("########## SETTING UP MODEL ##########")
         if not load_model:
             self.model = MZANetwork(self.__dict__).to(self.device)
             
