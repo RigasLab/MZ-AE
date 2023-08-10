@@ -119,7 +119,11 @@ if __name__ == "__main__":
             
             #Loading Weights
             PATH = args.exp_dir+'/'+ args.load_exp_name+"/model_weights/at_epoch{epoch}".format(epoch=args.load_epoch)
-            mza.model.load_state_dict(torch.load(PATH))
+            
+            checkpoint = torch.load(PATH)
+            # mza.model.load_state_dict(torch.load(PATH))
+            mza.model.load_state_dict(checkpoint['model_state_dict'])
+            mza.optimizer.load_state_dict(checkpoint['optimizer_state_dict'])
             
             #Training
             mza.main_train(load_model = True)

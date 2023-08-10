@@ -168,9 +168,9 @@ class MZA_Experiment(DynSystem_Data, Train_Methodology):
         print("########## SETTING UP MODEL ##########")
         if not load_model:
             self.model = MZANetwork(self.__dict__).to(self.device)
-            
+            self.optimizer = torch.optim.Adam(self.model.parameters(), lr = self.learning_rate, weight_decay=1e-5)
             # print(self.model.parameters)
-        self.optimizer = torch.optim.Adam(self.model.parameters(), lr = self.learning_rate, weight_decay=1e-5)
+        
         if not self.deactivate_lrscheduler:
             self.scheduler = StepLR(self.optimizer, 
                     step_size = 20, # Period of learning rate decay
@@ -178,9 +178,15 @@ class MZA_Experiment(DynSystem_Data, Train_Methodology):
         # writer = SummaryWriter(exp_dir+'/'+exp_name+'/'+'log/') #Tensorboard writer
 
         if not load_model:
-            #Saving Initial Model
+            #Saving Initial Model state
             if self.no_save_model:
-                torch.save(self.model, self.exp_dir+'/'+self.exp_name+'/'+self.exp_name)
+                torch.save({
+                    'epoch':-1,
+                    'model_state_dict': self.model.state_dict(),
+                    'optimizer_state_dict':self.optimizer.state_dict()
+                    }, self.exp_dir+'/'+self.exp_name+'/'+self.exp_name)
+                
+                # torch.save(self.model, self.exp_dir+'/'+self.exp_name+'/'+self.exp_name)
 
             #saving args
             self.save_args()
