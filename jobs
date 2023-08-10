@@ -102,7 +102,7 @@
 ##KS Experiments
 # python main.py --dynsys KS --bs 512 --ntransients 5000 --lr 5e-5 --nepochs 2000 --train_size 0.9 --info lr5e-5 --nhu 40 --seq_len 17 --data_dir Data/KS/ks_N512_dt0.025_L22.0_maxn800000.npy --exp_dir Trained_Models/KSLocalLargeDataset --num_obs 6 --lambda_ResL 1 --deactivate_lrscheduler
 
-python main.py --AE_Model Autoencoder_sequential --Seq_Model LSTM_Model --dynsys KS --bs 512 --ntransients 75000 --lr 5e-5 --nepochs 2000 --train_size 0.9 --info lr5e-5 --nhu 100 --seq_len 129 --data_dir Data/KS/ks_N512_dt0.025_L36.0_maxn800000.npy --exp_dir Trained_Models/KSLocalLargeDataset --num_obs 10 --seq_len 64 --lambda_ResL 1 --deactivate_lrscheduler
+python main.py --AE_Model Autoencoder_sequential --Seq_Model LSTM_Model --dynsys KS --bs 512 --ntransients 75000 --lr 5e-5 --nepochs 2000 --nsave 2 --train_size 0.9 --info lr5e-5 --nhu 100 --seq_len 129 --data_dir Data/KS/ks_N512_dt0.025_L36.0_maxn800000.npy --exp_dir Trained_Models/KSLocalLargeDataset --num_obs 10 --seq_len 64 --lambda_ResL 1 --deactivate_lrscheduler
 
 
 # python main.py --dynsys KS --lr 5e-5 --nepochs 15000 --nsave 1000 --train_size 0.8 --time_sample 10 --info lr5e-5_linear_autoencoder_nostateevo --pred_horizon 10 --data_dir Data/KS/ks_N128_dt0.025_L3.4297890236303448.npy --exp_dir Trained_Models/Exp6.1_KS_Seq_lentest --num_obs 16 --ntransients 25000 --nhu 40 --seq_len 6 --deactivate_lrscheduler

@@ -254,16 +254,31 @@ class Train_Methodology():
             
             if self.min_train_loss > train_Ldict["avg_loss"]:
                 self.min_train_loss = train_Ldict["avg_loss"]
-                torch.save(self.model.state_dict(), self.exp_dir+'/'+ self.exp_name+"/model_weights/min_train_loss".format(epoch=ix_epoch))
+                torch.save({
+                    'epoch':ix_epoch,
+                    'model_state_dict': self.model.state_dict(),
+                    'optimizer_state_dict':self.optimizer.state_dict()
+                    }, self.exp_dir+'/'+ self.exp_name+"/model_weights/min_train_loss")
 
             if (ix_epoch%self.nsave == 0):
-                #saving weights
-                torch.save(self.model.state_dict(), self.exp_dir+'/'+ self.exp_name+"/model_weights/at_epoch{epoch}".format(epoch=ix_epoch))
+                #saving weights and optimizer state
+
+                torch.save({
+                    'epoch':ix_epoch,
+                    'model_state_dict': self.model.state_dict(),
+                    'optimizer_state_dict':self.optimizer.state_dict()
+                    }, self.exp_dir+'/'+ self.exp_name+"/model_weights/at_epoch{epoch}".format(epoch=ix_epoch))
+                # torch.save(self.model.state_dict(), self.exp_dir+'/'+ self.exp_name+"/model_weights/at_epoch{epoch}".format(epoch=ix_epoch))
 
             #ending time
             end_time = time()
             print("Time Taken: ", end_time - start_time)
         #saving weights
-        torch.save(self.model.state_dict(), self.exp_dir+'/'+ self.exp_name+"/model_weights/at_epoch{epoch}".format(epoch=ix_epoch))
+        torch.save({
+                    'epoch':ix_epoch,
+                    'model_state_dict': self.model.state_dict(),
+                    'optimizer_state_dict':self.optimizer.state_dict()
+                    }, self.exp_dir+'/'+ self.exp_name+"/model_weights/at_epoch{epoch}".format(epoch=ix_epoch))
+        # torch.save(self.model.state_dict(), self.exp_dir+'/'+ self.exp_name+"/model_weights/at_epoch{epoch}".format(epoch=ix_epoch))
         # writer.close()
         self.logf.close()
