@@ -5,35 +5,37 @@ from torch.autograd import Variable
 "Autoencoder without seq"
 class Autoencoder(nn.Module):
 
-    def __init__(self, args):
+    def __init__(self, args, model_eval = False):
         super(Autoencoder, self).__init__()
 
         print("AE_Model: Autoencoder")
 
         self.args = args
-        self.input_size  = self.args["statedim"] 
-        self.latent_size = self.args["num_obs"] 
-        self.linear_ae   = self.args["linear_autoencoder"]
 
-        #encoder layers
-        self.e_fc1 = nn.Linear(self.input_size, 512)
-        # self.e_fc2 = nn.Linear(512, 512)
-        self.e_fc2 = nn.Linear(512, 256)
-        self.e_fc3 = nn.Linear(256, 128)
-        self.e_fc4 = nn.Linear(128, 64)
-        self.e_fc5 = nn.Linear(64, self.latent_size)
+        if not model_eval:
+            self.input_size  = self.args["statedim"] 
+            self.latent_size = self.args["num_obs"] 
+            self.linear_ae   = self.args["linear_autoencoder"]
 
-        #decoder layers
-        self.d_fc1 = nn.Linear(self.latent_size, 64)
-        self.d_fc2 = nn.Linear(64, 128)
-        self.d_fc3 = nn.Linear(128, 256)
-        self.d_fc4 = nn.Linear(256, 512)
-        self.d_fc5 = nn.Linear(512, self.input_size)
-        # self.d_fc6 = nn.Linear(512, input_size)
+            #encoder layers
+            self.e_fc1 = nn.Linear(self.input_size, 512)
+            # self.e_fc2 = nn.Linear(512, 512)
+            self.e_fc2 = nn.Linear(512, 256)
+            self.e_fc3 = nn.Linear(256, 128)
+            self.e_fc4 = nn.Linear(128, 64)
+            self.e_fc5 = nn.Linear(64, self.latent_size)
 
-        #reg layers
-        self.dropout = nn.Dropout(0.25)
-        self.relu    = nn.ReLU()
+            #decoder layers
+            self.d_fc1 = nn.Linear(self.latent_size, 64)
+            self.d_fc2 = nn.Linear(64, 128)
+            self.d_fc3 = nn.Linear(128, 256)
+            self.d_fc4 = nn.Linear(256, 512)
+            self.d_fc5 = nn.Linear(512, self.input_size)
+            # self.d_fc6 = nn.Linear(512, input_size)
+
+            #reg layers
+            self.dropout = nn.Dropout(0.25)
+            self.relu    = nn.ReLU()
 
     def encoder(self, x):
         #non linear encoder
@@ -102,83 +104,85 @@ class Autoencoder(nn.Module):
 #creates nn network using sequential method
 class Autoencoder_sequential(nn.Module):
 
-    def __init__(self, args):
+    def __init__(self, args, model_eval = False):
         super(Autoencoder_sequential, self).__init__()
 
         print("AE_Model: Autoencoder_sequential")
 
         self.args = args
-        self.input_size  = self.args["statedim"] 
-        self.latent_size = self.args["num_obs"] 
-        self.linear_ae   = self.args["linear_autoencoder"]
 
-        ## For old models where dropout was not possible
-        #non linear autoencoder
-        if not self.linear_ae:
-            self.encoder = nn.Sequential(
-                nn.Linear(self.input_size, 512),
-                # torch.nn.Dropout(p=0.5, inplace=False)
-                # nn.Tanh(inplace=True),
-                nn.ReLU(),
-                nn.Linear(512, 256),
-                nn.ReLU(),
-                nn.Linear(256, 128),
-                nn.ReLU(),
-                nn.Linear(128, 64),
-                nn.ReLU(),
-                nn.Linear(64, self.latent_size)
-            )
+        if not model_eval:
+            self.input_size  = self.args["statedim"] 
+            self.latent_size = self.args["num_obs"] 
+            self.linear_ae   = self.args["linear_autoencoder"]
 
-            self.decoder = nn.Sequential(
-                nn.Linear(self.latent_size, 64),
-                nn.ReLU(),
-                nn.Linear(64, 128),
-                nn.ReLU(),
-                nn.Linear(128, 256),
-                nn.ReLU(),
-                nn.Linear(256, 512),
-                nn.ReLU(),
-                nn.Linear(512, self.input_size)
-            )
-        
-        #linear autoencoder
-        else:
-            self.encoder = nn.Sequential(
-                nn.Linear(self.input_size, 512),
-                # nn.Tanh(inplace=True),
-                nn.Linear(512, 256),
-                nn.Linear(256, 128),
-                nn.Linear(128, 64),
-                nn.Linear(64, self.latent_size)
-            )
+            ## For old models where dropout was not possible
+            #non linear autoencoder
+            if not self.linear_ae:
+                self.encoder = nn.Sequential(
+                    nn.Linear(self.input_size, 512),
+                    # torch.nn.Dropout(p=0.5, inplace=False)
+                    # nn.Tanh(inplace=True),
+                    nn.ReLU(),
+                    nn.Linear(512, 256),
+                    nn.ReLU(),
+                    nn.Linear(256, 128),
+                    nn.ReLU(),
+                    nn.Linear(128, 64),
+                    nn.ReLU(),
+                    nn.Linear(64, self.latent_size)
+                )
 
-            self.decoder = nn.Sequential(
-                nn.Linear(self.latent_size, 64),
-                nn.Linear(64, 128),
-                nn.Linear(128, 256),
-                nn.Linear(256, 512),
-                nn.Linear(512, self.input_size)
-            )
+                self.decoder = nn.Sequential(
+                    nn.Linear(self.latent_size, 64),
+                    nn.ReLU(),
+                    nn.Linear(64, 128),
+                    nn.ReLU(),
+                    nn.Linear(128, 256),
+                    nn.ReLU(),
+                    nn.Linear(256, 512),
+                    nn.ReLU(),
+                    nn.Linear(512, self.input_size)
+                )
+            
+            #linear autoencoder
+            else:
+                self.encoder = nn.Sequential(
+                    nn.Linear(self.input_size, 512),
+                    # nn.Tanh(inplace=True),
+                    nn.Linear(512, 256),
+                    nn.Linear(256, 128),
+                    nn.Linear(128, 64),
+                    nn.Linear(64, self.latent_size)
+                )
+
+                self.decoder = nn.Sequential(
+                    nn.Linear(self.latent_size, 64),
+                    nn.Linear(64, 128),
+                    nn.Linear(128, 256),
+                    nn.Linear(256, 512),
+                    nn.Linear(512, self.input_size)
+                )
 
 
-        # self.encoder = nn.Sequential(
-        #     nn.Linear(input_size, 100),
-        #     nn.ReLU(inplace=True),
-        #     nn.Linear(100, 100),
-        #     nn.ReLU(inplace=True),
-        #     nn.Linear(100, latent_size)
-        # )
+            # self.encoder = nn.Sequential(
+            #     nn.Linear(input_size, 100),
+            #     nn.ReLU(inplace=True),
+            #     nn.Linear(100, 100),
+            #     nn.ReLU(inplace=True),
+            #     nn.Linear(100, latent_size)
+            # )
 
-        # self.decoder = nn.Sequential(
-        #     nn.Linear(latent_size, 100),
-        #     nn.ReLU(inplace=True),
-        #     nn.Linear(100, 100),
-        #     nn.ReLU(inplace=True),
-        #     nn.Linear(100, input_size)
-        # )
-        
-        
-        # print('Total number of parameters: {}'.format(self._num_parameters()))
+            # self.decoder = nn.Sequential(
+            #     nn.Linear(latent_size, 100),
+            #     nn.ReLU(inplace=True),
+            #     nn.Linear(100, 100),
+            #     nn.ReLU(inplace=True),
+            #     nn.Linear(100, input_size)
+            # )
+            
+            
+            # print('Total number of parameters: {}'.format(self._num_parameters()))
 
     def forward(self, Phi_n):
         x_n       = self.encoder(Phi_n)

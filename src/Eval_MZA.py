@@ -17,33 +17,31 @@ class Eval_MZA(MZA_Experiment):
 
         
         args = pickle.load(open(exp_dir + "/" + exp_name + "/args","rb"))
-
-        #safety measure for new parameters added in model
-        if ("linear_autoencoder" not in args.keys()):
-            args["linear_autoencoder"] = False
+        # #safety measure for new parameters added in model
+        # if ("linear_autoencoder" not in args.keys()):
+        #     args["linear_autoencoder"] = False
         
-        if ("nenddata" not in args.keys()):
-            args["nenddata"] = None
+        # if ("nenddata" not in args.keys()):
+        #     args["nenddata"] = None
         
-        if ("stable_koopman_init" not in args.keys()):
-            ski_flag = False
-            args["stable_koopman_init"] = False
-        else:
-            ski_flag = True
+        # if ("stable_koopman_init" not in args.keys()):
+        #     ski_flag = False
+        #     args["stable_koopman_init"] = False
+        # else:
+        #     ski_flag = True
             
-        
         super().__init__(args)
         self.exp_dir = exp_dir
         self.exp_name = exp_name
 
-        if not ski_flag: 
-            self.model.koopman.stable_koopman_init = False
+        # if not ski_flag: 
+        #     self.model.koopman.stable_koopman_init = False
         
-        try:
-            if self.nepoch_actseqmodel != 0:
-                self.deactivate_seqmodel = False
-        except Exception as error:
-            print("An exception occurred:", error)
+        # try:
+        #     if self.nepoch_actseqmodel != 0:
+        #         self.deactivate_seqmodel = False
+        # except Exception as error:
+        #     print("An exception occurred:", error)
             
 
     def load_weights(self, epoch_num, min_loss = False):
@@ -52,7 +50,11 @@ class Eval_MZA(MZA_Experiment):
             PATH = self.exp_dir+'/'+ self.exp_name+"/model_weights/min_train_loss".format(epoch=epoch_num)
         else:
             PATH = self.exp_dir+'/'+ self.exp_name+"/model_weights/at_epoch{epoch}".format(epoch=epoch_num)
-        self.model.load_state_dict(torch.load(PATH))
+        # self.model.load_state_dict(torch.load(PATH))
+
+        checkpoint = torch.load(PATH)
+        self.model.load_state_dict(checkpoint['model_state_dict'])
+        self.optimizer.load_state_dict(checkpoint['optimizer_state_dict'])
 
     @staticmethod
     def state_mse(Phi,Phi_hat):
