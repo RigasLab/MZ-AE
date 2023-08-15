@@ -8,6 +8,9 @@ from src.Train_Methods.Train_Methodology import Train_Methodology
 from src.PreProc_Data.DynSystem_Data import DynSystem_Data
 from torch.optim.lr_scheduler import StepLR
 
+import matplotlib.pyplot as plt
+import pandas as pd
+
 # from utils.train_test import train_model, test_model, predict
 from src.utils.make_dir import mkdirs
 # from torch.utils.tensorboard import SummaryWriter
@@ -201,6 +204,62 @@ class MZA_Experiment(DynSystem_Data, Train_Methodology):
         if self.no_save_model:
             # torch.save(self.model, self.exp_dir+'/'+self.exp_name+'/'+self.exp_name)
             print("model saved in "+ self.exp_dir+'/'+self.exp_name+'/'+self.exp_name)
+    
+    def plot_learning_curves(self):
+
+        df = pd.read_csv(self.exp_dir+'/'+self.exp_name+"/out_log/log")
+
+        min_trainloss = df.loc[df['Train_Loss'].idxmin(), 'epoch']
+        print("Epoch with Minimum train_error: ", min_trainloss)
+
+        #Total Loss
+        plt.figure()
+        plt.semilogy(df['epoch'],df['Train_Loss'], label="Train Loss")
+        plt.semilogy(df['epoch'], df['Test_Loss'], label="Test Loss")
+        plt.legend()
+        plt.xlabel("Epochs")
+        plt.savefig(self.exp_dir+'/'+self.exp_name+"/out_log/TotalLoss.png", dpi = 256, facecolor = 'w', bbox_inches='tight')
+
+        # #Observable Evolution Loss
+        # plt.figure()
+        # plt.semilogy(df['epoch'],df['Train_ObsEvo_Loss'], label="Train Observable Evolution Loss")
+        # plt.semilogy(df['epoch'], df['Test_ObsEvo_Loss'], label="Test Observable Evolution Loss")
+        # plt.legend()
+        # plt.xlabel("Epochs")
+        # plt.savefig(self.exp_dir+'/'+self.exp_name+"/out_log/ObservableLoss.png", dpi = 256, facecolor = 'w', bbox_inches='tight')
+
+        #KoopEvo Loss
+        plt.figure()
+        plt.semilogy(df['epoch'],df['Train_KoopEvo_Loss'], label="Train KoopEvo Loss")
+        plt.semilogy(df['epoch'], df['Test_KoopEvo_Loss'], label="Test KoopEvo Loss")
+        plt.legend()
+        plt.xlabel("Epochs")
+        plt.savefig(self.exp_dir+'/'+self.exp_name+"/out_log/KoopEvo.png", dpi = 256, facecolor = 'w', bbox_inches='tight')
+
+        #Residual Loss
+        plt.figure()
+        plt.semilogy(df['epoch'],df['Train_Residual_Loss'], label="Train Residual Loss")
+        plt.semilogy(df['epoch'], df['Test_Residual_Loss'], label="Test Residual Loss")
+        plt.legend()
+        plt.xlabel("Epochs")
+        plt.savefig(self.exp_dir+'/'+self.exp_name+"/out_log/ResidualLoss.png", dpi = 256, facecolor = 'w', bbox_inches='tight')
+
+
+        #Autoencoder Loss
+        plt.figure()
+        plt.semilogy(df['epoch'],df['Train_Autoencoder_Loss'], label="Train Autoencoder Loss")
+        plt.semilogy(df['epoch'], df['Test_Autoencoder_Loss'], label="Test Autoencoder Loss")
+        plt.legend()
+        plt.xlabel("Epochs")
+        plt.savefig(self.exp_dir+'/'+self.exp_name+"/out_log/AutoencoderLoss.png", dpi = 256, facecolor = 'w', bbox_inches='tight')
+
+        #State Loss
+        plt.figure()
+        plt.semilogy(df['epoch'],df['Train_StateEvo_Loss'], label="Train State Evolution Loss")
+        plt.semilogy(df['epoch'], df['Test_StateEvo_Loss'], label="Test State Evolution Loss")
+        plt.legend()
+        plt.xlabel("Epochs")
+        plt.savefig(self.exp_dir+'/'+self.exp_name+"/out_log/StateLoss.png", dpi = 256, facecolor = 'w', bbox_inches='tight')
 
 
 

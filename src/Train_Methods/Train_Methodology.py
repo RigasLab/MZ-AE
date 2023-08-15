@@ -218,14 +218,14 @@ class Train_Methodology():
 
             #start time
             start_time = time()
-            #learning rate customization
+            #LEARNING RATE CUSTOMIZATION
             if not self.deactivate_lrscheduler:
                 before_lr = self.optimizer.param_groups[0]["lr"]
                 self.scheduler.step()
                 after_lr = self.optimizer.param_groups[0]["lr"]
                 print("Epoch %d: SGD lr %.6f -> %.6f" % (ix_epoch, before_lr, after_lr))
             
-            #Activating seq_model in between if asked
+            #ACTIVATING SEQMODEL IN BETWEEN IF ASKED
             if self.nepoch_actseqmodel!=0:
                 if ix_epoch == self.nepoch_actseqmodel:
                     self.deactivate_seqmodel = False
@@ -234,12 +234,14 @@ class Train_Methodology():
                     
                     print("SEQMODEL : ", not self.deactivate_seqmodel)
 
+            #CALCULATING LOSS
+
             # train_loss, train_ObsEvo_Loss, train_Autoencoder_Loss, train_StateEvo_Loss, train_koop_ptg, train_seqmodel_ptg = 
             train_Ldict = self.train_test_loss("Train")
             test_Ldict  = self.train_test_loss("Test", self.test_dataloader)
             # test_loss, test_ObsEvo_Loss, test_Autoencoder_Loss, test_StateEvo_Loss, test_koop_ptg, test_seqmodel_ptg  = 
             
-            #printing and saving data
+            #PRINTING AND SAVING DATA
             print(f"Epoch {ix_epoch} ")
             print(f"Train Loss: {train_Ldict['avg_loss']}, KoopEvo : {train_Ldict['avg_KoopEvo_Loss']}, Residual : {train_Ldict['avg_Residual_Loss']}, Auto : {train_Ldict['avg_Autoencoder_Loss']}, StateEvo : {train_Ldict['avg_StateEvo_Loss']}")
             print(f"Test Loss: {test_Ldict['avg_loss']}, KoopEvo : {test_Ldict['avg_KoopEvo_Loss']}, Residual : {test_Ldict['avg_Residual_Loss']}, Auto : {test_Ldict['avg_Autoencoder_Loss']}, StateEvo : {test_Ldict['avg_StateEvo_Loss']}")
@@ -252,6 +254,7 @@ class Train_Methodology():
             self.log.writerow(writeable_loss)
             self.logf.flush()
             
+            #saving Min Loss weights and optimizer state
             if self.min_train_loss > train_Ldict["avg_loss"]:
                 self.min_train_loss = train_Ldict["avg_loss"]
                 torch.save({
@@ -261,19 +264,23 @@ class Train_Methodology():
                     }, self.exp_dir+'/'+ self.exp_name+"/model_weights/min_train_loss")
 
             if (ix_epoch%self.nsave == 0):
-                #saving weights and optimizer state
+                #saving weights and plotting loss
+
+                self.plot_learning_curves()
 
                 torch.save({
                     'epoch':ix_epoch,
                     'model_state_dict': self.model.state_dict(),
-                    'optimizer_state_dict':self.optimizer.state_dict()
+                    # 'optimizer_state_dict':self.optimizer.state_dict()
                     }, self.exp_dir+'/'+ self.exp_name+"/model_weights/at_epoch{epoch}".format(epoch=ix_epoch))
                 # torch.save(self.model.state_dict(), self.exp_dir+'/'+ self.exp_name+"/model_weights/at_epoch{epoch}".format(epoch=ix_epoch))
 
             #ending time
             end_time = time()
-            print("Time Taken: ", end_time - start_time)
-        #saving weights
+            print("Epoch Time Taken: ", end_time - start_time)
+        
+
+        #saving final weights
         torch.save({
                     'epoch':ix_epoch,
                     'model_state_dict': self.model.state_dict(),
