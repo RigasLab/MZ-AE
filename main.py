@@ -1,6 +1,6 @@
 import torch, pickle, os
+import pandas as pd
 from src.MZA_Experiment import MZA_Experiment
-
 
 torch.manual_seed(99)
 import argparse
@@ -80,52 +80,63 @@ if __name__ == "__main__":
         
         epochlist = ([int(wfname[8:]) for wfname in dirlist])
         epochlist.sort()
+        epoch_flag = 0   #flag to check if want to start from last epoch
         
         #loads last epoch from the saved weigths
         if (args.load_epoch == -1):
-            args.load_epoch = epochlist[-1]
-        
-        if(args.load_epoch in epochlist):
-            
-            print(f"Training from epoch {args.load_epoch}")
+            epoch_flag =-1
 
-            #creating experiment
+        if(args.load_epoch in epochlist) or (args.load_epoch == -1):
+            
+
+            #CREATING EXPERIMENT
+            #loading params
             loaded_args = pickle.load(open(args.exp_dir + "/" + args.load_exp_name + "/args","rb"))
             
-            #safety measure for old models without new params (adding new params with default value)
-            args_dict = vars(args)
-            print("New parameters not present in model")          
-            for key, value in args_dict.items():
-                if key not in loaded_args.keys():
-                    if key not in ["lr","nlayers","nhu","bs","load_exp_name","stable_koopman_init"]:
-                        print(key)
-                        loaded_args[key] = value
+            # #safety measure for old models without new params (adding new params with default value)
+            # args_dict = vars(args)
+                    
+            # for key, value in args_dict.items():
+            #     if key not in loaded_args.keys():
+                      
+            #         if key not in ["lr","nlayers","nhu","bs","load_exp_name","stable_koopman_init"]:
+            #             print(key)
+            #             loaded_args[key] = value
             
-            if ("stable_koopman_init" not in loaded_args.keys()):
-                ski_flag = False
-                loaded_args["stable_koopman_init"] = False
-            else:
-                ski_flag = True
-            
+            # if ("stable_koopman_init" not in loaded_args.keys()):
+            #     ski_flag = False
+            #     loaded_args["stable_koopman_init"] = False
+            # else:
+            #     ski_flag = True
+
+            if (args.load_epoch == -1):
+                df = pd.read_csv(args.exp_dir+'/'+args.load_exp_name+"/out_log/log")
+                min_trainloss_epoch = df.loc[df['Train_Loss'].idxmin(), 'epoch']
+                args.load_epoch = min_trainloss_epoch
+
             mza  = MZA_Experiment(loaded_args)
             mza.load_epoch = args.load_epoch
 
-            if not ski_flag: 
-                mza.model.koopman.stable_koopman_init = False
+            # if not ski_flag: (-> with code for safety for old models)
+            #     mza.model.koopman.stable_koopman_init = False
 
             # #to change the deactivate seqmodel status
             # if args.chg_deactivate_seqmodel:
             #     mza.deactivate_seqmodel = not mza.deactivate_seqmodel
             
             #Loading Weights
-            PATH = args.exp_dir+'/'+ args.load_exp_name+"/model_weights/at_epoch{epoch}".format(epoch=args.load_epoch)
+            if (epoch_flag == -1):
+                PATH = args.exp_dir+'/'+ args.load_exp_name+"/model_weights/min_train_loss"
+            else:
+                PATH = args.exp_dir+'/'+ args.load_exp_name+"/model_weights/at_epoch{epoch}".format(epoch=args.load_epoch)
             
             checkpoint = torch.load(PATH)
             # mza.model.load_state_dict(torch.load(PATH))
             mza.model.load_state_dict(checkpoint['model_state_dict'])
             mza.optimizer.load_state_dict(checkpoint['optimizer_state_dict'])
-            
+
             #Training
+            print(f"Training from epoch {args.load_epoch}")
             mza.main_train(load_model = True)
 
         else:

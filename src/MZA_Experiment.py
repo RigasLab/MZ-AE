@@ -79,25 +79,28 @@ class MZA_Experiment(DynSystem_Data, Train_Methodology):
 
             self.args = args
 
-            #printing out important information
-            print("########## Imp Info ##########")
-            if self.deactivate_seqmodel:
-                print("Training without Seqmodel")
-            
-            if self.stable_koopman_init:
-                print("Initializing Stable Koopman")
-            
-            if self.linear_autoencoder:
-                print("Using Linear Autoencoder")
-            else:
-                print("Using Non-Linear Autoencoder")
-            
-            #emptying gpu cache memory
-            torch.cuda.empty_cache()
+           
         
         else:
             for k, v in args.items():
                 setattr(self, k, v)
+        
+        #printing out important information
+        print("########## Imp Info ##########")
+        print("System: ", self.dynsys)
+        if self.deactivate_seqmodel:
+            print("Training without Seqmodel")
+        
+        if self.stable_koopman_init:
+            print("Initializing Stable Koopman")
+        
+        if self.linear_autoencoder:
+            print("Using Linear Autoencoder")
+        else:
+            print("Using Non-Linear Autoencoder")
+        
+        #emptying gpu cache memory
+        torch.cuda.empty_cache()
 
     def make_directories(self):
         '''
@@ -162,6 +165,7 @@ class MZA_Experiment(DynSystem_Data, Train_Methodology):
 
         #Loading and visualising data
         print("########## LOADING DATASET ##########")
+        print("Data Dir: ", self.data_dir)
         self.load_and_preproc_data()
 
         # #Creating Statevariable Dataset
@@ -193,6 +197,11 @@ class MZA_Experiment(DynSystem_Data, Train_Methodology):
 
             #saving args
             self.save_args()
+        
+        if load_model:
+            print("AE Model: ", self.autoencoder_model)
+            print("Seq Model: ", self.seq_model)
+            print("Koop Model: ", self.koop_model)
             
         # Initiating Data Logger
         self.log_data(load_model)
@@ -210,7 +219,7 @@ class MZA_Experiment(DynSystem_Data, Train_Methodology):
         df = pd.read_csv(self.exp_dir+'/'+self.exp_name+"/out_log/log")
 
         min_trainloss = df.loc[df['Train_Loss'].idxmin(), 'epoch']
-        print("Epoch with Minimum train_error: ", min_trainloss)
+        # print("Epoch with Minimum train_error: ", min_trainloss)
 
         #Total Loss
         plt.figure()
@@ -219,6 +228,7 @@ class MZA_Experiment(DynSystem_Data, Train_Methodology):
         plt.legend()
         plt.xlabel("Epochs")
         plt.savefig(self.exp_dir+'/'+self.exp_name+"/out_log/TotalLoss.png", dpi = 256, facecolor = 'w', bbox_inches='tight')
+        plt.close()
 
         # #Observable Evolution Loss
         # plt.figure()
@@ -235,6 +245,7 @@ class MZA_Experiment(DynSystem_Data, Train_Methodology):
         plt.legend()
         plt.xlabel("Epochs")
         plt.savefig(self.exp_dir+'/'+self.exp_name+"/out_log/KoopEvo.png", dpi = 256, facecolor = 'w', bbox_inches='tight')
+        plt.close()
 
         #Residual Loss
         plt.figure()
@@ -243,6 +254,7 @@ class MZA_Experiment(DynSystem_Data, Train_Methodology):
         plt.legend()
         plt.xlabel("Epochs")
         plt.savefig(self.exp_dir+'/'+self.exp_name+"/out_log/ResidualLoss.png", dpi = 256, facecolor = 'w', bbox_inches='tight')
+        plt.close()
 
 
         #Autoencoder Loss
@@ -252,6 +264,7 @@ class MZA_Experiment(DynSystem_Data, Train_Methodology):
         plt.legend()
         plt.xlabel("Epochs")
         plt.savefig(self.exp_dir+'/'+self.exp_name+"/out_log/AutoencoderLoss.png", dpi = 256, facecolor = 'w', bbox_inches='tight')
+        plt.close()
 
         #State Loss
         plt.figure()
@@ -260,6 +273,6 @@ class MZA_Experiment(DynSystem_Data, Train_Methodology):
         plt.legend()
         plt.xlabel("Epochs")
         plt.savefig(self.exp_dir+'/'+self.exp_name+"/out_log/StateLoss.png", dpi = 256, facecolor = 'w', bbox_inches='tight')
-
+        plt.close()
 
 

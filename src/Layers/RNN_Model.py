@@ -90,6 +90,7 @@ class LSTM_Model_Attention(nn.Module):
         h_0 = torch.zeros(self.num_layers, x.size(0), self.hidden_size).to(self.device)  # hidden state
         c_0 = torch.zeros(self.num_layers, x.size(0), self.hidden_size).to(self.device)  # internal state
         # Propagate input through LSTM
+        self.lstm.flatten_parameters()
         output, (hn, cn) = self.lstm(x, (h_0, c_0))  # lstm with input, hidden, and internal state
         # print("hn size: ", hn.size())
 

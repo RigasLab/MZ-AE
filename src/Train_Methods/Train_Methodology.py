@@ -273,7 +273,7 @@ class Train_Methodology():
                     'model_state_dict': self.model.state_dict(),
                     # 'optimizer_state_dict':self.optimizer.state_dict()
                     }, self.exp_dir+'/'+ self.exp_name+"/model_weights/at_epoch{epoch}".format(epoch=ix_epoch))
-                # torch.save(self.model.state_dict(), self.exp_dir+'/'+ self.exp_name+"/model_weights/at_epoch{epoch}".format(epoch=ix_epoch))
+                
 
             #ending time
             end_time = time()
