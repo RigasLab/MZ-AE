@@ -1,4 +1,3 @@
-
 import torch
 import torch.nn as nn
 from torch.autograd import Variable
@@ -7,15 +6,16 @@ from torch.autograd import Variable
 class Autoencoder(nn.Module):
 
     def __init__(self, args, model_eval = False):
-        
+        super(Autoencoder, self).__init__()
 
         print("AE_Model: Autoencoder")
 
-        self.load_basic_arguments(args)
+        self.args = args
 
         if not model_eval:
-            
-            super(Autoencoder, self).__init__()
+            self.input_size  = self.args["statedim"] 
+            self.latent_size = self.args["num_obs"] 
+            self.linear_ae   = self.args["linear_autoencoder"]
 
             #encoder layers
             self.e_fc1 = nn.Linear(self.input_size, 512)
@@ -36,17 +36,6 @@ class Autoencoder(nn.Module):
             #reg layers
             self.dropout = nn.Dropout(0.25)
             self.relu    = nn.ReLU()
-    
-    def load_basic_arguments(self, args):
-
-        self.args = args
-        print("AE_Model: Autoencoder")
-        self.input_size  = self.args["statedim"] 
-        self.latent_size = self.args["num_obs"] 
-        self.linear_ae   = self.args["linear_autoencoder"]
-
-        self.dropout = nn.Dropout(0.25)
-        self.relu    = nn.ReLU()
 
     def encoder(self, x):
         #non linear encoder
@@ -116,15 +105,16 @@ class Autoencoder(nn.Module):
 class Autoencoder_sequential(nn.Module):
 
     def __init__(self, args, model_eval = False):
-        
+        super(Autoencoder_sequential, self).__init__()
 
         print("AE_Model: Autoencoder_sequential")
 
-        self.load_basic_arguments(args)
+        self.args = args
 
         if not model_eval:
-
-            super(Autoencoder_sequential, self).__init__()
+            self.input_size  = self.args["statedim"] 
+            self.latent_size = self.args["num_obs"] 
+            self.linear_ae   = self.args["linear_autoencoder"]
 
             ## For old models where dropout was not possible
             #non linear autoencoder
@@ -193,14 +183,6 @@ class Autoencoder_sequential(nn.Module):
             
             
             # print('Total number of parameters: {}'.format(self._num_parameters()))
-
-    def load_basic_arguments(self, args):
-
-        self.args = args
-
-        self.input_size  = self.args["statedim"] 
-        self.latent_size = self.args["num_obs"] 
-        self.linear_ae   = self.args["linear_autoencoder"]
 
     def forward(self, Phi_n):
         x_n       = self.encoder(Phi_n)
