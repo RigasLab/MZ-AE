@@ -109,14 +109,14 @@ class Train_Methodology():
             Phi_n   = Phi_n[None,...] if (Phi_n.ndim == self.state_ndim) else Phi_n #[bs statedim]
             Phi_n_ph = torch.cat((Phi_n[:,None,...], Phi_nn_ph[:,:-1,...]), 1)    #[bs ph_size statedim]
             
-            #flattening batchsize seqlen / batchsize pred_horizon
+            ####### flattening batchsize seqlen / batchsize pred_horizon ######
             Phi_seq = torch.flatten(Phi_seq, start_dim = 0, end_dim = 1) #[bs*seqlen, statedim]
             Phi_nn_ph  = torch.flatten(Phi_nn_ph, start_dim = 0, end_dim = 1) #[bs*ph_size, statedim]
-            #obtain observables
+            ###### obtain observables ######
             x_seq, Phi_seq_hat = self.model.autoencoder(Phi_seq)
             x_nn_ph , Phi_nn_hat_ph_nolatentevol = self.model.autoencoder(Phi_nn_ph)
 
-            #reshaping tensors in desired form
+            ###### reshaping tensors in desired form ######
             sd = (self.statedim,) if str(type(self.statedim)) == "<class 'int'>" else self.statedim
             
             Phi_nn_ph   = Phi_nn_ph.reshape(int(Phi_nn_ph.shape[0]/ph_size), ph_size, *sd) #[bs ph_size statedim]
@@ -133,17 +133,17 @@ class Train_Methodology():
             x_n   = x_n[None,...] if (x_n.ndim == 1) else x_n #[bs obsdim]
             x_seq = x_seq[:,:-1,:] #removing the current timestep from sequence. The sequence length is one less than input
             
-            # #Evolving in Time
+            ####### Evolving in Time ########
             if self.deactivate_seqmodel:
                 x_nn_hat_ph, Phi_nn_hat_ph, koop_nn_ph = self.time_evolution(x_n, x_seq, Phi_n, ph_size)
 
             else:
                 x_nn_hat_ph, Phi_nn_hat_ph, koop_nn_ph, seqmodel_nn_ph = self.time_evolution(x_n, x_seq, Phi_n, ph_size)
 
-            #calculating residual
+            ####### calculating residual ######
             residual = x_nn_ph - koop_nn_ph
 
-            #Calculating loss
+            ####### Calculating loss
             mseLoss      = nn.MSELoss()
             KoopEvo_Loss = mseLoss(koop_nn_ph, x_nn_ph)
             if not self.deactivate_seqmodel:
@@ -157,10 +157,10 @@ class Train_Methodology():
             # seqnorm = torch.norm(seqmodel_nn_ph, p = 'fro')**2
             if not self.deactivate_seqmodel:
                 loss = (KoopEvo_Loss + self.lambda_ResL*Residual_Loss) + \
-                        100*(Autoencoder_Loss) #+ StateEvo_Loss #+ self.seq_model_weight*seqnorm
+                        100*(Autoencoder_Loss) + StateEvo_Loss #+ self.seq_model_weight*seqnorm
             else:
                 loss = 0.1*(KoopEvo_Loss) + \
-                        100*(Autoencoder_Loss) #+ StateEvo_Loss #+ 0.00001*(torch.norm(abs(Phi_n_hat - Phi_n), float('inf')) + torch.norm(abs(Phi_nn_hat - Phi_nn), float('inf')))#+ 0.1*torch.mean(torch.abs(self.model.koopman.kMatrixDiag)) + 0.1*torch.mean(torch.abs(self.model.koopman.kMatrixUT))#(1e-9)*l1_norm
+                        100*(Autoencoder_Loss) + StateEvo_Loss #+ 0.00001*(torch.norm(abs(Phi_n_hat - Phi_n), float('inf')) + torch.norm(abs(Phi_nn_hat - Phi_nn), float('inf')))#+ 0.1*torch.mean(torch.abs(self.model.koopman.kMatrixDiag)) + 0.1*torch.mean(torch.abs(self.model.koopman.kMatrixUT))#(1e-9)*l1_norm
 
             if mode == "Train":
                 # self.optimizer.zero_grad()
