@@ -3,7 +3,7 @@ import numpy as np
 import torch.nn as nn
 # from torch.autograd import Variable
 
-class Koopman(nn.Module):
+class old_Koopman(nn.Module):
 
     def __init__(self, args, model_eval = False):
         super(Koopman, self).__init__()
@@ -95,5 +95,61 @@ class Koopman(nn.Module):
         count = 0
         for name, param in self.named_parameters():
             print(name, param.numel())
+            count += param.numel()
+        return count
+    
+
+"Autoencoder without seq"
+class Koopman(nn.Module):
+
+    def __init__(self, args, model_eval = False):
+
+        super(Koopman, self).__init__()
+
+        print("Koop_Model: new_Koopman")
+
+        self.args = args
+
+        if not model_eval:
+            self.latent_size         = self.args["num_obs"]
+            self.device              = self.args["device"]
+            self.stable_koopman_init = self.args["stable_koopman_init"]
+
+            #encoder layers
+            self.e_fc1 = nn.Linear(self.latent_size, self.latent_size, bias = False)
+    
+
+
+    def forward(self, x_n):
+        x_nn = self.e_fc1(x_n)
+        return x_nn
+
+    def getKoopmanMatrix(self, requires_grad=False):
+        '''
+        Returns current Koopman operator
+        # '''
+
+        # kMatrix = self.kMatrix
+        
+        # self.kMatrix = Variable(torch.Tensor(self.latent_size, self.latent_size), requires_grad=requires_grad).to(self.kMatrixUT.device)
+
+        # utIdx   = torch.triu_indices(self.latent_size, self.latent_size, offset=1)
+        # diagIdx = torch.stack([torch.arange(0, self.latent_size, dtype=torch.long).unsqueeze(0), \
+        #     torch.arange(0,self.latent_size,dtype=torch.long).unsqueeze(0)], dim=0)
+        # self.kMatrix[utIdx[0], utIdx[1]] = self.kMatrixUT
+        # self.kMatrix[utIdx[1], utIdx[0]] = -self.kMatrixUT
+        # self.kMatrix[diagIdx[0], diagIdx[1]] = torch.nn.functional.relu(self.kMatrixDiag)
+
+        for name, param in self.named_parameters():
+            print(name, param.numel())
+            koopman = param
+            break
+
+        return koopman
+    
+    def _num_parameters(self):
+        count = 0
+        for name, param in self.named_parameters():
+            # print(name, param.numel())
             count += param.numel()
         return count

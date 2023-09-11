@@ -107,10 +107,13 @@
 # python main.py --AE_Model Autoencoder_sequential --Seq_Model LSTM_Model_Attention --dynsys 2DCyl --bs 16 --pred_horizon 10 --ntransients 0 --lr 5e-5 --nepochs 5000 --nsave 1 --train_size 0.9 --info lr5e-5 --nhu 40 --num_obs 2 --seq_len 9 --lambda_ResL 1 --data_dir Data/2DCylinder/processed_data/npyfiles/nektar_cyl_data_40_dt0.25_T1000.npy --exp_dir Trained_Models/Exp7.4.1_Attention_Seq_test_Re100 --deactivate_lrscheduler
 # python main.py --load_epoch -1 --exp_dir Trained_Models/Exp7.4.1_Attention_Seq_test_Re100 --load_exp_name sl9_nhu40_numobs2_bs16_lr5e-5 --nepochs 3000
 
+
+python main.py --AE_Model Autoencoder_sequential --Seq_Model LSTM_Model --dynsys 2DCyl --bs 16 --pred_horizon 10 --ntransients 0 --lr 5e-5 --nepochs 5000 --nsave 200 --train_size 0.9 --info lr5e-5 --nhu 40 --num_obs 2 --seq_len 33 --lambda_ResL 1 --data_dir Data/2DCylinder/processed_data/npyfiles/Re150_nektar_cyl_data_40_dt0.25_T1000.npy --exp_dir Trained_Models/Exp7.1.2_Seq_len_test_Re150 --deactivate_lrscheduler
+
 ##KS Experiments
 # python main.py --dynsys KS --bs 512 --ntransients 5000 --lr 5e-5 --nepochs 2000 --train_size 0.9 --info lr5e-5 --nhu 40 --seq_len 17 --data_dir Data/KS/ks_N512_dt0.025_L22.0_maxn800000.npy --exp_dir Trained_Models/KSLocalLargeDataset --num_obs 6 --lambda_ResL 1 --deactivate_lrscheduler
 
-python main.py --AE_Model Autoencoder_sequential --Seq_Model LSTM_Model --dynsys KS --bs 512 --ntransients 75000 --lr 5e-5 --nepochs 2000 --nsave 2 --train_size 0.9 --info lr5e-5 --nhu 100 --seq_len 129 --data_dir Data/KS/ks_N512_dt0.025_L36.0_maxn800000.npy --exp_dir Trained_Models/KSLocalLargeDataset --num_obs 10 --seq_len 64 --lambda_ResL 1 --deactivate_lrscheduler
+# python main.py --AE_Model Autoencoder_sequential --Seq_Model LSTM_Model --dynsys KS --bs 512 --ntransients 75000 --lr 5e-5 --nepochs 2000 --nsave 2 --train_size 0.9 --info lr5e-5 --nhu 100 --seq_len 129 --data_dir Data/KS/ks_N512_dt0.025_L36.0_maxn800000.npy --exp_dir Trained_Models/KSLocalLargeDataset --num_obs 10 --seq_len 64 --lambda_ResL 1 --deactivate_lrscheduler
 
 
 # python main.py --dynsys KS --lr 5e-5 --nepochs 15000 --nsave 1000 --train_size 0.8 --time_sample 10 --info lr5e-5_linear_autoencoder_nostateevo --pred_horizon 10 --data_dir Data/KS/ks_N128_dt0.025_L3.4297890236303448.npy --exp_dir Trained_Models/Exp6.1_KS_Seq_lentest --num_obs 16 --ntransients 25000 --nhu 40 --seq_len 6 --deactivate_lrscheduler
