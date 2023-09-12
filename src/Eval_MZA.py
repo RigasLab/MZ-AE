@@ -54,7 +54,7 @@ class Eval_MZA(MZA_Experiment):
 
         checkpoint = torch.load(PATH)
         self.model.load_state_dict(checkpoint['model_state_dict'])
-        self.optimizer.load_state_dict(checkpoint['optimizer_state_dict'])
+        # self.optimizer.load_state_dict(checkpoint['optimizer_state_dict'])
 
     @staticmethod
     def state_mse(Phi,Phi_hat):

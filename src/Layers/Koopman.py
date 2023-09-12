@@ -3,7 +3,7 @@ import numpy as np
 import torch.nn as nn
 # from torch.autograd import Variable
 
-class old_Koopman(nn.Module):
+class Koopman(nn.Module):
 
     def __init__(self, args, model_eval = False):
         super(Koopman, self).__init__()
@@ -100,11 +100,11 @@ class old_Koopman(nn.Module):
     
 
 "Autoencoder without seq"
-class Koopman(nn.Module):
+class new_Koopman(nn.Module):
 
     def __init__(self, args, model_eval = False):
 
-        super(Koopman, self).__init__()
+        super(new_Koopman, self).__init__()
 
         print("Koop_Model: new_Koopman")
 
