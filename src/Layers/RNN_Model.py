@@ -52,6 +52,9 @@ class LSTM_Model(nn.Module):
 
         return out
 
+# class Linear_RNN(nn.module):
+    
+
 ## applies attention by taking information from the hidden units and generating attention weights
     
 class LSTM_Model_Attention(nn.Module):

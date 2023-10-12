@@ -1,10 +1,13 @@
 import numpy as np
 import csv, h5py, json, pickle
+import torch
 from torch.utils.data import DataLoader
 from src.PreProc_Data.DataProc import StackedSequenceDataset
 
 
 class DynSystem_Data:
+
+
 
     def load_and_preproc_data(self):
         '''
@@ -18,6 +21,7 @@ class DynSystem_Data:
         data_args (dict)      :  Attributes of the loaded data
         '''
         
+        print(self.np)
         self.lp_data   = np.load(self.data_dir)
 
         if self.dynsys == "Duffing":
@@ -29,8 +33,7 @@ class DynSystem_Data:
         
         elif self.dynsys == "2DCyl":
             self.lp_data = self.lp_data[:,self.ntransients:self.nenddata,:]
-
-            
+    
         print("Data Shape: ", self.lp_data.shape)
 
         #additional data parameters
@@ -38,16 +41,24 @@ class DynSystem_Data:
         self.state_ndim = len(self.statedim)
         self.statedim  = self.statedim[0] if self.state_ndim == 1 else self.statedim
         
-
         #Normalising Data
         if self.norm_input:
             print("normalizing Input")
             self.lp_data[...,0] = (self.lp_data[...,0] - np.mean(self.lp_data[...,0],axis=0))/np.std(self.lp_data[...,0],axis=0)
         else:
             print("Not normalizing Input")
-        # data[...,1] = (data[...,1] - np.mean(data[...,1]))/np.std(data[...,1])
+        
 
-    
+        # Calculate the noise level as a fraction of the maximum data value
+        # max_data_value = np.max(self.lp_data)
+        # noise_level = max_data_value * (10**(desired_psnr_percent / -20.0))
+
+        # Generate Gaussian noise with the calculated noise level for each data point
+        noise = np.random.normal(0, self.lp_data.std(), self.lp_data.shape) * self.np
+        self.lp_data_noise = self.lp_data + noise
+
+        
+        
     def create_dataset(self, mode = "Both"):
 
         '''

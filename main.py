@@ -11,7 +11,7 @@ if __name__ == "__main__":
 
     #Training Params
     parser.add_argument('--load_epoch', type = int, default = 0 ,help = "loads model at a particular epoch for training")
-    parser.add_argument('--dynsys', type = str, default = "2DCyl")
+    parser.add_argument('--dynsys', type = str, default = "KS")
     parser.add_argument('--deactivate_lrscheduler', action = 'store_true', help = "deactivates the lrscheduler for prediction")
     parser.add_argument('--pred_horizon', type = int, default = 10, help = "Number of steps to predict over while calculating loss")
 
@@ -43,17 +43,18 @@ if __name__ == "__main__":
     parser.add_argument('--linear_autoencoder', action = 'store_true', help = "use linear autoencoder")
     
     #Data Params ARGS
-    parser.add_argument('--ntransients', type = int,   default = 770000)
+    parser.add_argument('--ntransients', type = int,   default = 50000)
     parser.add_argument('--nenddata', type = int,   default = None)
     parser.add_argument('--bs',          type = int,   default = 16)
     parser.add_argument('--train_size',  type = float, default = 0.9)
     parser.add_argument('--norm_input',  action = 'store_true',  help = "normalises input")
     parser.add_argument('--time_sample', type = int, default = 10, help = "time sampling size")
+    parser.add_argument('--noise_p',  type = float, default = 0.00, help = "percentage noise to add to the data")
 
     #Directory Params ARGS
     parser.add_argument('--exp_dir',    type = str, default = "Trained_Models/Testcode")
     parser.add_argument('--load_exp_name',   type = str, default = "")
-    parser.add_argument('--data_dir',   type = str, default = "Data/KS/ks_N128_dt0.025_L36.0_maxn800000.npy") 
+    parser.add_argument('--data_dir',   type = str, default = "Data/KS/ks_N256_dt0.025_L22.0_maxn800000.npy") 
     parser.add_argument('--nsave',      type = int,   default = 10)
     parser.add_argument('--no_save_model', action = 'store_false',  help = "doesn't save model")
     parser.add_argument('--info',       type = str, default = "_")
@@ -64,6 +65,10 @@ if __name__ == "__main__":
    
     # mza = MZA_Experiment(args)
     # mza.main_train()
+
+    #test
+    # mza = MZA_Experiment(args)
+    # mza.test()
 
 
     #Running from scratch
@@ -88,7 +93,6 @@ if __name__ == "__main__":
 
         if(args.load_epoch in epochlist) or (args.load_epoch == -1):
             
-
             #CREATING EXPERIMENT
             #loading params
             loaded_args = pickle.load(open(args.exp_dir + "/" + args.load_exp_name + "/args","rb"))

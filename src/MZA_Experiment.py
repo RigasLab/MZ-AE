@@ -32,13 +32,14 @@ class MZA_Experiment(DynSystem_Data, Train_Methodology):
         #Data Parameters
         if str(type(args)) != "<class 'dict'>":
 
-            self.dynsys = args.dynsys
+            self.dynsys      = args.dynsys
             self.train_size  = args.train_size
             self.batch_size  = args.bs
             self.ntransients = args.ntransients
             self.seq_len     = args.seq_len
             self.time_sample = args.time_sample
-            self.nenddata = args.nenddata
+            self.nenddata    = args.nenddata
+            self.np          = args.noise_p
 
             #Autoncoder Parameters          
             self.autoencoder_model  = args.AE_Model 
@@ -46,7 +47,7 @@ class MZA_Experiment(DynSystem_Data, Train_Methodology):
             self.linear_autoencoder = args.linear_autoencoder 
 
             #Koopman Parameters
-            self.koop_model = args.Koop_Model
+            self.koop_model          = args.Koop_Model
             self.stable_koopman_init = args.stable_koopman_init
 
             #RNN Parameters
@@ -57,14 +58,14 @@ class MZA_Experiment(DynSystem_Data, Train_Methodology):
             self.seq_model_weight    = args.seq_model_weight
 
             #Model Training # Model Hyper-parameters
-            self.learning_rate    = args.lr      
+            self.learning_rate          = args.lr      
             self.deactivate_lrscheduler = args.deactivate_lrscheduler        
-            self.nepochs            = args.nepochs
-            self.norm_input         = args.norm_input         #if input should be normalised
+            self.nepochs                = args.nepochs
+            self.norm_input             = args.norm_input         #if input should be normalised
             # self.npredsteps         = args.npredsteps
-            self.nepoch_actseqmodel = args.nepoch_actseqmodel
-            self.pred_horizon       = args.pred_horizon
-            self.lambda_ResL        = args.lambda_ResL
+            self.nepoch_actseqmodel     = args.nepoch_actseqmodel
+            self.pred_horizon           = args.pred_horizon
+            self.lambda_ResL            = args.lambda_ResL
 
             #Directory Parameters
             self.nsave         = args.nsave                 #after how many epochs to save
@@ -157,6 +158,8 @@ class MZA_Experiment(DynSystem_Data, Train_Methodology):
             # args_dict["data_args"] = data_args
             pickle.dump(args_dict, f)
             print("Saved Args")
+
+    
 
     def main_train(self, load_model = False):
 
@@ -276,3 +279,17 @@ class MZA_Experiment(DynSystem_Data, Train_Methodology):
         plt.close()
 
 
+
+    def test(self, load_model = False):
+
+        #Loading and visualising data
+        print("########## LOADING DATASET ##########")
+        print("Data Dir: ", self.data_dir)
+        self.load_and_preproc_data()
+
+        plt.figure()
+        print
+        plt.plot(self.lp_data[0,:500,0], label = "normal data")
+        plt.plot(self.lp_data_noise[0,:500,1], label = "noise data")
+        plt.legend()
+        plt.savefig("noise_test.png")

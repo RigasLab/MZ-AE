@@ -10,11 +10,11 @@ import src.Layers.RNN_Model as RNN_Model
 import src.Layers.Koopman as Koopman
 
 class MZANetwork(nn.Module):
-    def __init__(self, exp_args : dict, model_eval = False):
+    def __init__(self, exp_args : dict):
         super(MZANetwork, self).__init__()
         
-        self.args = exp_args
-        self.model_eval = model_eval
+        
+        self.args        = exp_args
         self.select_models()
                 
     def select_models(self):
@@ -31,13 +31,6 @@ class MZANetwork(nn.Module):
             if (self.args["nepoch_actseqmodel"] != 0):
                 for param in self.seqmodel.parameters():
                     param.requires_grad = False
-
-    def reinit_models(self):
-
-        self.autoencoder.load_basic_arguments(self.args)
-        self.koopman.__init__(self.args, model_eval = True)
-        if not self.args["deactivate_seqmodel"] or (self.args["nepoch_actseqmodel"] != 0):
-            self.seqmodel.__init__(self.args, model_eval = True) 
 
     def _num_parameters(self):
         count = 0

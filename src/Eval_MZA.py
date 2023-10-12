@@ -37,11 +37,11 @@ class Eval_MZA(MZA_Experiment):
         # if not ski_flag: 
         #     self.model.koopman.stable_koopman_init = False
         
-        # try:
-        #     if self.nepoch_actseqmodel != 0:
-        #         self.deactivate_seqmodel = False
-        # except Exception as error:
-        #     print("An exception occurred:", error)
+        try:
+            if self.nepoch_actseqmodel != 0:
+                self.deactivate_seqmodel = False
+        except Exception as error:
+            print("An exception occurred:", error)
             
 
     def load_weights(self, epoch_num, min_loss = False):
@@ -111,7 +111,7 @@ class Eval_MZA(MZA_Experiment):
         '''
 
         kde = gaussian_kde(ke)
-        k = np.linspace(min(ke), max(ke), 1000)
+        k = np.linspace(min(ke), max(ke), 10000)
         pdf = kde.evaluate(k)
         return k, pdf
 
@@ -430,8 +430,8 @@ class Eval_MZA(MZA_Experiment):
                 Phi = torch.cat((Phi,Phi_nn[None,...]), 0)
 
                 if n == 0:
-                    grad_xn_xseq = x_seq_n.grad[:,None,...]  #[num_traj timesteps seqlen obsdim]
-                    # grad_xn_x   = x[n][None,...]                    #[timesteps num_trajs obsdim]
+                    grad_xn_xseq = x_seq_n.grad[:,None,...] #[num_traj timesteps seqlen obsdim]
+                    # grad_xn_x   = x[n][None,...]          #[timesteps num_trajs obsdim]
                 else:
                     grad_xn_xseq = torch.cat((grad_xn_xseq, x_seq_n.grad[:,None,...]), 1)
                 
