@@ -18,6 +18,8 @@ class Eval_MZA(MZA_Experiment):
         
         args = pickle.load(open(exp_dir + "/" + exp_name + "/args","rb"))
         # #safety measure for new parameters added in model
+        if ("np" not in args.keys()):
+            args["np"] = 0
         # if ("linear_autoencoder" not in args.keys()):
         #     args["linear_autoencoder"] = False
         

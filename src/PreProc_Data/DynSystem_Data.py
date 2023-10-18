@@ -21,7 +21,6 @@ class DynSystem_Data:
         data_args (dict)      :  Attributes of the loaded data
         '''
         
-        print(self.np)
         self.lp_data   = np.load(self.data_dir)
 
         if self.dynsys == "Duffing":
@@ -48,7 +47,6 @@ class DynSystem_Data:
         else:
             print("Not normalizing Input")
         
-
         # Calculate the noise level as a fraction of the maximum data value
         # max_data_value = np.max(self.lp_data)
         # noise_level = max_data_value * (10**(desired_psnr_percent / -20.0))
