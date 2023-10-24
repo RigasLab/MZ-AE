@@ -40,6 +40,7 @@ class MZA_Experiment(DynSystem_Data, Train_Methodology):
             self.time_sample = args.time_sample
             self.nenddata    = args.nenddata
             self.np          = args.noise_p
+            self.noisecolor  = args.noisecolor
 
             #Autoncoder Parameters          
             self.autoencoder_model  = args.AE_Model 

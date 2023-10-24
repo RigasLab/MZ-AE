@@ -1,6 +1,7 @@
 import numpy as np
 import csv, h5py, json, pickle
 import torch
+import colorednoise as cn
 from torch.utils.data import DataLoader
 from src.PreProc_Data.DataProc import StackedSequenceDataset
 
@@ -52,11 +53,11 @@ class DynSystem_Data:
         # noise_level = max_data_value * (10**(desired_psnr_percent / -20.0))
 
         # Generate Gaussian noise with the calculated noise level for each data point
-        noise = np.random.normal(0, self.lp_data.std(), self.lp_data.shape) * self.np
-        self.lp_data_noise = self.lp_data + noise
 
-        
-        
+        noise = cn.powerlaw_psd_gaussian(self.noisecolor, self.lp_data.shape) * self.np
+        # noise = np.random.normal(0, self.lp_data.std(), self.lp_data.shape) 
+        self.lp_data_noise = self.lp_data + noise
+ 
     def create_dataset(self, mode = "Both"):
 
         '''
