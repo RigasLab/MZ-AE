@@ -56,8 +56,9 @@ class DynSystem_Data:
 
         noise = cn.powerlaw_psd_gaussian(self.noisecolor, self.lp_data.shape) * self.np
         # noise = np.random.normal(0, self.lp_data.std(), self.lp_data.shape) 
-        self.lp_data_noise = self.lp_data + noise
- 
+        self.lp_data_without_noise = self.lp_data
+        self.lp_data = self.lp_data_without_noise + noise
+    
     def create_dataset(self, mode = "Both"):
 
         '''
