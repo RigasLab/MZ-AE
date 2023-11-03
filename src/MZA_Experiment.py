@@ -282,7 +282,8 @@ class MZA_Experiment(DynSystem_Data, Train_Methodology):
 
 
     def test(self, load_model = False):
-
+        import numpy as np
+        import matplotlib.image as mpimg
         #Loading and visualising data
         print("########## LOADING DATASET ##########")
         print("Data Dir: ", self.data_dir)
@@ -290,7 +291,29 @@ class MZA_Experiment(DynSystem_Data, Train_Methodology):
 
         plt.figure()
         print
-        plt.plot(self.lp_data[0,:500,0], label = "normal data")
-        plt.plot(self.lp_data_noise[0,:500,1], label = "noise data")
+        plt.plot(self.lp_data_without_noise[0,:500,0], label = "normal data")
+        plt.plot(self.lp_data[0,:500,1], label = "noise data")
         plt.legend()
-        plt.savefig("noise_test.png")
+        plt.savefig(f"test/noise_images/noise_test_np{self.np}_color{self.noisecolor}.png")
+
+        def plot_spectrum(s, beta):
+            f = np.fft.rfftfreq(s.shape[-1])
+            spec = np.linalg.norm(np.fft.rfft(s, axis = -1), axis = 1).squeeze()
+            data = np.stack((f,spec), axis = 0)
+
+            np.save(f"test/noise_images/data_np{self.np}_color{self.noisecolor}", data)
+            print(data.shape)
+            
+            return plt.loglog(f, spec, label = f"beta: {beta}")[0]
+
+        plt.figure()
+        # loaded_plot = mpimg.imread('test/noise_images/initial_plot.png')
+        # plt.imshow(loaded_plot)  # Display the loaded plot
+        plot_spectrum(self.lp_data,self.noisecolor)
+        print("lpshape: ", self.lp_data.shape)
+        plt.legend()
+
+        
+
+        plt.savefig(f"test/noise_images/spectrum_noise_test_np{self.np}_color{self.noisecolor}.png")
+        # plt.savefig("test/noise_images/initial_plot.png")

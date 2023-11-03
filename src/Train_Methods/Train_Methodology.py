@@ -266,7 +266,10 @@ class Train_Methodology():
             if (ix_epoch%self.nsave == 0):
                 #saving weights and plotting loss
 
-                self.plot_learning_curves()
+                try:
+                    self.plot_learning_curves()
+                except Exception as e:
+                    print(f"An unexpected error occurred: {e}")
 
                 torch.save({
                     'epoch':ix_epoch,
