@@ -279,6 +279,15 @@ class MZA_Experiment(DynSystem_Data, Train_Methodology):
         plt.savefig(self.exp_dir+'/'+self.exp_name+"/out_log/StateLoss.png", dpi = 256, facecolor = 'w', bbox_inches='tight')
         plt.close()
 
+        #LatentEvo Loss
+        plt.figure()
+        plt.semilogy(df['epoch'],df['Train_LatentEvo_Loss'], label="Train Latent Evolution Loss")
+        plt.semilogy(df['epoch'], df['Test_LatentEvo_Loss'], label="Test Latent Evolution Loss")
+        plt.legend()
+        plt.xlabel("Epochs")
+        plt.savefig(self.exp_dir+'/'+self.exp_name+"/out_log/LatentLoss.png", dpi = 256, facecolor = 'w', bbox_inches='tight')
+        plt.close()
+
 
 
     def test(self, load_model = False):

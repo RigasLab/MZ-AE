@@ -99,11 +99,12 @@ class DynSystem_Data:
             
             if self.dynsys == "KS" or self.dynsys == "2DCyl":
                 self.test_data  = self.lp_data[:,int(self.train_size * self.lp_data.shape[1]):]
-            elif self.dynsys == "ExpData":
 
-                self.val_data = self.lp_data[int(self.train_size**2 * self.lp_data.shape[0]):int(self.train_size * self.lp_data.shape[0])]
-                self.test_data = self.lp_data[int(self.train_size * self.lp_data.shape[0]):]
+            elif self.dynsys == "ExpData":
+                self.test_data = self.lp_data[int(self.train_size**2 * self.lp_data.shape[0]):int(self.train_size * self.lp_data.shape[0])]
+                self.val_data = self.lp_data[int(self.train_size * self.lp_data.shape[0]):]
             else:
+                
                 self.test_data  = self.lp_data[int(self.train_size * self.lp_data.shape[0]):]
             
             self.test_num_trajs  = self.test_data.shape[0]
