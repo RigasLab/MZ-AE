@@ -124,8 +124,8 @@ class MZA_Experiment(DynSystem_Data, Train_Methodology):
         #                        ,"Train_koop_ptg", "Train_seqmodel_ptg"\
         #                        ,"Test_koop_ptg", "Test_seqmodel_ptg"]
 
-        self.metrics = ["epoch","Train_Loss","Train_KoopEvo_Loss","Train_Residual_Loss","Train_Autoencoder_Loss","Train_StateEvo_Loss"\
-                               ,"Test_Loss","Test_KoopEvo_Loss", "Test_Residual_Loss","Test_Autoencoder_Loss","Test_StateEvo_Loss"\
+        self.metrics = ["epoch","Train_Loss","Train_KoopEvo_Loss","Train_Residual_Loss","Train_Autoencoder_Loss","Train_StateEvo_Loss","Train_LatentEvo_Loss"\
+                               ,"Test_Loss","Test_KoopEvo_Loss", "Test_Residual_Loss","Test_Autoencoder_Loss","Test_StateEvo_Loss","Test_LatentEvo_Loss"\
                                ,"Train_koop_ptg", "Train_seqmodel_ptg"\
                                ,"Test_koop_ptg", "Test_seqmodel_ptg"]
 
