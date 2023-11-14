@@ -124,8 +124,8 @@ class MZA_Experiment(DynSystem_Data, Train_Methodology):
         #                        ,"Train_koop_ptg", "Train_seqmodel_ptg"\
         #                        ,"Test_koop_ptg", "Test_seqmodel_ptg"]
 
-        self.metrics = ["epoch","Train_Loss","Train_KoopEvo_Loss","Train_Residual_Loss","Train_Autoencoder_Loss","Train_StateEvo_Loss"\
-                               ,"Test_Loss","Test_KoopEvo_Loss", "Test_Residual_Loss","Test_Autoencoder_Loss","Test_StateEvo_Loss"\
+        self.metrics = ["epoch","Train_Loss","Train_KoopEvo_Loss","Train_Residual_Loss","Train_Autoencoder_Loss","Train_StateEvo_Loss","Train_LatentEvo_Loss"\
+                               ,"Test_Loss","Test_KoopEvo_Loss", "Test_Residual_Loss","Test_Autoencoder_Loss","Test_StateEvo_Loss","Test_LatentEvo_Loss"\
                                ,"Train_koop_ptg", "Train_seqmodel_ptg"\
                                ,"Test_koop_ptg", "Test_seqmodel_ptg"]
 
@@ -279,41 +279,69 @@ class MZA_Experiment(DynSystem_Data, Train_Methodology):
         plt.savefig(self.exp_dir+'/'+self.exp_name+"/out_log/StateLoss.png", dpi = 256, facecolor = 'w', bbox_inches='tight')
         plt.close()
 
+        #LatentEvo Loss
+        plt.figure()
+        plt.semilogy(df['epoch'],df['Train_LatentEvo_Loss'], label="Train Latent Evolution Loss")
+        plt.semilogy(df['epoch'], df['Test_LatentEvo_Loss'], label="Test Latent Evolution Loss")
+        plt.legend()
+        plt.xlabel("Epochs")
+        plt.savefig(self.exp_dir+'/'+self.exp_name+"/out_log/LatentLoss.png", dpi = 256, facecolor = 'w', bbox_inches='tight')
+        plt.close()
+
 
 
     def test(self, load_model = False):
-        import numpy as np
-        import matplotlib.image as mpimg
-        #Loading and visualising data
+
+        from src.Layers.Autoencoder import Conv2D_Autoencoder
         print("########## LOADING DATASET ##########")
         print("Data Dir: ", self.data_dir)
         self.load_and_preproc_data()
+        self.create_dataset()
 
-        plt.figure()
-        print
-        plt.plot(self.lp_data_without_noise[0,:500,0], label = "normal data")
-        plt.plot(self.lp_data[0,:500,1], label = "noise data")
-        plt.legend()
-        plt.savefig(f"test/noise_images/noise_test_np{self.np}_color{self.noisecolor}.png")
+        autoencoder = Conv2D_Autoencoder(self.__dict__)
+        
+        for a,b in self.train_dataloader:
+            print("shape of a#### : ", a.shape)
+            a = torch.flatten(a,start_dim = 0, end_dim = 1)
+            x = autoencoder.encoder(a)
+            y = autoencoder.decoder(x)
+            print("shape x: ", x.shape)
+            print("shape y: ", y.shape)
+            break
 
-        def plot_spectrum(s, beta):
-            f = np.fft.rfftfreq(s.shape[-1])
-            spec = np.linalg.norm(np.fft.rfft(s, axis = -1), axis = 1).squeeze()
-            data = np.stack((f,spec), axis = 0)
+        #Test for Noise
+        # import numpy as np
+        # import matplotlib.image as mpimg
+        # #Loading and visualising data
+        # print("########## LOADING DATASET ##########")
+        # print("Data Dir: ", self.data_dir)
+        # self.load_and_preproc_data()
 
-            np.save(f"test/noise_images/data_np{self.np}_color{self.noisecolor}", data)
-            print(data.shape)
+        # plt.figure()
+        # print
+        # plt.plot(self.lp_data_without_noise[0,:500,0], label = "normal data")
+        # plt.plot(self.lp_data[0,:500,1], label = "noise data")
+        # plt.legend()
+        # plt.savefig(f"test/noise_images/noise_test_np{self.np}_color{self.noisecolor}.png")
+
+        # def plot_spectrum(s, beta):
+        #     f = np.fft.rfftfreq(s.shape[-1])
+        #     spec = np.linalg.norm(np.fft.rfft(s, axis = -1), axis = 1).squeeze()
+        #     data = np.stack((f,spec), axis = 0)
+
+        #     np.save(f"test/noise_images/data_np{self.np}_color{self.noisecolor}", data)
+        #     print(data.shape)
             
-            return plt.loglog(f, spec, label = f"beta: {beta}")[0]
+        #     return plt.loglog(f, spec, label = f"beta: {beta}")[0]
 
-        plt.figure()
-        # loaded_plot = mpimg.imread('test/noise_images/initial_plot.png')
-        # plt.imshow(loaded_plot)  # Display the loaded plot
-        plot_spectrum(self.lp_data,self.noisecolor)
-        print("lpshape: ", self.lp_data.shape)
-        plt.legend()
+        # plt.figure()
+        # # loaded_plot = mpimg.imread('test/noise_images/initial_plot.png')
+        # # plt.imshow(loaded_plot)  # Display the loaded plot
+        # plot_spectrum(self.lp_data,self.noisecolor)
+        # print("lpshape: ", self.lp_data.shape)
+        # plt.legend()
 
         
 
-        plt.savefig(f"test/noise_images/spectrum_noise_test_np{self.np}_color{self.noisecolor}.png")
-        # plt.savefig("test/noise_images/initial_plot.png")
+        # plt.savefig(f"test/noise_images/spectrum_noise_test_np{self.np}_color{self.noisecolor}.png")
+        # # plt.savefig("test/noise_images/initial_plot.png")
