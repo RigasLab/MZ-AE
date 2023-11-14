@@ -8,8 +8,6 @@ from src.PreProc_Data.DataProc import StackedSequenceDataset
 
 class DynSystem_Data:
 
-
-
     def load_and_preproc_data(self):
         '''
         loads and preprocesses data
@@ -43,9 +41,9 @@ class DynSystem_Data:
         print("Data Shape: ", self.lp_data.shape)
 
         #additional data parameters
-        self.statedim  = self.lp_data.shape[2:]
+        self.statedim   = self.lp_data.shape[2:]
         self.state_ndim = len(self.statedim)
-        self.statedim  = self.statedim[0] if self.state_ndim == 1 else self.statedim
+        self.statedim   = self.statedim[0] if self.state_ndim == 1 else self.statedim
         print("State Dims: ", self.statedim)
 
         #Normalising Data
@@ -103,13 +101,14 @@ class DynSystem_Data:
             elif self.dynsys == "ExpData":
                 self.test_data = self.lp_data[int(self.train_size**2 * self.lp_data.shape[0]):int(self.train_size * self.lp_data.shape[0])]
                 self.val_data = self.lp_data[int(self.train_size * self.lp_data.shape[0]):]
+                print("Val_Shape: ", self.val_data.shape)
+                
             else:
                 
                 self.test_data  = self.lp_data[int(self.train_size * self.lp_data.shape[0]):]
             
-            self.test_num_trajs  = self.test_data.shape[0]
-            print("Val_Shape: ", self.val_data.shape)
             print("Test_Shape: " , self.test_data.shape)
+            self.test_num_trajs  = self.test_data.shape[0]
             self.test_dataset     = StackedSequenceDataset(self.test_data , self.__dict__)
             self.test_dataloader  = DataLoader(self.test_dataset, batch_size=self.batch_size, shuffle = False, num_workers = 0)
 
