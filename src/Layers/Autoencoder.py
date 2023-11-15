@@ -728,8 +728,6 @@ class Conv2D_Autoencoder(nn.Module):
             x = self.relu(self.d_cc4(x))
             x = self.d_cc5(x)
 
-
-        
         #linear encoder
         else:
             x = self.d_fc1(x)
