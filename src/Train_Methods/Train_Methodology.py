@@ -93,8 +93,8 @@ class Train_Methodology():
             return None
 
         num_batches = len(dataloader)
-        total_loss, total_ObsEvo_Loss, total_Autoencoder_Loss, total_StateEvo_Loss,\
-            total_KoopEvo_Loss, total_Residual_Loss  = 0,0,0,0,0,0
+        total_loss, total_ObsEvo_Loss, total_Autoencoder_Loss, total_StateEvo_Loss, total_LatentEvo_Loss,\
+            total_KoopEvo_Loss, total_Residual_Loss  = 0,0,0,0,0,0,0
         total_koop_ptg, total_seqmodel_ptg = 0,0
         
 
@@ -150,13 +150,14 @@ class Train_Methodology():
                 Residual_Loss = mseLoss(seqmodel_nn_ph, residual)
             Autoencoder_Loss  = mseLoss(Phi_n_hat_ph, Phi_n_ph)
             StateEvo_Loss     = mseLoss(Phi_nn_hat_ph, Phi_nn_ph)
+            LatentEvo_Loss    = mseLoss(x_nn_hat_ph, x_nn_ph)
 
             #calculating l1 norm of the matrix
             # kMatrix = self.model.koopman.getKoopmanMatrix(requires_grad = False)
             # l1_norm = torch.norm(kMatrix, p=1)
             # seqnorm = torch.norm(seqmodel_nn_ph, p = 'fro')**2
             if not self.deactivate_seqmodel:
-                loss = (KoopEvo_Loss + self.lambda_ResL*Residual_Loss) + \
+                loss = (KoopEvo_Loss + self.lambda_ResL*Residual_Loss + LatentEvo_Loss) + \
                         100*(Autoencoder_Loss) #+ StateEvo_Loss) #+ self.seq_model_weight*seqnorm
             else:
                 loss = 0.1*(KoopEvo_Loss) + \
@@ -176,6 +177,7 @@ class Train_Methodology():
                 total_Residual_Loss += Residual_Loss.item()
             total_Autoencoder_Loss += Autoencoder_Loss.item()
             total_StateEvo_Loss    += StateEvo_Loss.item()
+            total_LatentEvo_Loss   += LatentEvo_Loss.item()
             total_koop_ptg         += 0#koop_ptg
             total_seqmodel_ptg     += 0#seq_ptg
 
@@ -187,11 +189,12 @@ class Train_Methodology():
             avg_Residual_Loss    = total_Residual_Loss / num_batches
         avg_Autoencoder_Loss = total_Autoencoder_Loss / num_batches
         avg_StateEvo_Loss    = total_StateEvo_Loss / num_batches
+        avg_LatentEvo_Loss   = total_LatentEvo_Loss / num_batches
         avg_koop_ptg         = total_koop_ptg / num_batches
         avg_seqmodel_ptg     = total_seqmodel_ptg / num_batches
 
         Ldict = {'avg_loss': avg_loss, 'avg_KoopEvo_Loss': avg_KoopEvo_Loss, 'avg_Residual_Loss': 0, \
-                 'avg_Autoencoder_Loss': avg_Autoencoder_Loss, 'avg_StateEvo_Loss': avg_StateEvo_Loss,\
+                 'avg_Autoencoder_Loss': avg_Autoencoder_Loss, 'avg_StateEvo_Loss': avg_StateEvo_Loss, 'avg_LatentEvo_Loss': avg_LatentEvo_Loss,\
                  'avg_koop_ptg': avg_koop_ptg, 'avg_seqmodel_ptg': avg_seqmodel_ptg} 
         if not self.deactivate_seqmodel:
             Ldict['avg_Residual_Loss'] = avg_Residual_Loss
@@ -207,7 +210,7 @@ class Train_Methodology():
         print("Untrained Test\n--------")
         test_Ldict = self.train_test_loss("Test", self.test_dataloader)
         # test_loss, test_ObsEvo_Loss, test_Autoencoder_Loss, test_StateEvo_Loss, test_koop_ptg, test_seqmodel_ptg = 
-        print(f"Test Loss: {test_Ldict['avg_loss']}, KoopEvo : {test_Ldict['avg_KoopEvo_Loss']}, Residual : {test_Ldict['avg_Residual_Loss']}, Auto : {test_Ldict['avg_Autoencoder_Loss']}, StateEvo : {test_Ldict['avg_StateEvo_Loss']}")
+        print(f"Test Loss: {test_Ldict['avg_loss']:<{6}}, KoopEvo : {test_Ldict['avg_KoopEvo_Loss']:<{6}}, Residual : {test_Ldict['avg_Residual_Loss']:<{6}}, Auto : {test_Ldict['avg_Autoencoder_Loss']:<{6}}, StateEvo : {test_Ldict['avg_StateEvo_Loss']:<{6}}, LatentEvo : {test_Ldict['avg_LatentEvo_Loss']}")
 
         # min train loss
         self.min_train_loss = 1000 
@@ -243,11 +246,12 @@ class Train_Methodology():
             
             #PRINTING AND SAVING DATA
             print(f"Epoch {ix_epoch} ")
-            print(f"Train Loss: {train_Ldict['avg_loss']}, KoopEvo : {train_Ldict['avg_KoopEvo_Loss']}, Residual : {train_Ldict['avg_Residual_Loss']}, Auto : {train_Ldict['avg_Autoencoder_Loss']}, StateEvo : {train_Ldict['avg_StateEvo_Loss']}")
-            print(f"Test Loss: {test_Ldict['avg_loss']}, KoopEvo : {test_Ldict['avg_KoopEvo_Loss']}, Residual : {test_Ldict['avg_Residual_Loss']}, Auto : {test_Ldict['avg_Autoencoder_Loss']}, StateEvo : {test_Ldict['avg_StateEvo_Loss']}")
+            print(f"Train Loss: {train_Ldict['avg_loss']:<{6}}, KoopEvo : {train_Ldict['avg_KoopEvo_Loss']:<{6}}, Residual : {train_Ldict['avg_Residual_Loss']:<{6}}, Auto : {train_Ldict['avg_Autoencoder_Loss']:<{6}}, StateEvo : {train_Ldict['avg_StateEvo_Loss']:<{6}}, LatentEvo : {train_Ldict['avg_LatentEvo_Loss']}")
+            print(f"Test Loss: {test_Ldict['avg_loss']:<{6}}, KoopEvo : {test_Ldict['avg_KoopEvo_Loss']:<{6}}, Residual : {test_Ldict['avg_Residual_Loss']:<{6}}, Auto : {test_Ldict['avg_Autoencoder_Loss']:<{6}}, StateEvo : {test_Ldict['avg_StateEvo_Loss']:<{6}}, LatentEvo : {test_Ldict['avg_LatentEvo_Loss']}")
 
-            writeable_loss = {"epoch":ix_epoch,"Train_Loss":train_Ldict['avg_loss'], "Train_KoopEvo_Loss":train_Ldict['avg_KoopEvo_Loss'], "Train_Residual_Loss":train_Ldict['avg_Residual_Loss'], "Train_Autoencoder_Loss":train_Ldict["avg_Autoencoder_Loss"], "Train_StateEvo_Loss":train_Ldict["avg_StateEvo_Loss"],\
-                                                "Test_Loss":test_Ldict['avg_loss'], "Test_KoopEvo_Loss":test_Ldict['avg_KoopEvo_Loss'], "Test_Residual_Loss":test_Ldict['avg_Residual_Loss'],  "Test_Autoencoder_Loss":test_Ldict["avg_Autoencoder_Loss"], "Test_StateEvo_Loss":test_Ldict["avg_StateEvo_Loss"],\
+            indentation = 0
+            writeable_loss = {"epoch":str(ix_epoch).rjust(indentation),"Train_Loss":str(train_Ldict['avg_loss']).rjust(indentation), "Train_KoopEvo_Loss":str(train_Ldict['avg_KoopEvo_Loss']).rjust(indentation), "Train_Residual_Loss":str(train_Ldict['avg_Residual_Loss']).rjust(indentation), "Train_Autoencoder_Loss":str(train_Ldict["avg_Autoencoder_Loss"]).rjust(indentation), "Train_StateEvo_Loss":str(train_Ldict["avg_StateEvo_Loss"]).rjust(indentation), "Train_LatentEvo_Loss":str(train_Ldict["avg_LatentEvo_Loss"]).rjust(indentation),\
+                                                "Test_Loss":str(test_Ldict['avg_loss']).rjust(indentation), "Test_KoopEvo_Loss":str(test_Ldict['avg_KoopEvo_Loss']).rjust(indentation), "Test_Residual_Loss":str(test_Ldict['avg_Residual_Loss']).rjust(indentation),  "Test_Autoencoder_Loss":str(test_Ldict["avg_Autoencoder_Loss"]).rjust(indentation), "Test_StateEvo_Loss":str(test_Ldict["avg_StateEvo_Loss"]).rjust(indentation), "Test_LatentEvo_Loss":str(test_Ldict["avg_LatentEvo_Loss"]).rjust(indentation),\
                                                 "Train_koop_ptg": 0, "Train_seqmodel_ptg": 0,\
                                                 "Test_koop_ptg": 0, "Test_seqmodel_ptg": 0}
             
