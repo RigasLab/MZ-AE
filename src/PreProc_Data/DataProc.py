@@ -298,8 +298,5 @@ that RNN only trains on the converged rsiduals of the Koopman
 
 #############################################################
 
-<<<<<<< HEAD
-=======
 
 
->>>>>>> 3a37276bfa282bc21924f9d9dba38eac347ebca0
