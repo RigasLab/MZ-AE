@@ -103,12 +103,12 @@ class DynSystem_Data:
             elif self.dynsys == "ExpData":
                 self.test_data = self.lp_data[int(self.train_size**2 * self.lp_data.shape[0]):int(self.train_size * self.lp_data.shape[0])]
                 self.val_data = self.lp_data[int(self.train_size * self.lp_data.shape[0]):]
+                print("Val_Shape: ", self.val_data.shape)
             else:
-                
                 self.test_data  = self.lp_data[int(self.train_size * self.lp_data.shape[0]):]
             
             self.test_num_trajs  = self.test_data.shape[0]
-            print("Val_Shape: ", self.val_data.shape)
+            
             print("Test_Shape: " , self.test_data.shape)
             self.test_dataset     = StackedSequenceDataset(self.test_data , self.__dict__)
             self.test_dataloader  = DataLoader(self.test_dataset, batch_size=self.batch_size, shuffle = False, num_workers = 0)

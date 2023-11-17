@@ -52,6 +52,33 @@ class LSTM_Model(nn.Module):
 
         return out
 
+    def predict(self, x, h, c):
+
+        if h==0:
+            h = torch.zeros(self.num_layers, x.size(0), self.hidden_size).to(self.device)  # hidden state
+            c = torch.zeros(self.num_layers, x.size(0), self.hidden_size).to(self.device)  # internal state
+
+        # Propagate input through LSTM
+        output, (hn, cn) = self.lstm(x, (h, c))  # lstm with input, hidden, and internal state
+        # print("hn size: ", hn.size())
+        hn = hn.view(-1, self.hidden_size)  # reshaping the data for Dense layer next
+        # hn = self.linear(hn[0]).flatten()
+        # hn = hn[-1]
+        # print("hn size: ", hn.size())
+        out = self.relu(hn)
+        out = self.fc_1(out)  # first Dense
+        out = self.relu(out)  # relu
+        # out = self.bn1(out)
+        # out = self.dp(out)
+        out = self.fc_2(out)  # second Dense
+        out = self.relu(out)  # relu
+        # out = self.bn2(out)
+        # out = self.dp(out)
+        out = self.fc(out)    # Final Output
+
+        return out,hn,cn
+
+
 # class Linear_RNN(nn.module):
     
 
