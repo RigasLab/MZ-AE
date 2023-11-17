@@ -24,8 +24,11 @@ class Autoencoder(nn.Module):
             self.e_fc3 = nn.Linear(256, 128)
             self.e_fc4 = nn.Linear(128, 64)
             self.e_fc5 = nn.Linear(64, self.latent_size)
+            self.e_fc6 = nn.Linear(self.latent_size, self.latent_size)
+
 
             #decoder layers
+            self.d_fc0 = nn.Linear(self.latent_size, self.latent_size)
             self.d_fc1 = nn.Linear(self.latent_size, 64)
             self.d_fc2 = nn.Linear(64, 128)
             self.d_fc3 = nn.Linear(128, 256)
@@ -49,7 +52,7 @@ class Autoencoder(nn.Module):
             # x = self.dropout(x)
             x = self.relu(self.e_fc4(x))
             x = self.relu(self.e_fc5(x))  #added relu here
-            # x = self.relu(self.e_fc6(x))
+            x = self.e_fc6(x)
         
         #linear encoder
         else:
@@ -64,6 +67,7 @@ class Autoencoder(nn.Module):
     def decoder(self, x):
         #non linear encoder
         if not self.linear_ae:
+            x = self.d_fc0(x)
             x = self.relu(self.d_fc1(x))
             x = self.relu(self.d_fc2(x))
             # x = self.dropout(x)

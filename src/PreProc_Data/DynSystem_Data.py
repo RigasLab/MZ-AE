@@ -104,7 +104,6 @@ class DynSystem_Data:
                 print("Val_Shape: ", self.val_data.shape)
                 
             else:
-                
                 self.test_data  = self.lp_data[int(self.train_size * self.lp_data.shape[0]):]
             
             print("Test_Shape: " , self.test_data.shape)
