@@ -216,7 +216,8 @@ class Train_Methodology():
         print(f"Test Loss: {test_Ldict['avg_loss']:<{6}}, KoopEvo : {test_Ldict['avg_KoopEvo_Loss']:<{6}}, Residual : {test_Ldict['avg_Residual_Loss']:<{6}}, Auto : {test_Ldict['avg_Autoencoder_Loss']:<{6}}, StateEvo : {test_Ldict['avg_StateEvo_Loss']:<{6}}, LatentEvo : {test_Ldict['avg_LatentEvo_Loss']}", flush = True)
 
         # min train loss
-        self.min_train_loss = 1000 
+        self.min_train_loss = 1000
+        self.min_test_loss  = 1000 
         
         print("################## Starting Training ###############", flush = True)
         
@@ -264,13 +265,13 @@ class Train_Methodology():
                 self.logf.flush()
                 
                 #saving Min Loss weights and optimizer state
-                if self.min_train_loss > train_Ldict["avg_loss"]:
-                    self.min_train_loss = train_Ldict["avg_loss"]
+                if self.min_test_loss > test_Ldict["avg_loss"]:
+                    self.min_test_loss = test_Ldict["avg_loss"]
                     torch.save({
                         'epoch':ix_epoch,
                         'model_state_dict': self.model.state_dict(),
                         'optimizer_state_dict':self.optimizer.state_dict()
-                        }, self.exp_dir+'/'+ self.exp_name+"/model_weights/min_train_loss")
+                        }, self.exp_dir+'/'+ self.exp_name+"/model_weights/min_test_loss")
 
                 if (ix_epoch%self.nsave == 0):
                     #saving weights and plotting loss

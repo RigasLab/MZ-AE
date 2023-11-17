@@ -516,6 +516,27 @@ class Eval_MZA(MZA_Experiment):
             x_seq = x_seq.detach() if not self.deactivate_seqmodel else 0
 
             return x.detach(), Phi.detach(), Phi_koop.detach(), x_koop.detach(), x_seq
+    
+    @staticmethod
+    def prediction_limit(Phi_ms_hat, Phi, x):
+        '''
+        Computes Prediction limit at threshold of 0.5
+        Input
+        -----
+        Phi_ms_hat (ndarray): [timesteps statedim]
+        Phi        (ndarray): [timesteps statedim]
+        x          (ndarray): [timesteps]
+
+        Returns
+        -------
+        Prediction limit (float) 
+        '''
+        pl  = []
+        for i in range(Phi_ms_hat.shape[0]):
+            pli = np.sqrt(np.mean((Phi_ms_hat[i] - Phi[i])**2)/np.mean(Phi[:i+1]**2))
+            pl.append(pli)
+            if (pli > 0.5):
+                return x[i]
 
     def jacobian_calc(self, initial_conditions, timesteps):
 
