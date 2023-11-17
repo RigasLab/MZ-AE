@@ -2,3 +2,6 @@ Trained_Models/*
 Data/*
 __pycache__
 test/noise_images/*
+*.sh
+*.e*
+*.o*

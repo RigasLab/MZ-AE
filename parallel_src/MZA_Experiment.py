@@ -83,7 +83,7 @@ class MZA_Experiment(DynSystem_Data, Train_Methodology):
             self.no_save_model = args.no_save_model
             self.load_epoch    = args.load_epoch
             if self.load_epoch != 0:
-                self.exp_name = args.load_exp_name
+                self.exp_name  = args.load_exp_name
 
             self.args = args
 
@@ -128,18 +128,18 @@ class MZA_Experiment(DynSystem_Data, Train_Methodology):
         #                        ,"Train_koop_ptg", "Train_seqmodel_ptg"\
         #                        ,"Test_koop_ptg", "Test_seqmodel_ptg"]
 
-        self.metrics = ["epoch","Train_Loss","Train_KoopEvo_Loss","Train_Residual_Loss","Train_Autoencoder_Loss","Train_StateEvo_Loss"\
-                               ,"Test_Loss","Test_KoopEvo_Loss", "Test_Residual_Loss","Test_Autoencoder_Loss","Test_StateEvo_Loss"\
+        self.metrics = ["epoch","Train_Loss","Train_KoopEvo_Loss","Train_Residual_Loss","Train_Autoencoder_Loss","Train_StateEvo_Loss","Train_LatentEvo_Loss"\
+                               ,"Test_Loss","Test_KoopEvo_Loss", "Test_Residual_Loss","Test_Autoencoder_Loss","Test_StateEvo_Loss","Test_LatentEvo_Loss"\
                                ,"Train_koop_ptg", "Train_seqmodel_ptg"\
                                ,"Test_koop_ptg", "Test_seqmodel_ptg"]
 
         if load_model:
             self.logf = open(self.exp_dir + '/' + self.exp_name + "/out_log/log", "a")
-            self.log  = csv.DictWriter(self.logf, self.metrics)
+            self.log = csv.DictWriter(self.logf, self.metrics)
 
         else:
             self.logf = open(self.exp_dir + '/' + self.exp_name + "/out_log/log", "w")
-            self.log  = csv.DictWriter(self.logf, self.metrics)
+            self.log = csv.DictWriter(self.logf, self.metrics)
             self.log.writeheader()
 
         print("Logger Initialised")
@@ -194,20 +194,20 @@ class MZA_Experiment(DynSystem_Data, Train_Methodology):
     ###############################################################################
     def main_train(self, rank: int, world_size: int, load_model = False):
         
-        print("in main_train", flush = True)
         #for parallel process
         self.ddp_setup(rank, world_size)
         self.gpu_id = rank
         self.device = rank
 
-        print("gpu_id: ", self.gpu_id, flush = True)
-        
+        print("Training parallel with gpu: ", self.gpu_id, flush = True)        
         # #Creating Statevariable Dataset
         self.create_dataset()
+        
         #Creating Model
-        print("Creating Model", flush = True)
         if self.gpu_id == 0:
+            print("Creating Model", flush = True)
             print("########## SETTING UP MODEL ##########", flush = True)
+        
         if not load_model:
             self.model = MZANetwork(self.__dict__).to(self.gpu_id)
             # print(self.model.parameters)
@@ -218,11 +218,11 @@ class MZA_Experiment(DynSystem_Data, Train_Methodology):
             self.optimizer = torch.optim.Adam(self.DDPmodel.parameters(), lr = self.learning_rate, weight_decay=1e-5)
 
             # print("len parameters: ", len(self.DDPmodel.parameters()))
-            num = 0
-            for name, param in self.DDPmodel.named_parameters():
-                print(num, " : ", name)
-                print(params)
-                num = num + 1
+            # num = 0
+            # for name, param in self.DDPmodel.named_parameters():
+            #     print(num, " : ", name)
+            #     print(param)
+            #     num = num + 1
 
         if not self.deactivate_lrscheduler:
             self.scheduler = StepLR(self.optimizer, 

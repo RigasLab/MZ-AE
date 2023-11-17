@@ -134,6 +134,7 @@ class Train_Methodology():
             x_n   = x_n[None,...] if (x_n.ndim == 1) else x_n #[bs obsdim]
             x_seq = x_seq[:,:-1,:] #removing the current timestep from sequence. The sequence length is one less than input
             
+            Phi_seq_hat = Phi_seq_hat.detach()
             ####### Evolving in Time ########
             if self.deactivate_seqmodel:
                 x_nn_hat_ph, Phi_nn_hat_ph, koop_nn_ph = self.time_evolution(x_n, x_seq, Phi_n, ph_size)
@@ -274,18 +275,18 @@ class Train_Methodology():
                 if (ix_epoch%self.nsave == 0):
                     #saving weights and plotting loss
 
-                    try:
-                        self.plot_learning_curves()
-                    except Exception as e:
-                        print(f"An unexpected error occurred: {e}", flush = True)
-
                     torch.save({
                         'epoch':ix_epoch,
                         'model_state_dict': self.model.state_dict(),
                         # 'optimizer_state_dict':self.optimizer.state_dict()
                         }, self.exp_dir+'/'+ self.exp_name+"/model_weights/at_epoch{epoch}".format(epoch=ix_epoch))
                     
-
+                if (ix_epoch%10 == 0):
+                    try:
+                        self.plot_learning_curves()
+                    except Exception as e:
+                        print(f"An unexpected error occurred: {e}", flush = True)
+                        
                 #ending time
                 end_time = time()
                 print("Epoch Time Taken: ", end_time - start_time, flush = True)
