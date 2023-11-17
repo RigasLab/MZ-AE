@@ -48,7 +48,7 @@ class Autoencoder(nn.Module):
             x = self.relu(self.e_fc3(x))
             # x = self.dropout(x)
             x = self.relu(self.e_fc4(x))
-            x = self.relu(self.e_fc5(x))  #added relu here
+            x = self.e_fc5(x)
             # x = self.relu(self.e_fc6(x))
         
         #linear encoder
