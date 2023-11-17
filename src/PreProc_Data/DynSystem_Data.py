@@ -43,11 +43,7 @@ class DynSystem_Data:
         #additional data parameters
         self.statedim   = self.lp_data.shape[2:]
         self.state_ndim = len(self.statedim)
-<<<<<<< HEAD
-        self.statedim  = self.statedim[0] if self.state_ndim == 1 else self.statedim
-=======
         self.statedim   = self.statedim[0] if self.state_ndim == 1 else self.statedim
->>>>>>> 3a37276bfa282bc21924f9d9dba38eac347ebca0
         print("State Dims: ", self.statedim)
 
         #Normalising Data
@@ -106,18 +102,10 @@ class DynSystem_Data:
                 self.test_data = self.lp_data[int(self.train_size**2 * self.lp_data.shape[0]):int(self.train_size * self.lp_data.shape[0])]
                 self.val_data = self.lp_data[int(self.train_size * self.lp_data.shape[0]):]
                 print("Val_Shape: ", self.val_data.shape)
-<<<<<<< HEAD
-=======
                 
->>>>>>> 3a37276bfa282bc21924f9d9dba38eac347ebca0
             else:
                 self.test_data  = self.lp_data[int(self.train_size * self.lp_data.shape[0]):]
             
-<<<<<<< HEAD
-            self.test_num_trajs  = self.test_data.shape[0]
-            
-=======
->>>>>>> 3a37276bfa282bc21924f9d9dba38eac347ebca0
             print("Test_Shape: " , self.test_data.shape)
             self.test_num_trajs  = self.test_data.shape[0]
             self.test_dataset     = StackedSequenceDataset(self.test_data , self.__dict__)

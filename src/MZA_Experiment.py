@@ -344,5 +344,4 @@ class MZA_Experiment(DynSystem_Data, Train_Methodology):
         
 
         # plt.savefig(f"test/noise_images/spectrum_noise_test_np{self.np}_color{self.noisecolor}.png")
-<<<<<<< HEAD
         # # plt.savefig("test/noise_images/initial_plot.png")
