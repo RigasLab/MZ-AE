@@ -454,6 +454,7 @@ class Conv2D_Autoencoder_2(nn.Module):
             self.latent_size = self.args["num_obs"] 
             self.linear_ae   = self.args["linear_autoencoder"]
             self.conv_filter_size = self.args["conv_filter_size"]
+            self.statedim    = self.args["statedim"]
 
 
             #encoder layers
@@ -466,7 +467,7 @@ class Conv2D_Autoencoder_2(nn.Module):
             self.e_cc3_bn = nn.BatchNorm2d(4) 
             # self.e_cc4 = nn.Conv2d(8, 4, 5, stride=1, padding=0, dilation=1, groups=1, bias=True, padding_mode='zeros', device=self.args["device"], dtype=None)
 
-            e_fc1_fdim = 4*(50-(self.conv_filter_size-1)*3)*(53-(self.conv_filter_size-1)*3)
+            e_fc1_fdim = 4*(self.statedim[1]-(self.conv_filter_size-1)*3)*(self.statedim[2]-(self.conv_filter_size-1)*3)
             self.e_fc1 = nn.Linear(e_fc1_fdim, 1000)
             self.e_fc2 = nn.Linear(1000,100)
             self.e_fc3 = nn.Linear(100, self.latent_size)
@@ -538,8 +539,8 @@ class Conv2D_Autoencoder_2(nn.Module):
             # x = self.dropout(x)
             
             # print("in decoder: ", x.shape)
-            firstdim_for_convx = int(x.numel()/(4*(50-(self.conv_filter_size-1)*3)*(53-(self.conv_filter_size-1)*3)))
-            x = x.reshape(firstdim_for_convx,4,50-(self.conv_filter_size-1)*3,53-(self.conv_filter_size-1)*3)
+            firstdim_for_convx = int(x.numel()/(4*(self.statedim[1]-(self.conv_filter_size-1)*3)*(self.statedim[2]-(self.conv_filter_size-1)*3)))
+            x = x.reshape(firstdim_for_convx,4,self.statedim[1]-(self.conv_filter_size-1)*3,self.statedim[2]-(self.conv_filter_size-1)*3)
 
             x = self.d_cc1_bn(self.relu(self.d_cc1(x)))
             x = self.d_cc2_bn(self.relu(self.d_cc2(x)))
