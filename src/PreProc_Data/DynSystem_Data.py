@@ -37,7 +37,7 @@ class DynSystem_Data:
 
         #for Experimental Data
         elif self.dynsys == "ExpData":
-            self.lp_data = self.lp_data[1:]
+            self.lp_data = self.lp_data[1+self.ntransients:]
         print("Data Shape: ", self.lp_data.shape)
 
         #additional data parameters

@@ -111,7 +111,10 @@
 # python main.py --AE_Model Autoencoder_sequential --Seq_Model LSTM_Model --dynsys 2DCyl --bs 16 --pred_horizon 10 --ntransients 0 --lr 5e-5 --nepochs 5000 --nsave 200 --train_size 0.9 --info lr5e-5 --nhu 40 --num_obs 2 --seq_len 33 --lambda_ResL 1 --data_dir Data/2DCylinder/processed_data/npyfiles/Re150_nektar_cyl_data_40_dt0.25_T1000.npy --exp_dir Trained_Models/Exp7.1.2_Seq_len_test_Re150 --deactivate_lrscheduler
 
 ##KS Experiments
-python main.py --dynsys KS --bs 512 --ntransients 5000 --lr 5e-5 --nepochs 2000 --train_size 0.9 --info lr5e-5 --nhu 40 --seq_len 17 --data_dir Data/KS/ks_N256_dt0.025_L22.0_maxn800000.npy --exp_dir Trained_Models/KSLocalLargeDataset --num_obs 6 --lambda_ResL 1 --deactivate_lrscheduler
+# python main.py --dynsys KS \
+#                --bs 512 \
+#                --ntransients 5000\
+#                --lr 5e-5 --nepochs 2000 --train_size 0.9 --info lr5e-5 --nhu 40 --seq_len 17 --data_dir Data/KS/ks_N256_dt0.025_L22.0_maxn800000.npy --exp_dir Trained_Models/KSLocalLargeDataset --num_obs 6 --lambda_ResL 1 --deactivate_lrscheduler
 
 # python main.py --AE_Model Autoencoder_sequential --Seq_Model LSTM_Model --dynsys KS --bs 512 --ntransients 75000 --lr 5e-5 --nepochs 2000 --nsave 2 --train_size 0.9 --info lr5e-5 --nhu 100 --seq_len 129 --data_dir Data/KS/ks_N512_dt0.025_L36.0_maxn800000.npy --exp_dir Trained_Models/KSLocalLargeDataset --num_obs 10 --seq_len 64 --lambda_ResL 1 --deactivate_lrscheduler
 
@@ -125,7 +128,12 @@ python main.py --dynsys KS --bs 512 --ntransients 5000 --lr 5e-5 --nepochs 2000 
 # python main.py --AE_Model Autoencoder_sequential --Seq_Model LSTM_Model --dynsys KS --bs 512 --ntransients 75000 --lr 5e-5 --nepochs 2000 --nsave 2 --train_size 0.9 --info lr5e-5 --nhu 100 --seq_len 129 --data_dir Data/KS/ks_N512_dt0.025_L22.0_maxn800000.npy --exp_dir Trained_Models/NoiseTest --num_obs 8 --seq_len 13 --noise_p 0.5 --noisecolor 2 --deactivate_lrscheduler
 
 
+##ExpData Experiments
 
+python main.py --AE_Model Conv2D_Autoencoder --Seq_Model LSTM_Model --dynsys ExpData \
+                        --bs 64 --lr 5e-5 --nepochs 1000 --nsave 1000 --train_size 0.8 --time_sample 10 \
+                        --data_dir Data/ExpData/velocity.npy --exp_dir Trained_Models/ExpData/Test \
+                        --pred_horizon 5 --ntransients 8 --num_obs 24 --nhu 100 --seq_len 5 --info test --deactivate_lrscheduler
 
 
 
