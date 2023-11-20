@@ -4,7 +4,7 @@ import csv, pickle, copy
 
 from src.Layers.MZANetwork import MZANetwork
 
-from src.Train_Methods.Train_Methodology import Train_Methodology
+from src.Train_Methods.Train_Methodology import Train_Methodology, Train_Methodology_Autoencoder
 from src.PreProc_Data.DynSystem_Data import DynSystem_Data
 from torch.optim.lr_scheduler import StepLR
 
@@ -104,6 +104,7 @@ class MZA_Experiment(DynSystem_Data, Train_Methodology):
         #emptying gpu cache memory
         torch.cuda.empty_cache()
 
+###########################################################################################################################
     def make_directories(self):
         '''
         Makes Experiment Directory
@@ -115,7 +116,7 @@ class MZA_Experiment(DynSystem_Data, Train_Methodology):
                     ]
         mkdirs(directories)
     
-    
+###########################################################################################################################
     def log_data(self, load_model = False):
 
         # Logging Data
@@ -140,6 +141,7 @@ class MZA_Experiment(DynSystem_Data, Train_Methodology):
 
         print("Logger Initialised")
 
+###########################################################################################################################
     def save_args(self):
 
         #saving args
@@ -161,7 +163,7 @@ class MZA_Experiment(DynSystem_Data, Train_Methodology):
             print("Saved Args")
 
     
-
+###########################################################################################################################
     def main_train(self, load_model = False):
 
         #Making Experiment Directory
@@ -197,8 +199,6 @@ class MZA_Experiment(DynSystem_Data, Train_Methodology):
                     'optimizer_state_dict':self.optimizer.state_dict()
                     }, self.exp_dir+'/'+self.exp_name+'/'+self.exp_name)
                 
-                # torch.save(self.model, self.exp_dir+'/'+self.exp_name+'/'+self.exp_name)
-
             #saving args
             self.save_args()
         
@@ -215,9 +215,9 @@ class MZA_Experiment(DynSystem_Data, Train_Methodology):
 
         #Saving Model
         if self.no_save_model:
-            # torch.save(self.model, self.exp_dir+'/'+self.exp_name+'/'+self.exp_name)
             print("model saved in "+ self.exp_dir+'/'+self.exp_name+'/'+self.exp_name)
     
+###########################################################################################################################
     def plot_learning_curves(self):
 
         df = pd.read_csv(self.exp_dir+'/'+self.exp_name+"/out_log/log")
@@ -233,14 +233,6 @@ class MZA_Experiment(DynSystem_Data, Train_Methodology):
         plt.xlabel("Epochs")
         plt.savefig(self.exp_dir+'/'+self.exp_name+"/out_log/TotalLoss.png", dpi = 256, facecolor = 'w', bbox_inches='tight')
         plt.close()
-
-        # #Observable Evolution Loss
-        # plt.figure()
-        # plt.semilogy(df['epoch'],df['Train_ObsEvo_Loss'], label="Train Observable Evolution Loss")
-        # plt.semilogy(df['epoch'], df['Test_ObsEvo_Loss'], label="Test Observable Evolution Loss")
-        # plt.legend()
-        # plt.xlabel("Epochs")
-        # plt.savefig(self.exp_dir+'/'+self.exp_name+"/out_log/ObservableLoss.png", dpi = 256, facecolor = 'w', bbox_inches='tight')
 
         #KoopEvo Loss
         plt.figure()
@@ -289,7 +281,7 @@ class MZA_Experiment(DynSystem_Data, Train_Methodology):
         plt.close()
 
 
-
+###########################################################################################################################
     def test(self, load_model = False):
 
         from src.Layers.Autoencoder import Conv2D_Autoencoder

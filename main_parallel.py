@@ -39,7 +39,7 @@ if __name__ == "__main__":
     parser.add_argument('--stable_koopman_init', action = 'store_true', help = "creates negative semidefinite koopman")
 
     #AUTOENCODER Params ARGS
-    parser.add_argument('--num_obs',            type = int,   default=8)
+    parser.add_argument('--num_obs',            type = int,   default=8, help = "Latent Size of the Autoencoder")
     parser.add_argument('--linear_autoencoder', action = 'store_true', help = "use linear autoencoder")
     
     #Data Params ARGS
