@@ -24,7 +24,7 @@ class MZANetwork(nn.Module):
         seq_models         = {name: member for name, member in inspect.getmembers(RNN_Model) if inspect.isclass(member)}
 
         self.autoencoder = autoencoder_models[self.args["autoencoder_model"]](self.args) 
-        self.koopman = koop_models[self.args["koop_model"]](self.args)
+        self.koopman     = koop_models[self.args["koop_model"]](self.args)
 
         if not self.args["deactivate_seqmodel"] or (self.args["nepoch_actseqmodel"] != 0):
             self.seqmodel = seq_models[self.args["seq_model"]](self.args).to(self.args["device"])  

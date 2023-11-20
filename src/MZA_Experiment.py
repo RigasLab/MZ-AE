@@ -48,6 +48,7 @@ class MZA_Experiment(DynSystem_Data, Train_Methodology):
             self.num_obs               = args.num_obs
             self.linear_autoencoder    = args.linear_autoencoder 
             self.train_onlyautoencoder = args.train_onlyautoencoder
+            self.conv_filter_size      = args.conv_filter_size
 
             #Koopman Parameters
             self.koop_model          = args.Koop_Model
@@ -82,8 +83,6 @@ class MZA_Experiment(DynSystem_Data, Train_Methodology):
                 self.exp_name = args.load_exp_name
 
             self.args = args
-
-           
         
         else:
             for k, v in args.items():

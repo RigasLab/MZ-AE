@@ -40,6 +40,7 @@ if __name__ == "__main__":
 
     #AUTOENCODER Params ARGS
     parser.add_argument('--num_obs',            type = int,   default=8,   help = "Latent Size of the Autoencoder")
+    parser.add_argument('--conv_filter_size',   type = int,   default=5,   help = "Convolution Filter Size")
     parser.add_argument('--linear_autoencoder',    action = 'store_true',     help = "use linear autoencoder")
     parser.add_argument('--train_onlyautoencoder', action = 'store_true',     help = "train only autoencoder")
 

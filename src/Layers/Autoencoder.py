@@ -1,6 +1,6 @@
 import torch
 import torch.nn as nn
-from torch.autograd import Variable
+# from torch.autograd import Variable
 
 "Autoencoder without seq"
 class Autoencoder(nn.Module):
@@ -453,18 +453,21 @@ class Conv2D_Autoencoder_2(nn.Module):
             self.input_size  = self.args["statedim"] 
             self.latent_size = self.args["num_obs"] 
             self.linear_ae   = self.args["linear_autoencoder"]
+            self.conv_filter_size = self.args["conv_filter_size"]
+
 
             #encoder layers
-            self.e_cc1 = nn.Conv2d(2, 16, 5, stride=1, padding=0, dilation=1, groups=1, bias=True, padding_mode='zeros', device=self.args["device"], dtype=None)
+            self.e_cc1 = nn.Conv2d(2, 16, self.conv_filter_size, stride=1, padding=0, dilation=1, groups=1, bias=True, padding_mode='zeros', device=self.args["device"], dtype=None)
             # self.e_cc2 = nn.Conv1d(26, 256, 2, stride=1, padding=0, dilation=1, groups=1, bias=True, padding_mode='zeros', device=None, dtype=None)
             self.e_cc1_bn = nn.BatchNorm2d(16) 
-            self.e_cc2 = nn.Conv2d(16, 8, 5, stride=1, padding=0, dilation=1, groups=1, bias=True, padding_mode='zeros', device=self.args["device"], dtype=None)
+            self.e_cc2 = nn.Conv2d(16, 8, self.conv_filter_size, stride=1, padding=0, dilation=1, groups=1, bias=True, padding_mode='zeros', device=self.args["device"], dtype=None)
             self.e_cc2_bn = nn.BatchNorm2d(8) 
-            self.e_cc3 = nn.Conv2d(8, 4, 5, stride=1, padding=0, dilation=1, groups=1, bias=True, padding_mode='zeros', device=self.args["device"], dtype=None)
+            self.e_cc3 = nn.Conv2d(8, 4, self.conv_filter_size, stride=1, padding=0, dilation=1, groups=1, bias=True, padding_mode='zeros', device=self.args["device"], dtype=None)
             self.e_cc3_bn = nn.BatchNorm2d(4) 
             # self.e_cc4 = nn.Conv2d(8, 4, 5, stride=1, padding=0, dilation=1, groups=1, bias=True, padding_mode='zeros', device=self.args["device"], dtype=None)
 
-            self.e_fc1 = nn.Linear(6232, 1000)
+            e_fc1_fdim = 4*(50-(self.conv_filter_size-1)*3)*(53-(self.conv_filter_size-1)*3)
+            self.e_fc1 = nn.Linear(e_fc1_fdim, 1000)
             self.e_fc2 = nn.Linear(1000,100)
             self.e_fc3 = nn.Linear(100, self.latent_size)
             self.e_fc4 = nn.Linear(self.latent_size, self.latent_size)
@@ -473,13 +476,13 @@ class Conv2D_Autoencoder_2(nn.Module):
             self.d_fc1 = nn.Linear(self.latent_size, self.latent_size)
             self.d_fc2 = nn.Linear(self.latent_size, 100)
             self.d_fc3 = nn.Linear(100, 1000)
-            self.d_fc4 = nn.Linear(1000, 6232)
+            self.d_fc4 = nn.Linear(1000, e_fc1_fdim)
 
-            self.d_cc1 = torch.nn.ConvTranspose2d(4, 8, 5, stride=1, padding=0, output_padding=0, groups=1, bias=True, dilation=1, padding_mode='zeros', device=self.args["device"], dtype=None)
+            self.d_cc1 = torch.nn.ConvTranspose2d(4, 8, self.conv_filter_size, stride=1, padding=0, output_padding=0, groups=1, bias=True, dilation=1, padding_mode='zeros', device=self.args["device"], dtype=None)
             self.d_cc1_bn = nn.BatchNorm2d(8)
-            self.d_cc2 = torch.nn.ConvTranspose2d(8, 16, 5, stride=1, padding=0, output_padding=0, groups=1, bias=True, dilation=1, padding_mode='zeros', device=self.args["device"], dtype=None)
+            self.d_cc2 = torch.nn.ConvTranspose2d(8, 16, self.conv_filter_size, stride=1, padding=0, output_padding=0, groups=1, bias=True, dilation=1, padding_mode='zeros', device=self.args["device"], dtype=None)
             self.d_cc2_bn = nn.BatchNorm2d(16)
-            self.d_cc3 = torch.nn.ConvTranspose2d(16, 2, 5, stride=1, padding=0, output_padding=0, groups=1, bias=True, dilation=1, padding_mode='zeros', device=self.args["device"], dtype=None)
+            self.d_cc3 = torch.nn.ConvTranspose2d(16, 2, self.conv_filter_size, stride=1, padding=0, output_padding=0, groups=1, bias=True, dilation=1, padding_mode='zeros', device=self.args["device"], dtype=None)
             # self.d_cc4 = torch.nn.ConvTranspose2d(64, 2, 5, stride=1, padding=0, output_padding=0, groups=1, bias=True, dilation=1, padding_mode='zeros', device=self.args["device"], dtype=None)
             self.d_cc3_bn = nn.BatchNorm2d(2)
             self.d_cc4 = torch.nn.ConvTranspose2d(2, 2, 1, stride=1, padding=0, output_padding=0, groups=1, bias=True, dilation=1, padding_mode='zeros', device=self.args["device"], dtype=None)
@@ -535,8 +538,8 @@ class Conv2D_Autoencoder_2(nn.Module):
             # x = self.dropout(x)
             
             # print("in decoder: ", x.shape)
-            firstdim_for_convx = int(x.numel()/(4*38*41))
-            x = x.reshape(firstdim_for_convx,4,38,41)
+            firstdim_for_convx = int(x.numel()/(4*(50-(self.conv_filter_size-1)*3)*(53-(self.conv_filter_size-1)*3)))
+            x = x.reshape(firstdim_for_convx,4,50-(self.conv_filter_size-1)*3,53-(self.conv_filter_size-1)*3)
 
             x = self.d_cc1_bn(self.relu(self.d_cc1(x)))
             x = self.d_cc2_bn(self.relu(self.d_cc2(x)))
