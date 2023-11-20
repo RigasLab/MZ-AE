@@ -45,7 +45,7 @@ if __name__ == "__main__":
 
 
     #Data Params ARGS
-    parser.add_argument('--ntransients', type = int,   default = 50000, help = "number of trainsients to discard in the intial part of the dataset")
+    parser.add_argument('--ntransients', type = int,   default = 1, help = "number of trainsients to discard in the intial part of the dataset")
     parser.add_argument('--nenddata',    type = int,   default = None,  help = "if we want to skip last parts of the dataset")
     parser.add_argument('--bs',          type = int,   default = 16 ,   help = "BatchSize")
     parser.add_argument('--train_size',  type = float, default = 0.9,   help = "Train Data Proportion")

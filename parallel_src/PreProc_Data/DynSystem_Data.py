@@ -43,7 +43,7 @@ class DynSystem_Data:
 
         #for Experimental Data
         elif self.dynsys == "ExpData":
-            self.lp_data = self.lp_data[1:]
+            self.lp_data = self.lp_data[self.ntransients:]
         
         #additional data parameters
         self.statedim  = self.lp_data.shape[2:]
