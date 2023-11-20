@@ -4,7 +4,8 @@ import csv, pickle, copy
 
 from src.Layers.MZANetwork import MZANetwork
 
-from src.Train_Methods.Train_Methodology import Train_Methodology, Train_Methodology_Autoencoder
+from src.Train_Methods.Train_Methodology import Train_Methodology
+# from src.Train_Methods.Train_Methodology_Autoencoder import Train_Methodology_Autoencoder
 from src.PreProc_Data.DynSystem_Data import DynSystem_Data
 from torch.optim.lr_scheduler import StepLR
 
@@ -43,9 +44,10 @@ class MZA_Experiment(DynSystem_Data, Train_Methodology):
             self.noisecolor  = args.noisecolor
 
             #Autoncoder Parameters          
-            self.autoencoder_model  = args.AE_Model 
-            self.num_obs            = args.num_obs
-            self.linear_autoencoder = args.linear_autoencoder 
+            self.autoencoder_model     = args.AE_Model 
+            self.num_obs               = args.num_obs
+            self.linear_autoencoder    = args.linear_autoencoder 
+            self.train_onlyautoencoder = args.train_onlyautoencoder
 
             #Koopman Parameters
             self.koop_model          = args.Koop_Model
@@ -96,6 +98,9 @@ class MZA_Experiment(DynSystem_Data, Train_Methodology):
         if self.stable_koopman_init:
             print("Initializing Stable Koopman")
         
+        if self.train_onlyautoencoder:
+            print("Training only autoencoder")
+            
         if self.linear_autoencoder:
             print("Using Linear Autoencoder")
         else:
@@ -251,7 +256,6 @@ class MZA_Experiment(DynSystem_Data, Train_Methodology):
         plt.xlabel("Epochs")
         plt.savefig(self.exp_dir+'/'+self.exp_name+"/out_log/ResidualLoss.png", dpi = 256, facecolor = 'w', bbox_inches='tight')
         plt.close()
-
 
         #Autoencoder Loss
         plt.figure()

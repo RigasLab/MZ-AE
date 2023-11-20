@@ -73,8 +73,7 @@ class Train_Methodology():
             return x_nn_hat_ph[:,1:,...], Phi_nn_hat_ph[:,1:,...], koop_out_ph, seqmodel_out_ph
         
 
-
-
+################################################################################################################################################
 
     def train_test_loss(self, mode = "Train", dataloader = None):
         '''
@@ -183,7 +182,6 @@ class Train_Methodology():
 
 
         avg_loss             = total_loss / num_batches
-        # avg_ObsEvo_Loss      = total_ObsEvo_Loss / num_batches
         avg_KoopEvo_Loss     = total_KoopEvo_Loss / num_batches
         if not self.deactivate_seqmodel:
             avg_Residual_Loss    = total_Residual_Loss / num_batches
@@ -200,6 +198,86 @@ class Train_Methodology():
             Ldict['avg_Residual_Loss'] = avg_Residual_Loss
 
         return Ldict
+
+################################################################################################################################################
+    
+    def train_test_loss_autoencoder(self, mode = "Train", dataloader = None):
+        '''
+        One Step Prediction method
+        Requires: dataloader, model, optimizer
+        '''
+
+        if mode == "Train":
+            dataloader = self.train_dataloader 
+            self.model.train() 
+        elif mode == "Test":
+            dataloader = self.test_dataloader if dataloader != None else dataloader
+            self.model.eval()
+        else:
+            print("mode can be Train or Test")
+            return None
+
+        num_batches = len(dataloader)
+        total_loss, total_ObsEvo_Loss, total_Autoencoder_Loss, total_StateEvo_Loss, total_LatentEvo_Loss,\
+            total_KoopEvo_Loss, total_Residual_Loss  = 0,0,0,0,0,0,0
+        total_koop_ptg, total_seqmodel_ptg = 0,0
+        
+
+        for Phi_seq, Phi_nn_ph in dataloader:
+            # print(Phi_seq.device, Phi_nn_ph.device)
+            Phi_seq = Phi_seq.to(self.device)##########
+            Phi_nn_ph = Phi_nn_ph.to(self.device)##########
+            
+            Phi_n   = torch.squeeze(Phi_seq[:,-1,...])  
+            Phi_n   = Phi_n[None,...] if (Phi_n.ndim == self.state_ndim) else Phi_n #[bs statedim]
+
+            ####### flattening batchsize seqlen / batchsize pred_horizon ######
+            Phi_seq   = torch.flatten(Phi_seq,   start_dim = 0, end_dim = 1)        #[bs*seqlen, statedim]
+            # Phi_nn_ph = torch.flatten(Phi_nn_ph, start_dim = 0, end_dim = 1)      #[bs*ph_size, statedim]
+            ###### obtain observables ######
+            x_seq, Phi_seq_hat = self.model.autoencoder(Phi_seq)
+
+            ####### Calculating loss
+            mseLoss      = nn.MSELoss()
+            Autoencoder_Loss  = mseLoss(Phi_seq, Phi_seq_hat)
+            
+
+            #calculating l1 norm of the matrix
+            # kMatrix = self.model.koopman.getKoopmanMatrix(requires_grad = False)
+            # l1_norm = torch.norm(kMatrix, p=1)
+            # seqnorm = torch.norm(seqmodel_nn_ph, p = 'fro')**2
+            loss = Autoencoder_Loss
+            
+            if mode == "Train":
+                # self.optimizer.zero_grad()
+                for param in self.model.parameters():
+                    param.grad = None
+                loss.backward()
+                self.optimizer.step()
+
+            total_Autoencoder_Loss += Autoencoder_Loss.item()
+
+
+        avg_loss             = total_loss / num_batches
+        # avg_ObsEvo_Loss      = total_ObsEvo_Loss / num_batches
+        avg_KoopEvo_Loss     = 0 / num_batches
+        if not self.deactivate_seqmodel:
+            avg_Residual_Loss    = 0 / num_batches
+        avg_Autoencoder_Loss = total_Autoencoder_Loss / num_batches
+        avg_StateEvo_Loss    = 0 / num_batches
+        avg_LatentEvo_Loss   = 0 / num_batches
+        avg_koop_ptg         = 0 / num_batches
+        avg_seqmodel_ptg     = 0 / num_batches
+
+        Ldict = {'avg_loss': avg_loss, 'avg_KoopEvo_Loss': avg_KoopEvo_Loss, 'avg_Residual_Loss': 0, \
+                 'avg_Autoencoder_Loss': avg_Autoencoder_Loss, 'avg_StateEvo_Loss': avg_StateEvo_Loss, 'avg_LatentEvo_Loss': avg_LatentEvo_Loss,\
+                 'avg_koop_ptg': avg_koop_ptg, 'avg_seqmodel_ptg': avg_seqmodel_ptg} 
+        if not self.deactivate_seqmodel:
+            Ldict['avg_Residual_Loss'] = avg_Residual_Loss
+
+        return Ldict
+    
+################################################################################################################################################
     
     def training_loop(self):
         '''
@@ -208,7 +286,11 @@ class Train_Methodology():
         '''
         print("Device: ", self.device)
         print("Untrained Test\n--------")
-        test_Ldict = self.train_test_loss("Test", self.test_dataloader)
+
+        if self.train_onlyautoencoder: 
+            test_Ldict = self.train_test_loss_autoencoder("Test", self.test_dataloader)
+        else:
+            test_Ldict = self.train_test_loss("Test", self.test_dataloader)
         # test_loss, test_ObsEvo_Loss, test_Autoencoder_Loss, test_StateEvo_Loss, test_koop_ptg, test_seqmodel_ptg = 
         print(f"Test Loss: {test_Ldict['avg_loss']:<{6}}, KoopEvo : {test_Ldict['avg_KoopEvo_Loss']:<{6}}, Residual : {test_Ldict['avg_Residual_Loss']:<{6}}, Auto : {test_Ldict['avg_Autoencoder_Loss']:<{6}}, StateEvo : {test_Ldict['avg_StateEvo_Loss']:<{6}}, LatentEvo : {test_Ldict['avg_LatentEvo_Loss']}")
 
@@ -239,11 +321,12 @@ class Train_Methodology():
                     print("SEQMODEL : ", not self.deactivate_seqmodel)
 
             #CALCULATING LOSS
-
-            # train_loss, train_ObsEvo_Loss, train_Autoencoder_Loss, train_StateEvo_Loss, train_koop_ptg, train_seqmodel_ptg = 
-            train_Ldict = self.train_test_loss("Train")
-            test_Ldict  = self.train_test_loss("Test", self.test_dataloader)
-            # test_loss, test_ObsEvo_Loss, test_Autoencoder_Loss, test_StateEvo_Loss, test_koop_ptg, test_seqmodel_ptg  = 
+            if self.train_onlyautoencoder: 
+                train_Ldict = self.train_test_loss_autoencoder("Train")
+                test_Ldict  = self.train_test_loss_autoencoder("Test", self.test_dataloader)
+            else:
+                train_Ldict = self.train_test_loss("Train")
+                test_Ldict  = self.train_test_loss("Test", self.test_dataloader)
             
             #PRINTING AND SAVING DATA
             print(f"Epoch {ix_epoch} ")
@@ -251,10 +334,13 @@ class Train_Methodology():
             print(f"Test Loss: {test_Ldict['avg_loss']:<{6}}, KoopEvo : {test_Ldict['avg_KoopEvo_Loss']:<{6}}, Residual : {test_Ldict['avg_Residual_Loss']:<{6}}, Auto : {test_Ldict['avg_Autoencoder_Loss']:<{6}}, StateEvo : {test_Ldict['avg_StateEvo_Loss']:<{6}}, LatentEvo : {test_Ldict['avg_LatentEvo_Loss']}")
 
             indentation = 0
-            writeable_loss = {"epoch":str(ix_epoch).rjust(indentation),"Train_Loss":str(train_Ldict['avg_loss']).rjust(indentation), "Train_KoopEvo_Loss":str(train_Ldict['avg_KoopEvo_Loss']).rjust(indentation), "Train_Residual_Loss":str(train_Ldict['avg_Residual_Loss']).rjust(indentation), "Train_Autoencoder_Loss":str(train_Ldict["avg_Autoencoder_Loss"]).rjust(indentation), "Train_StateEvo_Loss":str(train_Ldict["avg_StateEvo_Loss"]).rjust(indentation), "Train_LatentEvo_Loss":str(train_Ldict["avg_LatentEvo_Loss"]).rjust(indentation),\
-                                                "Test_Loss":str(test_Ldict['avg_loss']).rjust(indentation), "Test_KoopEvo_Loss":str(test_Ldict['avg_KoopEvo_Loss']).rjust(indentation), "Test_Residual_Loss":str(test_Ldict['avg_Residual_Loss']).rjust(indentation),  "Test_Autoencoder_Loss":str(test_Ldict["avg_Autoencoder_Loss"]).rjust(indentation), "Test_StateEvo_Loss":str(test_Ldict["avg_StateEvo_Loss"]).rjust(indentation), "Test_LatentEvo_Loss":str(test_Ldict["avg_LatentEvo_Loss"]).rjust(indentation),\
-                                                "Train_koop_ptg": 0, "Train_seqmodel_ptg": 0,\
-                                                "Test_koop_ptg": 0, "Test_seqmodel_ptg": 0}
+            writeable_loss = {"epoch":str(ix_epoch).rjust(indentation),"Train_Loss":str(train_Ldict['avg_loss']).rjust(indentation), "Train_KoopEvo_Loss":str(train_Ldict['avg_KoopEvo_Loss']).rjust(indentation),\
+                              "Train_Residual_Loss":str(train_Ldict['avg_Residual_Loss']).rjust(indentation), "Train_Autoencoder_Loss":str(train_Ldict["avg_Autoencoder_Loss"]).rjust(indentation),\
+                              "Train_StateEvo_Loss":str(train_Ldict["avg_StateEvo_Loss"]).rjust(indentation), "Train_LatentEvo_Loss":str(train_Ldict["avg_LatentEvo_Loss"]).rjust(indentation),\
+                              "Test_Loss":str(test_Ldict['avg_loss']).rjust(indentation), "Test_KoopEvo_Loss":str(test_Ldict['avg_KoopEvo_Loss']).rjust(indentation), "Test_Residual_Loss":str(test_Ldict['avg_Residual_Loss']).rjust(indentation),\
+                              "Test_Autoencoder_Loss":str(test_Ldict["avg_Autoencoder_Loss"]).rjust(indentation), "Test_StateEvo_Loss":str(test_Ldict["avg_StateEvo_Loss"]).rjust(indentation), "Test_LatentEvo_Loss":str(test_Ldict["avg_LatentEvo_Loss"]).rjust(indentation),\
+                              "Train_koop_ptg": 0, "Train_seqmodel_ptg": 0,\
+                              "Test_koop_ptg": 0, "Test_seqmodel_ptg": 0}
             
             self.log.writerow(writeable_loss)
             self.logf.flush()

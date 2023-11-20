@@ -40,10 +40,10 @@ if __name__ == "__main__":
 
     #AUTOENCODER Params ARGS
     parser.add_argument('--num_obs',            type = int,   default=8,   help = "Latent Size of the Autoencoder")
-    parser.add_argument('--linear_autoencoder', action = 'store_true',     help = "use linear autoencoder")
-    parser.add_argument('--num_obs',            type = int,   default=8,   help = "Latent Size of the Autoencoder")
+    parser.add_argument('--linear_autoencoder',    action = 'store_true',     help = "use linear autoencoder")
+    parser.add_argument('--train_onlyautoencoder', action = 'store_true',     help = "train only autoencoder")
 
-    
+
     #Data Params ARGS
     parser.add_argument('--ntransients', type = int,   default = 50000, help = "number of trainsients to discard in the intial part of the dataset")
     parser.add_argument('--nenddata',    type = int,   default = None,  help = "if we want to skip last parts of the dataset")
@@ -63,13 +63,14 @@ if __name__ == "__main__":
     parser.add_argument('--info',            type = str, default = "_",  help = "extra infomration to be added to the experiment name")
 
     args = parser.parse_args()
+    #############################################################################
     # parser.add_argument('--divert_op', type = )
-    # #debugging
-   
+    
+    ## debugging
     # mza = MZA_Experiment(args)
     # mza.main_train()
 
-    # test
+    ## test
     # mza = MZA_Experiment(args)
     # mza.test()
 

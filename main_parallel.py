@@ -40,27 +40,28 @@ if __name__ == "__main__":
 
     #AUTOENCODER Params ARGS
     parser.add_argument('--num_obs',            type = int,   default=8, help = "Latent Size of the Autoencoder")
-    parser.add_argument('--linear_autoencoder', action = 'store_true', help = "use linear autoencoder")
+    parser.add_argument('--linear_autoencoder', action = 'store_true',   help = "use linear autoencoder")
     
     #Data Params ARGS
     parser.add_argument('--ntransients', type = int,   default = 50000, help = "number of trainsients to discard in the intial part of the dataset")
-    parser.add_argument('--nenddata',    type = int,   default = None, help = "if we want to skip last parts of the dataset")
-    parser.add_argument('--bs',          type = int,   default = 16 , help = "BatchSize")
-    parser.add_argument('--train_size',  type = float, default = 0.9, help = "Train Data Proportion")
-    parser.add_argument('--norm_input',  action = 'store_true',  help = "normalises input")
-    parser.add_argument('--time_sample', type = int, default = 10, help = "time sampling size")
-    parser.add_argument('--noisecolor',  type = int, default = 0, help = "colorof noise for white:0, pink:1, red:2")
-    parser.add_argument('--noise_p',     type = float, default = 0.00, help = "percentage noise to add to the data")
+    parser.add_argument('--nenddata',    type = int,   default = None,  help = "if we want to skip last parts of the dataset")
+    parser.add_argument('--bs',          type = int,   default = 16 ,   help = "BatchSize")
+    parser.add_argument('--train_size',  type = float, default = 0.9,   help = "Train Data Proportion")
+    parser.add_argument('--norm_input',  action = 'store_true',         help = "normalises input")
+    parser.add_argument('--time_sample', type = int,   default = 10,    help = "time sampling size")
+    parser.add_argument('--noisecolor',  type = int,   default = 0,     help = "colorof noise for white:0, pink:1, red:2")
+    parser.add_argument('--noise_p',     type = float, default = 0.00,  help = "percentage noise to add to the data")
 
     #Directory Params ARGS
-    parser.add_argument('--exp_dir',         type = str, default = "Trained_Models/Testcode")
-    parser.add_argument('--load_exp_name',   type = str, default = "", help = "Name of the experiment to be loaded")
-    parser.add_argument('--data_dir',        type = str, default = "Data/ExpData/velocity.npy")#"Data/KS/ks_N256_dt0.025_L22.0_maxn800000.npy")#"Data/KS/npyfiles/ks_N256_dt0.001_L6_short.npy")#
-    parser.add_argument('--nsave',           type = int,   default = 10, help = "save every nsave number of epochs")
-    parser.add_argument('--no_save_model',   action = 'store_false',  help = "doesn't save model")
-    parser.add_argument('--info',            type = str, default = "_", help = "extra infomration to be added to the experiment name")
+    parser.add_argument('--exp_dir',         type = str,   default = "Trained_Models/Testcode",   help = "Directory for the Experiment")
+    parser.add_argument('--load_exp_name',   type = str,   default = "",   help = "Name of the experiment to be loaded")
+    parser.add_argument('--data_dir',        type = str,   default = "Data/ExpData/velocity.npy", help = "Directory for Data")#"Data/KS/ks_N256_dt0.025_L22.0_maxn800000.npy")#"Data/KS/npyfiles/ks_N256_dt0.001_L6_short.npy")#
+    parser.add_argument('--nsave',           type = int,   default = 10,   help = "save every nsave number of epochs")
+    parser.add_argument('--no_save_model',   action = 'store_false',       help = "doesn't save model")
+    parser.add_argument('--info',            type = str,   default = "_",  help = "extra infomration to be added to the experiment name")
 
     args = parser.parse_args()
+    #########################################################################################
     # parser.add_argument('--divert_op', type = )
     # #debugging
    
