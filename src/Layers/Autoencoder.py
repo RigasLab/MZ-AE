@@ -460,7 +460,7 @@ class Conv2D_Autoencoder_2(nn.Module):
 
 
             #encoder layers
-            self.e_cc1 = nn.Conv2d(2, 32, self.conv_filter_size, stride=1, padding=0, dilation=1, groups=1, bias=True, padding_mode='zeros', device=self.args["device"], dtype=None)
+            self.e_cc1 = nn.Conv2d(self.statedim[-3], 32, self.conv_filter_size, stride=1, padding=0, dilation=1, groups=1, bias=True, padding_mode='zeros', device=self.args["device"], dtype=None)
             # self.e_cc2 = nn.Conv1d(26, 256, 2, stride=1, padding=0, dilation=1, groups=1, bias=True, padding_mode='zeros', device=None, dtype=None)
             self.e_cc1_bn = nn.BatchNorm2d(32) 
             self.e_cc2 = nn.Conv2d(32, 16, self.conv_filter_size, stride=1, padding=0, dilation=1, groups=1, bias=True, padding_mode='zeros', device=self.args["device"], dtype=None)
@@ -485,10 +485,10 @@ class Conv2D_Autoencoder_2(nn.Module):
             self.d_cc1_bn = nn.BatchNorm2d(16)
             self.d_cc2 = torch.nn.ConvTranspose2d(16, 32, self.conv_filter_size, stride=1, padding=0, output_padding=0, groups=1, bias=True, dilation=1, padding_mode='zeros', device=self.args["device"], dtype=None)
             self.d_cc2_bn = nn.BatchNorm2d(32)
-            self.d_cc3 = torch.nn.ConvTranspose2d(32, 2, self.conv_filter_size, stride=1, padding=0, output_padding=0, groups=1, bias=True, dilation=1, padding_mode='zeros', device=self.args["device"], dtype=None)
+            self.d_cc3 = torch.nn.ConvTranspose2d(32, self.statedim[-3], self.conv_filter_size, stride=1, padding=0, output_padding=0, groups=1, bias=True, dilation=1, padding_mode='zeros', device=self.args["device"], dtype=None)
             # self.d_cc4 = torch.nn.ConvTranspose2d(64, 2, 5, stride=1, padding=0, output_padding=0, groups=1, bias=True, dilation=1, padding_mode='zeros', device=self.args["device"], dtype=None)
-            self.d_cc3_bn = nn.BatchNorm2d(2)
-            self.d_cc4 = torch.nn.ConvTranspose2d(2, 2, 1, stride=1, padding=0, output_padding=0, groups=1, bias=True, dilation=1, padding_mode='zeros', device=self.args["device"], dtype=None)
+            self.d_cc3_bn = nn.BatchNorm2d(self.statedim[-3])
+            self.d_cc4 = torch.nn.ConvTranspose2d(self.statedim[-3], self.statedim[-3], 1, stride=1, padding=0, output_padding=0, groups=1, bias=True, dilation=1, padding_mode='zeros', device=self.args["device"], dtype=None)
 
             # self.d_fc5 = nn.Linear(512, self.input_size)
             # self.d_fc6 = nn.Linear(512, input_size)
