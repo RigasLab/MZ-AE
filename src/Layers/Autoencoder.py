@@ -500,6 +500,10 @@ class Conv2D_Autoencoder_2(nn.Module):
 
     def encoder(self, x):
         #non linear encoder
+        self.af        = nn.ReLU()
+        self.num_convlayers = 3
+        self.dropout   = nn.Dropout(p=0.25)
+
         if not self.linear_ae:
             
             x = self.e_cc1_bn(self.af(self.e_cc1(x)))
@@ -516,9 +520,7 @@ class Conv2D_Autoencoder_2(nn.Module):
             x = self.af(self.e_fc3(x))
             x = self.af(self.e_fc4(x))
 
-
             # x = self.af(self.e_fc6(x))
-        
         #linear encoder
         else:
             x = self.e_fc1(x)
@@ -530,6 +532,9 @@ class Conv2D_Autoencoder_2(nn.Module):
         return x
     
     def decoder(self, x):
+        self.af = nn.ReLU()
+        self.num_convlayers = 3
+        self.dropout   = nn.Dropout(p=0.25)
         #non linear encoder
         if not self.linear_ae:
             
@@ -540,7 +545,6 @@ class Conv2D_Autoencoder_2(nn.Module):
             x = self.af(self.d_fc4(x))
             x = self.dropout(x)
 
-            
             # print("in decoder: ", x.shape)
             firstdim_for_convx = int(x.numel()/(4*(self.statedim[1]-(self.conv_filter_size-1)*self.num_convlayers)*(self.statedim[2]-(self.conv_filter_size-1)*self.num_convlayers)))
             x = x.reshape(firstdim_for_convx,4,self.statedim[1]-(self.conv_filter_size-1)*self.num_convlayers,self.statedim[2]-(self.conv_filter_size-1)*self.num_convlayers)

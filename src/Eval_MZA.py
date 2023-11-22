@@ -49,7 +49,9 @@ class Eval_MZA(MZA_Experiment):
     def load_weights(self, epoch_num, min_loss = False):
 
         if min_loss:
-            PATH = self.exp_dir+'/'+ self.exp_name+"/model_weights/min_train_loss".format(epoch=epoch_num)
+            # PATH = self.exp_dir+'/'+ self.exp_name+"/model_weights/min_train_loss".format(epoch=epoch_num)
+            PATH = self.exp_dir+'/'+ self.exp_name+"/model_weights/min_test_loss".format(epoch=epoch_num)
+
         else:
             PATH = self.exp_dir+'/'+ self.exp_name+"/model_weights/at_epoch{epoch}".format(epoch=epoch_num)
         # self.model.load_state_dict(torch.load(PATH))
@@ -653,6 +655,9 @@ class Eval_MZA(MZA_Experiment):
 
         min_trainloss = df.loc[df['Train_Loss'].idxmin(), 'epoch']
         print("Epoch with Minimum train_error: ", min_trainloss)
+
+        min_testloss = df.loc[df['Test_Loss'].idxmin(), 'epoch']
+        print("Epoch with Minimum test_error: ", min_testloss)
 
         #Total Loss
         plt.figure()
