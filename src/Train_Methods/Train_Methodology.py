@@ -291,7 +291,7 @@ class Train_Methodology():
             test_Ldict = self.train_test_loss_autoencoder("Test", self.test_dataloader)
         else:
             test_Ldict = self.train_test_loss("Test", self.test_dataloader)
-        # test_loss, test_ObsEvo_Loss, test_Autoencoder_Loss, test_StateEvo_Loss, test_koop_ptg, test_seqmodel_ptg = 
+
         print(f"Test Loss: {test_Ldict['avg_loss']:<{6}}, KoopEvo : {test_Ldict['avg_KoopEvo_Loss']:<{6}}, Residual : {test_Ldict['avg_Residual_Loss']:<{6}}, Auto : {test_Ldict['avg_Autoencoder_Loss']:<{6}}, StateEvo : {test_Ldict['avg_StateEvo_Loss']:<{6}}, LatentEvo : {test_Ldict['avg_LatentEvo_Loss']}")
 
         # min train loss
