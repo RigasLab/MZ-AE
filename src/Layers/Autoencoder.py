@@ -222,9 +222,9 @@ class Conv1D_Autoencoder(nn.Module):
 
 
             #encoder layers
-            self.e_cc1 = nn.Conv1d(1, 16, self.conv_filter_size, stride=1, padding=0, dilation=1, groups=1, bias=True, padding_mode='zeros', device=self.args["device"], dtype=None)
+            self.e_cc1 = nn.Conv1d(1,16, self.conv_filter_size, stride=1, padding=0, dilation=1, groups=1, bias=True, padding_mode='zeros', device=self.args["device"], dtype=None)
             self.e_cc1_bn = nn.BatchNorm1d(16) 
-            self.e_cc1_mp = nn.MaxPool1d(kernel_size = self.conv_filter_size, stride=1, padding=1, dilation=1, return_indices=False, ceil_mode=False)
+            self.e_cc1_mp = nn.MaxPool1d(kernel_size = self.conv_filter_size, stride=1, padding=int((self.conv_filter_size-1)/2), dilation=1, return_indices=False, ceil_mode=False)
             
             self.e_cc2 = nn.Conv1d(16, 8, self.conv_filter_size, stride=1, padding=0, dilation=1, groups=1, bias=True, padding_mode='zeros', device=self.args["device"], dtype=None)
             self.e_cc2_bn = nn.BatchNorm1d(8)
@@ -233,45 +233,46 @@ class Conv1D_Autoencoder(nn.Module):
             self.e_cc3_bn = nn.BatchNorm1d(4) 
 
             e_fc1_fdim = 4*(self.statedim-(self.conv_filter_size-1)*self.num_convlayers)
-            self.e_fc1 = nn.Linear(e_fc1_fdim, 128)
-            self.e_fc2 = nn.Linear(128,96)
+            self.e_fc1 = nn.Linear(e_fc1_fdim, 256)
+            self.e_fc2 = nn.Linear(256,96)
             self.e_fc3 = nn.Linear(96, self.latent_size)
             self.e_fc4 = nn.Linear(self.latent_size, self.latent_size)
 
             #decoder layers
             self.d_fc1 = nn.Linear(self.latent_size, self.latent_size)
             self.d_fc2 = nn.Linear(self.latent_size, 96)
-            self.d_fc3 = nn.Linear(96, 128)
-            self.d_fc4 = nn.Linear(128, e_fc1_fdim)
+            self.d_fc3 = nn.Linear(96, 256)
+            self.d_fc4 = nn.Linear(256, e_fc1_fdim)
 
             self.d_cc1 = torch.nn.ConvTranspose1d(4, 8, self.conv_filter_size, stride=1, padding=0, output_padding=0, groups=1, bias=True, dilation=1, padding_mode='zeros', device=self.args["device"], dtype=None)
             self.d_cc1_bn = nn.BatchNorm1d(8)
             self.d_cc2 = torch.nn.ConvTranspose1d(8, 16, self.conv_filter_size, stride=1, padding=0, output_padding=0, groups=1, bias=True, dilation=1, padding_mode='zeros', device=self.args["device"], dtype=None)
             self.d_cc2_bn = nn.BatchNorm1d(16)
-            self.d_cc3 = torch.nn.ConvTranspose1d(16, 1, self.conv_filter_size, stride=1, padding=0, output_padding=0, groups=1, bias=True, dilation=1, padding_mode='zeros', device=self.args["device"], dtype=None)
+            self.d_cc3 = torch.nn.ConvTranspose1d(16, 4, self.conv_filter_size, stride=1, padding=0, output_padding=0, groups=1, bias=True, dilation=1, padding_mode='zeros', device=self.args["device"], dtype=None)
             # self.d_cc4 = torch.nn.ConvTranspose2d(64, 2, 5, stride=1, padding=0, output_padding=0, groups=1, bias=True, dilation=1, padding_mode='zeros', device=self.args["device"], dtype=None)
-            self.d_cc3_bn = nn.BatchNorm1d(1)
-            self.d_cc4 = torch.nn.ConvTranspose1d(1, 1, 1, stride=1, padding=0, output_padding=0, groups=1, bias=True, dilation=1, padding_mode='zeros', device=self.args["device"], dtype=None)
+            self.d_cc3_bn = nn.BatchNorm1d(4)
+            self.d_cc4 = torch.nn.ConvTranspose1d(4, 1, 1, stride=1, padding=0, output_padding=0, groups=1, bias=True, dilation=1, padding_mode='zeros', device=self.args["device"], dtype=None)
 
             # self.d_fc5 = nn.Linear(512, self.input_size)
             # self.d_fc6 = nn.Linear(512, input_size)
 
             #reg layers
-            self.dropout   = nn.Dropout(p=0.25)
+            self.dropout   = nn.Dropout(p=0.1)
             self.dropout2d = nn.Dropout2d(p=0.8, inplace=True)
-            self.af        = nn.SiLU()
+            self.af        = nn.ReLU()
 
     def encoder(self, x):
 
         #reinitialisiing some parameters for old model analysis -> not part of algo logic
-        self.af        = nn.SiLU()
+        self.af        = nn.ReLU()
         self.num_convlayers = 3
         self.dropout   = nn.Dropout(p=0.25)
 
         #non linear encoder
         x = x[...,None,:]
-            
+        print("encoder in: ", x.shape)
         x = self.e_cc1_bn(self.e_cc1_mp(self.af(self.e_cc1(x))))
+        print("encoder in 2: ", x.shape)
         x = self.e_cc2_bn(self.e_cc1_mp(self.af(self.e_cc2(x))))
         x = self.e_cc3_bn(self.e_cc1_mp(self.af(self.e_cc3(x))))
         # x = self.af(self.e_cc4(x))
@@ -279,13 +280,11 @@ class Conv1D_Autoencoder(nn.Module):
         x = torch.flatten(x, start_dim = 1)
 
         x = self.af(self.e_fc1(x))
-        x = self.dropout(x)
+        # x = self.dropout(x)
         x = self.dropout(self.af(self.e_fc2(x)))
-        x = self.dropout(x)
+        # x = self.dropout(x)
         x = self.af(self.e_fc3(x))
-        x = self.af(self.e_fc4(x))
-
-            # x = self.af(self.e_fc6(x))
+        x = self.e_fc4(x)
         
         return x.squeeze(dim = -2)
     
@@ -293,14 +292,15 @@ class Conv1D_Autoencoder(nn.Module):
         self.af = nn.ReLU()
         self.num_convlayers = 3
         self.dropout   = nn.Dropout(p=0.25)
-        #non linear encoder
-            
+
+        #non linear decoder
+        x = x[...,None,:]    
         x = self.d_fc1(x)
         x = self.af(self.d_fc2(x))
         x = self.af(self.d_fc3(x))
-        x = self.dropout(x)
+        # x = self.dropout(x)
         x = self.af(self.d_fc4(x))
-        x = self.dropout(x)
+        # x = self.dropout(x)
 
         # print("in decoder: ", x.shape)
         firstdim_for_convx = int(x.numel()/(4*(self.statedim-(self.conv_filter_size-1)*self.num_convlayers)))
@@ -308,8 +308,10 @@ class Conv1D_Autoencoder(nn.Module):
 
         x = self.d_cc1_bn(self.e_cc1_mp(self.af(self.d_cc1(x))))
         x = self.d_cc2_bn(self.e_cc1_mp(self.af(self.d_cc2(x))))
-        x = self.d_cc3_bn(self.e_cc1_mp(self.af(self.d_cc3(x))))
+        x = self.af(self.d_cc3(x))
+        print("decoder out 2: ", x.shape)
         x = self.d_cc4(x)
+        print("decoder out: ", x.shape)
 
         return x
 
@@ -621,7 +623,6 @@ class Conv2D_Autoencoder_3(nn.Module):
 
             self.num_convlayers = 3
 
-
             #encoder layers
             self.e_cc1 = nn.Conv2d(self.statedim[-3], 16, self.conv_filter_size, stride=1, padding=0, dilation=1, groups=1, bias=True, padding_mode='zeros', device=self.args["device"], dtype=None)
             # self.e_cc2 = nn.Conv1d(26, 256, 2, stride=1, padding=0, dilation=1, groups=1, bias=True, padding_mode='zeros', device=None, dtype=None)
@@ -684,9 +685,8 @@ class Conv2D_Autoencoder_3(nn.Module):
             x = self.dropout(self.af(self.e_fc2(x)))
             x = self.dropout(x)
             x = self.af(self.e_fc3(x))
-            x = self.af(self.e_fc4(x))
+            x = self.e_fc4(x)
 
-            # x = self.af(self.e_fc6(x))
         #linear encoder
         else:
             x = self.e_fc1(x)
