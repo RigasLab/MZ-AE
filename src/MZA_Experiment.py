@@ -153,7 +153,7 @@ class MZA_Experiment(DynSystem_Data, Train_Methodology):
             args_dict = copy.deepcopy(self.__dict__)
 
             #deleting some high memory args
-            print(args_dict.keys())
+            print("\n", args_dict.keys(), "\n\n")
             del args_dict['lp_data']
             del args_dict['train_data']
             del args_dict['test_data']

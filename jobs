@@ -123,6 +123,12 @@
 
 # python main.py --load_epoch -1 --exp_dir Trained_Models/Exp6.1.4.3.3_L36_KS_testlargedata_Attention_seqlen --load_exp_name sl17_nhu100_numobs20_bs512_lr5e-5_ph20 --nepochs 3000 
 
+# python main.py --AE_Model Conv1D_Autoencoder --Seq_Model LSTM_Model --dynsys KS --train_onlyautoencoder  \
+#                         --bs 128 --lr 5e-5 --nepochs 1000 --nsave 1000 --train_size 0.8 --time_sample 10 \
+#                         --data_dir Data/KS/ks_N256_dt0.025_L22.0_maxn800000.npy --exp_dir Trained_Models/KS_ConvTest \
+#                         --conv_filter_size 3 --pred_horizon 5 --ntransients 65000 --num_obs 6 --nhu 100 --seq_len 3 --info test_fs3 --deactivate_lrscheduler
+
+
 #Noise Analysis
 
 # python main.py --AE_Model Autoencoder_sequential --norm_input --Seq_Model LSTM_Model --dynsys KS --bs 512 --ntransients 75000 --lr 5e-5 --nepochs 2000 --nsave 2 --train_size 0.9 --info lr5e-5 --nhu 100 --seq_len 129 --data_dir Data/KS/ks_N512_dt0.025_L22.0_maxn800000.npy --exp_dir Trained_Models/NoiseTest --num_obs 8 --seq_len 13 --noise_p 0.5 --noisecolor 2 --deactivate_lrscheduler
@@ -130,8 +136,8 @@
 
 ##ExpData Experiments
 
-python main.py --AE_Model Conv2D_Autoencoder_2 --Seq_Model LSTM_Model --dynsys ExpData  \
-                        --bs 128 --lr 5e-5 --nepochs 1000 --nsave 1000 --train_size 0.8 --time_sample 10 \
+python main.py --AE_Model Conv2D_Autoencoder_3 --Seq_Model LSTM_Model --dynsys ExpData   \
+                        --bs 16 --lr 5e-5 --nepochs 1000 --nsave 1000 --train_size 0.8 --time_sample 10 \
                         --data_dir Data/ExpData/velocity_equallysampled.npy --exp_dir Trained_Models/ExpData/Auto_Test_vorticity \
                         --conv_filter_size 3 --pred_horizon 5 --ntransients 8 --num_obs 24 --nhu 100 --seq_len 3 --info test_fs3 --deactivate_lrscheduler
 

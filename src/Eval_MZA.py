@@ -190,16 +190,17 @@ class Eval_MZA(MZA_Experiment):
 
             #flattening batchsize seqlen
             Phi_seq = torch.flatten(Phi_seq, start_dim = 0, end_dim = 1)   #[bs*seqlen, statedim]
-            Phi_nn = torch.squeeze(Phi_nn)
+            Phi_nn = torch.squeeze(Phi_nn, dim = 1)
 
             #obtain observables
+            print(count, " ", Phi_nn.shape) #######################
             x_seq, Phi_seq_hat = self.model.autoencoder(Phi_seq)
             x_nn , _   = self.model.autoencoder(Phi_nn)
             del _
             #reshaping tensors in desired form
             adaptive_bs = int(x_seq.shape[0]/self.seq_len)   #adaptive batchsize due to change in size for the last batch
             x_seq = x_seq.reshape(adaptive_bs, self.seq_len, self.num_obs) #[bs seqlen obsdim]
-            x_n   = torch.squeeze(x_seq[:,-1,:])  #[bs obsdim]
+            x_n   = x_seq[:,-1,:]  #[bs obsdim]
             
             sd = (self.statedim,) if str(type(self.statedim)) == "<class 'int'>" else self.statedim
             Phi_seq_hat = Phi_seq_hat.reshape(adaptive_bs, self.seq_len, *sd) #[bs seqlen statedim]

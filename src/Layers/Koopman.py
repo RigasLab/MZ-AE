@@ -69,7 +69,12 @@ class Koopman(nn.Module):
         # self.kMatrix[diagIdx[0], diagIdx[1]] = torch.nn.functional.relu(self.kMatrixDiag)
 
         #forward one step time propagation
-        x_nn = torch.bmm(x_n.unsqueeze(1), self.kMatrix.expand(x_n.size(0), self.kMatrix.size(0), self.kMatrix.size(0)))
+        if x_n.ndim == 2:
+            x_n = x_n.unsqueeze(1)
+        elif x_n.ndim == 1:
+            x_n = x_n[None, None,...]
+
+        x_nn = torch.bmm(x_n, self.kMatrix.expand(x_n.size(0), self.kMatrix.size(0), self.kMatrix.size(0)))
         
         return x_nn.squeeze(1)
 

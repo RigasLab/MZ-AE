@@ -46,9 +46,9 @@ class DynSystem_Data:
             self.lp_data = self.lp_data[self.ntransients:]
         
         #additional data parameters
-        self.statedim  = self.lp_data.shape[2:]
+        self.statedim   = self.lp_data.shape[2:]
         self.state_ndim = len(self.statedim)
-        self.statedim  = self.statedim[0] if self.state_ndim == 1 else self.statedim
+        self.statedim   = self.statedim[0] if self.state_ndim == 1 else self.statedim
         
         
         print("Data Shape: ", self.lp_data.shape)
