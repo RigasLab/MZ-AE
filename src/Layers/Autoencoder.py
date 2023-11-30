@@ -306,8 +306,8 @@ class Conv1D_Autoencoder(nn.Module):
         firstdim_for_convx = int(x.numel()/(4*(self.statedim-(self.conv_filter_size-1)*self.num_convlayers)))
         x = x.reshape(firstdim_for_convx,4,(self.statedim-(self.conv_filter_size-1)*self.num_convlayers))
 
-        x = self.d_cc1_bn(self.e_cc1_mp(self.af(self.d_cc1(x))))
-        x = self.d_cc2_bn(self.e_cc1_mp(self.af(self.d_cc2(x))))
+        x = self.d_cc1_bn(self.af(self.d_cc1(x)))
+        x = self.d_cc2_bn(self.af(self.d_cc2(x)))
         x = self.af(self.d_cc3(x))
         print("decoder out 2: ", x.shape)
         x = self.d_cc4(x)
@@ -901,7 +901,7 @@ class Conv2D_Autoencoder_mixed_filters(nn.Module):
     def __init__(self, args, model_eval = False):
         super(Conv2D_Autoencoder_mixed_filters, self).__init__()
 
-        print("AE_Model: Conv_Autoencoder_")
+        print("AE_Model: Conv_Autoencoder_mixed_filters")
 
         self.args = args
 
@@ -929,8 +929,8 @@ class Conv2D_Autoencoder_mixed_filters(nn.Module):
             self.e_bn2 = nn.BatchNorm2d(2) 
 
             #poollayers
-            self.e_ap = nn.MaxPool2d(kernel_size = 3, stride=1, padding=1, dilation=1, return_indices=False, ceil_mode=False)
-            self.e_mp = nn.AvgPool2d(kernel_size = 2, stride=1, padding=0)
+            self.e_mp = nn.MaxPool2d(kernel_size = 3, stride=1, padding=1, dilation=1, return_indices=False, ceil_mode=False)
+            self.e_ap = nn.AvgPool2d(kernel_size = 2, stride=1, padding=0)
 
             #combine convolution
             self.e_cc4 = nn.Conv2d(4, 4, kernel_size = 3, stride=1, padding=1, dilation=1, groups=1, bias=True, padding_mode='zeros', device=self.args["device"], dtype=None)
@@ -983,6 +983,8 @@ class Conv2D_Autoencoder_mixed_filters(nn.Module):
             x_lf = self.e_bn2(self.e_mp(self.af(self.e_cc3_fs3(x_lf))))
 
             #concatinating the outputs
+            # print("x_lf shape:", x_lf.shape)
+            # print("x_sf shape:", x_sf.shape)
             x = torch.concat((x_lf,x_sf), dim=1)
             x = self.e_bn4(self.af(self.e_cc4(x)))
 
@@ -1016,9 +1018,9 @@ class Conv2D_Autoencoder_mixed_filters(nn.Module):
             firstdim_for_convx = int(x.numel()/(4*(self.statedim[1]-(self.conv_filter_size-1)*self.num_convlayers)*(self.statedim[2]-(self.conv_filter_size-1)*self.num_convlayers)))
             x = x.reshape(firstdim_for_convx,4,self.statedim[1]-(self.conv_filter_size-1)*self.num_convlayers,self.statedim[2]-(self.conv_filter_size-1)*self.num_convlayers)
 
-            x = self.d_cc1_bn(self.e_cc1_mp(self.af(self.d_cc1(x))))
-            x = self.d_cc2_bn(self.e_cc1_mp(self.af(self.d_cc2(x))))
-            x = self.d_cc3_bn(self.e_cc1_mp(self.af(self.d_cc3(x))))
+            x = self.d_cc1_bn(self.af(self.d_cc1(x)))
+            x = self.d_cc2_bn(self.af(self.d_cc2(x)))
+            x = self.d_cc3_bn(self.af(self.d_cc3(x)))
             # x = self.af(self.d_cc4(x))
             x = self.d_cc4(x)
 
@@ -1049,7 +1051,7 @@ class Conv2D_Autoencoder_mixed_filters(nn.Module):
             count += param.numel()
         return count
 
-
+######################################################################
 "2D-Autoencoder"
 class Conv2D_Autoencoder_3_stn(nn.Module):
 

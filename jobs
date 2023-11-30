@@ -136,7 +136,7 @@
 
 ##ExpData Experiments
 
-python main.py --AE_Model Conv2D_Autoencoder_3 --Seq_Model LSTM_Model --dynsys ExpData   \
+python main.py --AE_Model Conv2D_Autoencoder_mixed_filters --Seq_Model LSTM_Model --dynsys ExpData   \
                         --bs 16 --lr 5e-5 --nepochs 1000 --nsave 1000 --train_size 0.8 --time_sample 10 \
                         --data_dir Data/ExpData/velocity_equallysampled_sample4.npy --exp_dir Trained_Models/ExpData/Auto_Test_stn \
                         --conv_filter_size 3 --pred_horizon 5 --ntransients 8 --num_obs 24 --nhu 100 --seq_len 3 --info test_fs3 --deactivate_lrscheduler
