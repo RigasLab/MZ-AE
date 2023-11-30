@@ -536,7 +536,7 @@ class Conv2D_Autoencoder_2(nn.Module):
 
             x = self.af(self.e_fc1(x))
             x = self.dropout(x)
-            x = self.dropout(self.af(self.e_fc2(x)))
+            x = self.af(self.e_fc2(x))
             x = self.dropout(x)
             x = self.af(self.e_fc3(x))
             x = self.af(self.e_fc4(x))
@@ -663,11 +663,11 @@ class Conv2D_Autoencoder_3(nn.Module):
             #reg layers
             self.dropout   = nn.Dropout(p=0.25)
             self.dropout2d = nn.Dropout2d(p=0.8, inplace=True)
-            self.af        = nn.ReLU()
+            self.af        = nn.SiLU()
 
     def encoder(self, x):
         #non linear encoder
-        self.af        = nn.ReLU()
+        self.af        = nn.SiLU()
         self.num_convlayers = 3
         self.dropout   = nn.Dropout(p=0.25)
 
@@ -682,7 +682,7 @@ class Conv2D_Autoencoder_3(nn.Module):
 
             x = self.af(self.e_fc1(x))
             x = self.dropout(x)
-            x = self.dropout(self.af(self.e_fc2(x)))
+            x = self.af(self.e_fc2(x))
             x = self.dropout(x)
             x = self.af(self.e_fc3(x))
             x = self.e_fc4(x)
@@ -698,7 +698,7 @@ class Conv2D_Autoencoder_3(nn.Module):
         return x
     
     def decoder(self, x):
-        self.af = nn.ReLU()
+        self.af = nn.SiLU()
         self.num_convlayers = 3
         self.dropout   = nn.Dropout(p=0.25)
         #non linear encoder
@@ -715,9 +715,10 @@ class Conv2D_Autoencoder_3(nn.Module):
             firstdim_for_convx = int(x.numel()/(4*(self.statedim[1]-(self.conv_filter_size-1)*self.num_convlayers)*(self.statedim[2]-(self.conv_filter_size-1)*self.num_convlayers)))
             x = x.reshape(firstdim_for_convx,4,self.statedim[1]-(self.conv_filter_size-1)*self.num_convlayers,self.statedim[2]-(self.conv_filter_size-1)*self.num_convlayers)
 
-            x = self.d_cc1_bn(self.e_cc1_mp(self.af(self.d_cc1(x))))
-            x = self.d_cc2_bn(self.e_cc1_mp(self.af(self.d_cc2(x))))
-            x = self.d_cc3_bn(self.e_cc1_mp(self.af(self.d_cc3(x))))
+            #removed max_pool in decoder
+            x = self.d_cc1_bn(self.af(self.d_cc1(x)))
+            x = self.d_cc2_bn(self.af(self.d_cc2(x)))
+            x = self.d_cc3_bn(self.af(self.d_cc3(x)))
             # x = self.af(self.d_cc4(x))
             x = self.d_cc4(x)
 
@@ -827,7 +828,7 @@ class Conv2D_Autoencoder_3_AvgPool(nn.Module):
 
             x = self.af(self.e_fc1(x))
             x = self.dropout(x)
-            x = self.dropout(self.af(self.e_fc2(x)))
+            x = self.af(self.e_fc2(x))
             x = self.dropout(x)
             x = self.af(self.e_fc3(x))
             x = self.e_fc4(x)
@@ -908,23 +909,31 @@ class Conv2D_Autoencoder_mixed_filters(nn.Module):
             self.input_size  = self.args["statedim"] 
             self.latent_size = self.args["num_obs"] 
             self.linear_ae   = self.args["linear_autoencoder"]
-            self.conv_filter_size = self.args["conv_filter_size"]
+            self.conv_filter_size = self.args["conv_filter_size"]  #larger filter size in this case
             self.statedim    = self.args["statedim"]
 
             self.num_convlayers = 3
 
             #encoder layers
-            self.e_cc1 = nn.Conv2d(self.statedim[-3], 4, self.conv_filter_size, stride=1, padding=0, dilation=1, groups=1, bias=True, padding_mode='zeros', device=self.args["device"], dtype=None)
-            # self.e_cc2 = nn.Conv1d(26, 256, 2, stride=1, padding=0, dilation=1, groups=1, bias=True, padding_mode='zeros', device=None, dtype=None)
-            self.e_cc1_bn = nn.BatchNorm2d(16) 
-            self.e_cc1_mp = nn.AvgPool2d(kernel_size = self.conv_filter_size, stride=1, padding=1)
-            
-            self.e_cc2 = nn.Conv2d(16, 8, self.conv_filter_size, stride=1, padding=0, dilation=1, groups=1, bias=True, padding_mode='zeros', device=self.args["device"], dtype=None)
-            self.e_cc2_bn = nn.BatchNorm2d(8)
-            
-            self.e_cc3 = nn.Conv2d(8, 4, self.conv_filter_size, stride=1, padding=0, dilation=1, groups=1, bias=True, padding_mode='zeros', device=self.args["device"], dtype=None)
-            self.e_cc3_bn = nn.BatchNorm2d(4) 
-            # self.e_cc4 = nn.Conv2d(8, 4, 5, stride=1, padding=0, dilation=1, groups=1, bias=True, padding_mode='zeros', device=self.args["device"], dtype=None)
+            self.e_cc1_fs2 = nn.Conv2d(self.statedim[-3], 8, kernel_size = 2, stride=1, padding=0, dilation=1, groups=1, bias=True, padding_mode='zeros', device=self.args["device"], dtype=None)
+            self.e_cc2_fs2 = nn.Conv2d(8, 4, kernel_size = 2, stride=1, padding=0, dilation=1, groups=1, bias=True, padding_mode='zeros', device=self.args["device"], dtype=None)
+            self.e_cc3_fs2 = nn.Conv2d(4, 2, kernel_size = 2, stride=1, padding=0, dilation=1, groups=1, bias=True, padding_mode='zeros', device=self.args["device"], dtype=None)
+
+            self.e_cc1_fs3 = nn.Conv2d(self.statedim[-3], 8, kernel_size = 3, stride=1, padding=0, dilation=1, groups=1, bias=True, padding_mode='zeros', device=self.args["device"], dtype=None)
+            self.e_cc2_fs3 = nn.Conv2d(8, 4, kernel_size = 3, stride=1, padding=0, dilation=1, groups=1, bias=True, padding_mode='zeros', device=self.args["device"], dtype=None)
+            self.e_cc3_fs3 = nn.Conv2d(4, 2, kernel_size = 3, stride=1, padding=0, dilation=1, groups=1, bias=True, padding_mode='zeros', device=self.args["device"], dtype=None)
+
+            #Batchnorm            
+            self.e_bn8 = nn.BatchNorm2d(8)
+            self.e_bn4 = nn.BatchNorm2d(4)
+            self.e_bn2 = nn.BatchNorm2d(2) 
+
+            #poollayers
+            self.e_ap = nn.MaxPool2d(kernel_size = 3, stride=1, padding=1, dilation=1, return_indices=False, ceil_mode=False)
+            self.e_mp = nn.AvgPool2d(kernel_size = 2, stride=1, padding=0)
+
+            #combine convolution
+            self.e_cc4 = nn.Conv2d(4, 4, kernel_size = 3, stride=1, padding=1, dilation=1, groups=1, bias=True, padding_mode='zeros', device=self.args["device"], dtype=None)
 
             e_fc1_fdim = 4*(self.statedim[1]-(self.conv_filter_size-1)*self.num_convlayers)*(self.statedim[2]-(self.conv_filter_size-1)*self.num_convlayers)
             self.e_fc1 = nn.Linear(e_fc1_fdim, 1000)
@@ -953,42 +962,44 @@ class Conv2D_Autoencoder_mixed_filters(nn.Module):
             #reg layers
             self.dropout   = nn.Dropout(p=0.25)
             self.dropout2d = nn.Dropout2d(p=0.8, inplace=True)
-            self.af        = nn.ReLU()
+            self.af        = nn.SiLU()
 
     def encoder(self, x):
         #non linear encoder
-        self.af        = nn.ReLU()
+        self.af        = nn.SiLU()
         self.num_convlayers = 3
         self.dropout   = nn.Dropout(p=0.25)
 
         if not self.linear_ae:
             
-            x = self.e_cc1_bn(self.e_cc1_mp(self.af(self.e_cc1(x))))
-            x = self.e_cc2_bn(self.e_cc1_mp(self.af(self.e_cc2(x))))
-            x = self.e_cc3_bn(self.e_cc1_mp(self.af(self.e_cc3(x))))
-            # x = self.af(self.e_cc4(x))
-            # print("in encoder: ", x.shape)
+            #small filter
+            x_sf = self.e_bn8(self.e_ap(self.af(self.e_cc1_fs2(x))))
+            x_sf = self.e_bn4(self.e_ap(self.af(self.e_cc2_fs2(x_sf))))
+            x_sf = self.e_bn2(self.e_ap(self.af(self.e_cc3_fs2(x_sf))))
+
+            #large filter
+            x_lf = self.e_bn8(self.e_mp(self.af(self.e_cc1_fs3(x))))
+            x_lf = self.e_bn4(self.e_mp(self.af(self.e_cc2_fs3(x_lf))))
+            x_lf = self.e_bn2(self.e_mp(self.af(self.e_cc3_fs3(x_lf))))
+
+            #concatinating the outputs
+            x = torch.concat((x_lf,x_sf), dim=1)
+            x = self.e_bn4(self.af(self.e_cc4(x)))
+
+            #fully connected layer
             x = torch.flatten(x, start_dim = 1)
 
             x = self.af(self.e_fc1(x))
             x = self.dropout(x)
-            x = self.dropout(self.af(self.e_fc2(x)))
+            x = self.af(self.e_fc2(x))
             x = self.dropout(x)
             x = self.af(self.e_fc3(x))
             x = self.e_fc4(x)
-
-        #linear encoder
-        else:
-            x = self.e_fc1(x)
-            x = self.e_fc2(x)
-            x = self.e_fc3(x)
-            x = self.e_fc4(x)
-            x = self.e_fc5(x)
         
         return x
     
     def decoder(self, x):
-        self.af = nn.ReLU()
+        self.af = nn.SiLU()
         self.num_convlayers = 3
         self.dropout   = nn.Dropout(p=0.25)
         #non linear encoder
