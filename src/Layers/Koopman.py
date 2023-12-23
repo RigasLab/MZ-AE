@@ -104,7 +104,7 @@ class Koopman(nn.Module):
         return count
     
 
-"Autoencoder without seq"
+
 class new_Koopman(nn.Module):
 
     def __init__(self, args, model_eval = False):
@@ -123,7 +123,6 @@ class new_Koopman(nn.Module):
             #encoder layers
             self.e_fc1 = nn.Linear(self.latent_size, self.latent_size, bias = False)
     
-
 
     def forward(self, x_n):
         x_nn = self.e_fc1(x_n)

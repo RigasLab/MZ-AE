@@ -11,7 +11,7 @@ if __name__ == "__main__":
 
     #Training Params
     parser.add_argument('--load_epoch',             type = int, default = 0 ,        help = "loads model at a particular epoch for training")
-    parser.add_argument('--dynsys',                 type = str, default = "ExpData", help = "Choose Dynamical System to train: 1)KS 2)2DCyl 3)ExpData 4)Duffing")
+    parser.add_argument('--dynsys',                 type = str, default = "KS", help = "Choose Dynamical System to train: 1)KS 2)2DCyl 3)ExpData 4)Duffing")
     parser.add_argument('--deactivate_lrscheduler', action = 'store_true',           help = "deactivates the lrscheduler for prediction")
     parser.add_argument('--pred_horizon',           type = int, default = 10,        help = "Number of steps to predict over while calculating loss")
 
@@ -58,7 +58,7 @@ if __name__ == "__main__":
     #Directory Params ARGS
     parser.add_argument('--exp_dir',         type = str, default = "Trained_Models/Testcode",   help = "Directory for the Experiment")
     parser.add_argument('--load_exp_name',   type = str, default = "",   help = "Name of the experiment to be loaded")
-    parser.add_argument('--data_dir',        type = str, default = "Data/ExpData/velocity.npy", help = "Directory for the Data")#"Data/KS/ks_N256_dt0.025_L22.0_maxn800000.npy")#"Data/KS/npyfiles/ks_N256_dt0.001_L6_short.npy")#
+    parser.add_argument('--data_dir',        type = str, default = "Data/KS/ks_N256_dt0.025_L22.0_maxn800000.npy", help = "Directory for the Data")#"Data/KS/ks_N256_dt0.025_L22.0_maxn800000.npy")#"Data/KS/npyfiles/ks_N256_dt0.001_L6_short.npy")#
     parser.add_argument('--nsave',           type = int,   default = 10, help = "save every nsave number of epochs")
     parser.add_argument('--no_save_model',   action = 'store_false',     help = "doesn't save model")
     parser.add_argument('--info',            type = str, default = "_",  help = "extra infomration to be added to the experiment name")
@@ -75,8 +75,8 @@ if __name__ == "__main__":
     # mza = MZA_Experiment(args)
     # mza.test()
 
-
-    #Running from scratch
+    #Uncomment the code below for the main code
+    ##Running from scratch
     if args.load_epoch == 0:
         mza = MZA_Experiment(args)
         mza.main_train()

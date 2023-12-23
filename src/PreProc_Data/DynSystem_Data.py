@@ -61,9 +61,9 @@ class DynSystem_Data:
         # # Generate Gaussian noise with the calculated noise level for each data point
 
         # noise = cn.powerlaw_psd_gaussian(self.noisecolor, self.lp_data.shape) * self.np
-        # # noise = np.random.normal(0, self.lp_data.std(), self.lp_data.shape) 
-        # self.lp_data_without_noise = self.lp_data
-        # self.lp_data = self.lp_data_without_noise + noise
+        noise = np.random.normal(0, self.lp_data.std()*self.np, self.lp_data.shape) 
+        self.lp_data_without_noise = self.lp_data
+        self.lp_data = self.lp_data_without_noise + noise
     
     def create_dataset(self, mode = "Both"):
 

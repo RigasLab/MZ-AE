@@ -287,37 +287,38 @@ class MZA_Experiment(DynSystem_Data, Train_Methodology):
 ###########################################################################################################################
     def test(self, load_model = False):
 
-        from src.Layers.Autoencoder import Conv2D_Autoencoder
-        print("########## LOADING DATASET ##########")
-        print("Data Dir: ", self.data_dir)
-        self.load_and_preproc_data()
-        self.create_dataset()
-
-        autoencoder = Conv2D_Autoencoder(self.__dict__)
-        
-        for a,b in self.train_dataloader:
-            print("shape of a#### : ", a.shape)
-            a = torch.flatten(a,start_dim = 0, end_dim = 1)
-            x = autoencoder.encoder(a)
-            y = autoencoder.decoder(x)
-            print("shape x: ", x.shape)
-            print("shape y: ", y.shape)
-            break
-
-        #Test for Noise
-        # import numpy as np
-        # import matplotlib.image as mpimg
-        # #Loading and visualising data
+        #Test for Autoencoder
+        # from src.Layers.Autoencoder import Conv2D_Autoencoder
         # print("########## LOADING DATASET ##########")
         # print("Data Dir: ", self.data_dir)
         # self.load_and_preproc_data()
+        # self.create_dataset()
 
-        # plt.figure()
-        # print
-        # plt.plot(self.lp_data_without_noise[0,:500,0], label = "normal data")
-        # plt.plot(self.lp_data[0,:500,1], label = "noise data")
-        # plt.legend()
-        # plt.savefig(f"test/noise_images/noise_test_np{self.np}_color{self.noisecolor}.png")
+        # autoencoder = Conv2D_Autoencoder(self.__dict__)
+        
+        # for a,b in self.train_dataloader:
+        #     print("shape of a#### : ", a.shape)
+        #     a = torch.flatten(a,start_dim = 0, end_dim = 1)
+        #     x = autoencoder.encoder(a)
+        #     y = autoencoder.decoder(x)
+        #     print("shape x: ", x.shape)
+        #     print("shape y: ", y.shape)
+        #     break
+
+        #Test for Noise
+        import numpy as np
+        import matplotlib.image as mpimg
+        #Loading and visualising data
+        print("########## LOADING DATASET ##########")
+        print("Data Dir: ", self.data_dir)
+        self.load_and_preproc_data()
+
+        plt.figure()
+        print
+        plt.plot(self.lp_data_without_noise[0,:500,0], label = "normal data")
+        plt.plot(self.lp_data[0,:500,1], label = "noise data")
+        plt.legend()
+        plt.savefig(f"test/noise_images/NEW_noise_test_np{self.np}_color{self.noisecolor}.png")
 
         # def plot_spectrum(s, beta):
         #     f = np.fft.rfftfreq(s.shape[-1])

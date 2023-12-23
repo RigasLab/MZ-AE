@@ -1071,7 +1071,7 @@ class Conv2D_Autoencoder_mixed_filters_samedec(nn.Module):
     def __init__(self, args, model_eval = False):
         super(Conv2D_Autoencoder_mixed_filters_samedec, self).__init__()
 
-        print("AE_Model: Conv_Autoencoder_mixed_filters")
+        print("AE_Model: Conv_Autoencoder_mixed_filters_samedec")
 
         self.args = args
 
