@@ -25,17 +25,17 @@ class Eval_MZA(MZA_Experiment):
         
         if ("train_onlyautoencoder" not in args.keys()):
             args["train_onlyautoencoder"] = False
-        # if ("linear_autoencoder" not in args.keys()):
-        #     args["linear_autoencoder"] = False
+        if ("linear_autoencoder" not in args.keys()):
+            args["linear_autoencoder"] = False
         
-        # if ("nenddata" not in args.keys()):
-        #     args["nenddata"] = None
+        if ("nenddata" not in args.keys()):
+            args["nenddata"] = None
         
-        # if ("stable_koopman_init" not in args.keys()):
-        #     ski_flag = False
-        #     args["stable_koopman_init"] = False
-        # else:
-        #     ski_flag = True
+        if ("stable_koopman_init" not in args.keys()):
+            ski_flag = False
+            args["stable_koopman_init"] = False
+        else:
+            ski_flag = True
             
         super().__init__(args)
         self.exp_dir = exp_dir
@@ -63,10 +63,11 @@ class Eval_MZA(MZA_Experiment):
         else:
             PATH = self.exp_dir+'/'+ self.exp_name+"/model_weights/at_epoch{epoch}".format(epoch=epoch_num)
         
-        # self.model.load_state_dict(torch.load(PATH))
-
-        checkpoint = torch.load(PATH)
-        self.model.load_state_dict(checkpoint['model_state_dict'])
+        if self.dynsys == "2DCyl":
+            self.model.load_state_dict(torch.load(PATH))
+        else:
+            checkpoint = torch.load(PATH)
+            self.model.load_state_dict(checkpoint['model_state_dict'])
         # self.optimizer.load_state_dict(checkpoint['optimizer_state_dict'])
 
 ##################################################################################################################
@@ -659,8 +660,8 @@ class Eval_MZA(MZA_Experiment):
 
             coxi = self.prediction_limit(Phi_ms_hat_, Phi_, x)
             
-            if coxi > 0.6:
-                coff_x = np.append(coff_x, coxi)
+            # if coxi > 0.6:
+            coff_x = np.append(coff_x, coxi)
 
         coff_x = np.array(coff_x)
 
