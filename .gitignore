@@ -3,5 +3,6 @@ Data/*
 __pycache__
 test/noise_images/*
 *.sh
+*.gif
 *.e*
 *.o*

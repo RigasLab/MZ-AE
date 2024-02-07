@@ -1,20 +1,15 @@
 import torch
 import csv, pickle, copy
-# from torch.utils.data import DataLoader
 
 from src.Layers.MZANetwork import MZANetwork
 
 from src.Train_Methods.Train_Methodology import Train_Methodology
-# from src.Train_Methods.Train_Methodology_Autoencoder import Train_Methodology_Autoencoder
 from src.PreProc_Data.DynSystem_Data import DynSystem_Data
 from torch.optim.lr_scheduler import StepLR
 
 import matplotlib.pyplot as plt
 import pandas as pd
-
-# from utils.train_test import train_model, test_model, predict
 from src.utils.make_dir import mkdirs
-# from torch.utils.tensorboard import SummaryWriter
 torch.manual_seed(99)
 
 
@@ -66,7 +61,6 @@ class MZA_Experiment(DynSystem_Data, Train_Methodology):
             self.deactivate_lrscheduler = args.deactivate_lrscheduler        
             self.nepochs                = args.nepochs
             self.norm_input             = args.norm_input         #if input should be normalised
-            # self.npredsteps         = args.npredsteps
             self.nepoch_actseqmodel     = args.nepoch_actseqmodel
             self.pred_horizon           = args.pred_horizon
             self.lambda_ResL            = args.lambda_ResL
@@ -123,12 +117,6 @@ class MZA_Experiment(DynSystem_Data, Train_Methodology):
 ###########################################################################################################################
     def log_data(self, load_model = False):
 
-        # Logging Data
-        # self.metrics = ["epoch","Train_Loss","Train_ObsEvo_Loss","Train_Autoencoder_Loss","Train_StateEvo_Loss"\
-        #                        ,"Test_Loss","Test_ObsEvo_Loss","Test_Autoencoder_Loss","Test_StateEvo_Loss"\
-        #                        ,"Train_koop_ptg", "Train_seqmodel_ptg"\
-        #                        ,"Test_koop_ptg", "Test_seqmodel_ptg"]
-
         self.metrics = ["epoch","Train_Loss","Train_KoopEvo_Loss","Train_Residual_Loss","Train_Autoencoder_Loss","Train_StateEvo_Loss","Train_LatentEvo_Loss"\
                                ,"Test_Loss","Test_KoopEvo_Loss", "Test_Residual_Loss","Test_Autoencoder_Loss","Test_StateEvo_Loss","Test_LatentEvo_Loss"\
                                ,"Train_koop_ptg", "Train_seqmodel_ptg"\
@@ -162,7 +150,6 @@ class MZA_Experiment(DynSystem_Data, Train_Methodology):
             del args_dict['train_dataloader']
             del args_dict['test_dataloader']
             # #adding data_args
-            # args_dict["data_args"] = data_args
             pickle.dump(args_dict, f)
             print("Saved Args")
 
@@ -192,7 +179,6 @@ class MZA_Experiment(DynSystem_Data, Train_Methodology):
             self.scheduler = StepLR(self.optimizer, 
                     step_size = 20, # Period of learning rate decay
                     gamma = 0.3) # Multiplicative factor of learning rate decay
-        # writer = SummaryWriter(exp_dir+'/'+exp_name+'/'+'log/') #Tensorboard writer
 
         if not load_model:
             #Saving Initial Model state
@@ -284,60 +270,3 @@ class MZA_Experiment(DynSystem_Data, Train_Methodology):
         plt.close()
 
 
-###########################################################################################################################
-    def test(self, load_model = False):
-
-        #Test for Autoencoder
-        # from src.Layers.Autoencoder import Conv2D_Autoencoder
-        # print("########## LOADING DATASET ##########")
-        # print("Data Dir: ", self.data_dir)
-        # self.load_and_preproc_data()
-        # self.create_dataset()
-
-        # autoencoder = Conv2D_Autoencoder(self.__dict__)
-        
-        # for a,b in self.train_dataloader:
-        #     print("shape of a#### : ", a.shape)
-        #     a = torch.flatten(a,start_dim = 0, end_dim = 1)
-        #     x = autoencoder.encoder(a)
-        #     y = autoencoder.decoder(x)
-        #     print("shape x: ", x.shape)
-        #     print("shape y: ", y.shape)
-        #     break
-
-        #Test for Noise
-        import numpy as np
-        import matplotlib.image as mpimg
-        #Loading and visualising data
-        print("########## LOADING DATASET ##########")
-        print("Data Dir: ", self.data_dir)
-        self.load_and_preproc_data()
-
-        plt.figure()
-        print
-        plt.plot(self.lp_data_without_noise[0,:500,0], label = "normal data")
-        plt.plot(self.lp_data[0,:500,1], label = "noise data")
-        plt.legend()
-        plt.savefig(f"test/noise_images/NEW_noise_test_np{self.np}_color{self.noisecolor}.png")
-
-        # def plot_spectrum(s, beta):
-        #     f = np.fft.rfftfreq(s.shape[-1])
-        #     spec = np.linalg.norm(np.fft.rfft(s, axis = -1), axis = 1).squeeze()
-        #     data = np.stack((f,spec), axis = 0)
-
-        #     np.save(f"test/noise_images/data_np{self.np}_color{self.noisecolor}", data)
-        #     print(data.shape)
-            
-        #     return plt.loglog(f, spec, label = f"beta: {beta}")[0]
-
-        # plt.figure()
-        # # loaded_plot = mpimg.imread('test/noise_images/initial_plot.png')
-        # # plt.imshow(loaded_plot)  # Display the loaded plot
-        # plot_spectrum(self.lp_data,self.noisecolor)
-        # print("lpshape: ", self.lp_data.shape)
-        # plt.legend()
-
-        
-
-        # plt.savefig(f"test/noise_images/spectrum_noise_test_np{self.np}_color{self.noisecolor}.png")
-        # # plt.savefig("test/noise_images/initial_plot.png")

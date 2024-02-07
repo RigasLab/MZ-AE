@@ -188,16 +188,9 @@ class Eval_MZA(MZA_Experiment):
         StateEvoLoss (torch tensor): [timesteps]
         '''
 
-        # dataloader = DataLoader(dataset, batch_size = len(dataset), shuffle = False)
-
         dataloader = DataLoader(dataset, batch_size = batch_size, shuffle = False)
 
-        # num_batches = len(dataloader)
-        # total_loss, total_ObsEvo_Loss, total_Autoencoder_Loss, total_StateEvo_Loss  = 0,0,0,0
-        # total_koop_ptg, total_seqmodel_ptg = 0,0
         self.model.eval()
-
-        
 
         for count, (Phi_seq, Phi_nn) in enumerate(dataloader):
             
@@ -285,20 +278,12 @@ class Eval_MZA(MZA_Experiment):
             seqmodel_out = torch.movedim(seqmodel_out, 1, 0) #[num_trajs timesteps statedim]
 
         StateEvo_Loss = Eval_MZA.state_mse(Phi_nn, Phi_nn_hat)
-        # mseLoss          = nn.MSELoss(reduction = 'none')
-        # StateEvo_Loss    = mseLoss(Phi_nn_hat, Phi_nn) #[num_trajs timesteps statedim]
-        # StateEvo_Loss    = torch.mean(StateEvo_Loss, dim = (0,*tuple(range(2,StateEvo_Loss.ndim)))) #[timesteps]
 
         if not self.deactivate_seqmodel:
             return x_nn_hat, Phi_nn_hat, x_nn, Phi_nn, StateEvo_Loss, koop_out, seqmodel_out
 
-            # return x_nn_hat.detach(), Phi_nn_hat.detach(), x_nn.detach(), Phi_nn.detach(), StateEvo_Loss.detach(), koop_out.detach(), seqmodel_out.detach()
-                   #avg_loss, avg_ObsEvo_Loss, avg_Autoencoder_Loss, avg_StateEvo_Loss, avg_koop_ptg, avg_seqmodel_ptg
         else:
             return x_nn_hat, Phi_nn_hat, x_nn, Phi_nn, StateEvo_Loss
-
-    # def get_initial_conditions_from_data(self, )
-
 
 ##################################################################################################################
     def predict_multistep(self, initial_conditions, timesteps):
@@ -321,7 +306,6 @@ class Eval_MZA(MZA_Experiment):
             x   = x_n[None,...]                       #[timesteps num_trajs obsdim]
             
             Phi = Phi_n[None, ...]                    #[timesteps num_trajs statedim]
-            # Phi_koop = Phi_n[None, ...]
 
             for n in range(timesteps):
 
@@ -342,10 +326,6 @@ class Eval_MZA(MZA_Experiment):
                 
                 x_seq_n = torch.movedim(x_seq_n, 1, 0) #[num_trajs seq_len obsdim]
                 x_seq_n = x_seq_n[:,:-1,:]
-                # koop_out     = self.model.koopman(x[n])
-                # seqmodel_out = self.model.seqmodel(x_seq_n)
-                # x_nn         = koop_out + seqmodel_out
-                # Phi_nn       = self.model.autoencoder.recover(x_nn)
 
                 koop_out     = self.model.koopman(x[n])
                 if self.deactivate_seqmodel:
@@ -378,234 +358,6 @@ class Eval_MZA(MZA_Experiment):
 
             return x.detach(), Phi.detach(), Phi_koop.detach(), x_koop.detach(), x_seq
 
-
-##################################################################################################################  
-    def predict_multistep_warmup(self, initial_conditions, timesteps):
-
-            '''
-            Input
-            -----
-            initial_conditions (torch tensor): [num_trajs, timesteps, statedim]
-            timesteps (int): Number timesteps for prediction
-
-            Returns
-            x (torch tensor): [num_trajs timesteps obsdim] observable vetcor
-            Phi (torch tensor): [num_trajs timesteps statedim] state vector
-            '''
-            
-            #input stats
-            num_trajs = initial_conditions.shape[0]
-            warmup_timesteps = initial_conditions.shape[1]
-
-            self.model.eval()
-            Phi_n  = torch.flatten(initial_conditions, start_dim = 0, end_dim = 1)   #[num_trajs*timesteps obsdim]
-            x_n, _ = self.model.autoencoder(Phi_n)    #[num_trajs*timesteps obsdim]
-            
-            x_n = x_n.reshape((num_trajs, warmup_timesteps, self.num_obs))
-            x   = torch.einsum("ij...->ji...",x_n)    #[timesteps num_trajs obsdim]
-            # x   = x[-1][None,...]
-            
-            Phi_n = torch.einsum("ij...->ji...", initial_conditions)                    #[timesteps num_trajs statedim]
-            Phi = Phi_n[-1][None,...]
-
-            for n in range(warmup_timesteps-1,timesteps+warmup_timesteps):
-
-                if n >= self.seq_len:
-                    i_start = n - self.seq_len + 1
-                    x_seq_n = x[i_start:(n+1), ...]
-                
-                x_seq_n = torch.movedim(x_seq_n, 1, 0) #[num_trajs seq_len obsdim]
-                x_seq_n = x_seq_n[:,:-1,:]
-                # koop_out     = self.model.koopman(x[n])
-                # seqmodel_out = self.model.seqmodel(x_seq_n)
-                # x_nn         = koop_out + seqmodel_out
-                # Phi_nn       = self.model.autoencoder.recover(x_nn)
-
-                koop_out     = self.model.koopman(x[n])
-                if self.deactivate_seqmodel:
-                    x_nn     = koop_out 
-                else:
-                    seqmodel_out = self.model.seqmodel(x_seq_n)
-                    x_nn         = koop_out + seqmodel_out 
-                Phi_nn = self.model.autoencoder.recover(x_nn)
-                Phi_nn_koop = self.model.autoencoder.recover(koop_out)
-
-                x   = torch.cat((x,x_nn[None,...]), 0)
-                Phi = torch.cat((Phi,Phi_nn[None,...]), 0)
-
-                # if n == warmup_timesteps-1:
-                #     Phi_koop = Phi_nn_koop[None,...]
-                #     x_koop   = koop_out[None,...]                    #[timesteps num_trajs obsdim]
-                #     x_seq    = seqmodel_out[None,...] if not self.deactivate_seqmodel else 0                #[timesteps num_trajs obsdim]
-                # else:
-                #     Phi_koop = torch.cat((Phi_koop, Phi_nn_koop[None,...]), 0)
-                #     x_koop   = torch.cat((x_koop, koop_out[None,...]), 0)
-                #     x_seq    = torch.cat((x_seq, seqmodel_out[None,...]), 0) if not self.deactivate_seqmodel else 0
-
-            x      = torch.movedim(x, 1, 0)   #[num_trajs timesteps obsdim]
-            x      = x[:,warmup_timesteps-1:,...] 
-            # x_koop = torch.movedim(x_koop, 1, 0)   #[num_trajs timesteps obsdim]
-            # x_seq  = torch.movedim(x_seq, 1, 0) if not self.deactivate_seqmodel else 0   #[num_trajs timesteps obsdim]
-            Phi    = torch.movedim(Phi, 1, 0) #[num_trajs timesteps statedim]
-            # Phi_koop = torch.movedim(Phi_koop, 1, 0) #[num_trajs timesteps-1 statedim]
-
-            # x_seq = x_seq.detach() if not self.deactivate_seqmodel else 0
-
-            return x.detach(), Phi.detach()#, Phi_koop.detach(), x_koop.detach(), x_seq
-
-
-##################################################################################################################  
-    def predict_multistep_warmup_memefficient(self, initial_conditions, timesteps):
-
-            '''
-            Input
-            -----
-            initial_conditions (torch tensor): [num_trajs, timesteps, statedim]
-            timesteps (int): Number timesteps for prediction
-
-            Returns
-            x (torch tensor): [num_trajs timesteps obsdim] observable vetcor
-            Phi (torch tensor): [num_trajs timesteps statedim] state vector
-            '''
-            
-            #input stats
-            num_trajs = initial_conditions.shape[0]
-            warmup_timesteps = initial_conditions.shape[1]
-
-            self.model.eval()
-            Phi_n  = torch.flatten(initial_conditions, start_dim = 0, end_dim = 1)   #[num_trajs*timesteps obsdim]
-            x_n, _ = self.model.autoencoder(Phi_n)    #[num_trajs*timesteps obsdim]
-            
-            x_n = x_n.reshape((num_trajs, warmup_timesteps, self.num_obs))
-            x   = torch.einsum("ij...->ji...",x_n)    #[timesteps num_trajs obsdim]
-            # x   = x[-1][None,...]
-            
-            Phi_n = torch.einsum("ij...->ji...", initial_conditions)                    #[timesteps num_trajs statedim]
-            Phi = Phi_n[-1][None,...]
-
-            for n in range(warmup_timesteps-1,timesteps+warmup_timesteps):
-
-                if n >= self.seq_len:
-                    i_start = n - self.seq_len + 1
-                    x_seq_n = x[i_start:(n+1), ...]
-                
-                x_seq_n = torch.movedim(x_seq_n, 1, 0) #[num_trajs seq_len obsdim]
-                x_seq_n = x_seq_n[:,:-1,:]
-                # koop_out     = self.model.koopman(x[n])
-                # seqmodel_out = self.model.seqmodel(x_seq_n)
-                # x_nn         = koop_out + seqmodel_out
-                # Phi_nn       = self.model.autoencoder.recover(x_nn)
-
-                koop_out     = self.model.koopman(x[n])
-                if self.deactivate_seqmodel:
-                    x_nn     = koop_out 
-                else:
-                    seqmodel_out = self.model.seqmodel(x_seq_n)
-                    x_nn         = koop_out + seqmodel_out 
-                Phi_nn = self.model.autoencoder.recover(x_nn).to("cpu")
-                Phi_nn_koop = self.model.autoencoder.recover(koop_out).to("cpu")
-
-                x   = torch.cat((x,x_nn[None,...]), 0)
-                Phi = torch.cat((Phi,Phi_nn[None,...]), 0)
-
-                # if n == warmup_timesteps-1:
-                #     Phi_koop = Phi_nn_koop[None,...]
-                #     x_koop   = koop_out[None,...]                    #[timesteps num_trajs obsdim]
-                #     x_seq    = seqmodel_out[None,...] if not self.deactivate_seqmodel else 0                #[timesteps num_trajs obsdim]
-                # else:
-                #     Phi_koop = torch.cat((Phi_koop, Phi_nn_koop[None,...]), 0)
-                #     x_koop   = torch.cat((x_koop, koop_out[None,...]), 0)
-                #     x_seq    = torch.cat((x_seq, seqmodel_out[None,...]), 0) if not self.deactivate_seqmodel else 0
-
-            x      = torch.movedim(x, 1, 0)   #[num_trajs timesteps obsdim]
-            x      = x[:,warmup_timesteps-1:,...] 
-            # x_koop = torch.movedim(x_koop, 1, 0)   #[num_trajs timesteps obsdim]
-            # x_seq  = torch.movedim(x_seq, 1, 0) if not self.deactivate_seqmodel else 0   #[num_trajs timesteps obsdim]
-            Phi    = torch.movedim(Phi, 1, 0) #[num_trajs timesteps statedim]
-            # Phi_koop = torch.movedim(Phi_koop, 1, 0) #[num_trajs timesteps-1 statedim]
-            # x_seq = x_seq.detach() if not self.deactivate_seqmodel else 0
-
-            return x.detach(), Phi.detach()#, Phi_koop.detach(), x_koop.detach(), x_seq
-    
-
-##################################################################################################################   
-    def predict_multistep_stateful(self, initial_conditions, timesteps):
-
-            '''
-            Stateful prediction using LSTM
-            Input
-            -----
-            initial_conditions (torch tensor): [num_trajs, timesteps, statedim]
-            timesteps (int): Number timesteps for prediction
-
-            Returns
-            -------
-            x (torch tensor): [num_trajs timesteps obsdim] observable vetcor
-            Phi (torch tensor): [num_trajs timesteps statedim] state vector
-            Phi_koop (torch tensor): [num_trajs timesteps statedim] state vector koopman contribution
-            x_koop (torch tensor): [num_trajs timesteps obsdim] observable koopman contribution
-            x_seq (torch tensor): [num_trajs timesteps obsdim] observable seqmodel contribution
-            '''
-
-            num_trajs = initial_conditions.shape[0]
-            
-            self.model.eval()
-            Phi_n  = torch.flatten(initial_conditions, start_dim = 0, end_dim = 1) #[num_trajs*timesteps obsdim]
-            x_n, _ = self.model.autoencoder(Phi_n)    #[num_trajs*timesteps obsdim]
-
-            x_n = x_n.reshape(num_trajs, initial_conditions.shape[1], x_n.shape[-1])  #[num_trajs timesteps obsdim]
-            x   = x_n[:,-1,...].unsqueeze(dim = 1)     #[num_trajs timesteps obsdim]
-            
-            Phi = Phi_n.reshape(*initial_conditions.shape)   #[num_trajs timesteps statedim]
-            Phi = Phi[:,1,...].unsqueeze(dim = 1)
-            # Phi_koop = Phi_n[None, ...]
-
-            inst_x = x_n[:,-1]                       #instantaneous x
-            prev_x = x_n[:,:-1]                      #previous x
-
-            if initial_conditions.shape[1] == 2:
-                prev_x = x_n[:,:-1].unsqueeze(1)
-
-            for n in range(timesteps):
-                
-                koop_out     = self.model.koopman(inst_x)
-                if self.deactivate_seqmodel:
-                    x_nn     = koop_out 
-                else:
-                    if n == 0:
-                        seqmodel_out, hn, cn = self.model.seqmodel.predict(prev_x, h = 0, c = 0, mode = "init")
-                    else:
-                        seqmodel_out, hn, cn = self.model.seqmodel.predict(prev_x, h = hn, c = cn)
-                    
-                    x_nn = koop_out + seqmodel_out.squeeze(dim = 1)            #[num_trajs obsdim]
-                 
-                
-                #recovering the statedim
-                Phi_nn      = self.model.autoencoder.recover(x_nn)           #[num_trajs obsdim]
-                Phi_nn_koop = self.model.autoencoder.recover(koop_out)       #[num_trajs obsdim]
-
-                #updating inst_x and prev_x for next step
-                prev_x = inst_x.unsqueeze(1)
-                inst_x = x_nn
-                 
-                #concatinating predicted values in the trajectory
-                x   = torch.cat((x, x_nn[:,None,...]), 1)
-                Phi = torch.cat((Phi, Phi_nn[:,None,...]), 1)
-
-                if n == 0:
-                    Phi_koop = Phi_nn_koop[:,None,...]
-                    x_koop   = koop_out[:,None,...]                    #[num_trajs timesteps obsdim]
-                    x_seq    = seqmodel_out[:,None,...] if not self.deactivate_seqmodel else 0                #[timesteps num_trajs obsdim]
-                else:
-                    Phi_koop = torch.cat((Phi_koop, Phi_nn_koop[:,None,...]), 1)
-                    x_koop   = torch.cat((x_koop, koop_out[:,None,...]), 1)
-                    x_seq    = torch.cat((x_seq, seqmodel_out[:,None,...]), 1) if not self.deactivate_seqmodel else 0
-
-            x_seq = x_seq.detach() if not self.deactivate_seqmodel else 0
-
-            return x.detach(), Phi.detach(), Phi_koop.detach(), x_koop.detach(), x_seq
-
-            
 
 ########################################################################################
     @staticmethod
@@ -666,116 +418,6 @@ class Eval_MZA(MZA_Experiment):
         coff_x = np.array(coff_x)
 
         return coff_x
-
-##############################################################################################################
-    def jacobian_calc(self, initial_conditions, timesteps):
-
-            '''
-            Computes jacobian of the output wrt input variables
-            Input
-            -----
-            initial_conditions (torch tensor): [num_trajs, statedim]
-            timesteps (int): Number timesteps for prediction
-
-            Returns
-            -------
-            grad_xn_xseq (torch tensor): [num_trajs timesteps seqlen obsdim] gradient of output observables wrt input observables
-            grad_xn_x (torch tensor): [num_trajs timesteps obsdim]
-            '''
-
-            self.model.train()
-            Phi_n  = initial_conditions.to(self.device) 
-            Phi_n.requires_grad = True 
-
-            x_n, _ = self.model.autoencoder(Phi_n)    #[num_trajs obsdim]
-            
-            x   = x_n[None,...]                       #[timesteps num_trajs obsdim]
-            
-            Phi = Phi_n[None, ...]                    #[timesteps num_trajs statedim]
-            # Phi_koop = Phi_n[None, ...]
-
-            for n in range(timesteps):
-
-                non_time_dims = (1,)*(x.ndim-1)   #dims apart from timestep in tuple form (1,1,...)
-                if n >= self.seq_len:
-                    i_start = n - self.seq_len + 1
-                    x_seq_n = x[i_start:(n+1), ...]
-                elif n==0:
-                    # padding = torch.zeros(x[0].repeat(self.seq_len - 1, *non_time_dims).shape).to(self.device)
-                    padding = x[0].repeat(self.seq_len - 1, *non_time_dims)
-                    x_seq_n = x[0:(n+1), ...]
-                    x_seq_n = torch.cat((padding, x_seq_n), 0)
-                else:
-                    # padding = torch.zeros(x[0].repeat(self.seq_len - n, *non_time_dims).shape).to(self.device)
-                    padding = x[0].repeat(self.seq_len - n, *non_time_dims)
-                    x_seq_n = x[1:(n+1), ...]
-                    x_seq_n = torch.cat((padding, x_seq_n), 0)
-                
-                x_seq_n = torch.movedim(x_seq_n, 1, 0) #[num_trajs seq_len obsdim]
-                x_seq_n = x_seq_n[:,:-1,:]
-                
-
-                # koop_out     = self.model.koopman(x[n])
-                # seqmodel_out = self.model.seqmodel(x_seq_n)
-                # x_nn         = koop_out + seqmodel_out
-                # Phi_nn       = self.model.autoencoder.recover(x_nn)
-
-                koop_out     = self.model.koopman(x[n])
-                if self.deactivate_seqmodel:
-                    x_nn     = koop_out 
-                else:
-                    seqmodel_out = self.model.seqmodel(x_seq_n)
-                    x_nn         = koop_out + seqmodel_out 
-
-                #caculating gradients
-                
-                x_seq_n.retain_grad()   #making x_seq_n a leaf to store gradients
-                x.retain_grad()
-                external_grad = torch.ones((1,self.num_obs)).to(self.device)
-                self.model.zero_grad()
-                x_nn.backward(external_grad, retain_graph = True)
-
-                # print(x_seq_n.grad.shape)
-                
-                Phi_nn = self.model.autoencoder.recover(x_nn)
-            #     Phi_nn_koop = self.model.autoencoder.recover(koop_out)
-
-                x   = torch.cat((x,x_nn[None,...]), 0)
-                Phi = torch.cat((Phi,Phi_nn[None,...]), 0)
-
-                if n == 0:
-                    grad_xn_xseq = x_seq_n.grad[:,None,...] #[num_traj timesteps seqlen obsdim]
-                    # grad_xn_x   = x[n][None,...]          #[timesteps num_trajs obsdim]
-                else:
-                    grad_xn_xseq = torch.cat((grad_xn_xseq, x_seq_n.grad[:,None,...]), 1)
-                
-                self.model.grad = None
-                x_seq_n.grad = None
-                x.grad = None
-                    
-
-            # x   = torch.movedim(x, 1, 0)   #[num_trajs timesteps obsdim]
-            # x_koop = torch.movedim(x_koop, 1, 0)   #[num_trajs timesteps obsdim]
-            # x_seq  = torch.movedim(x_seq, 1, 0) if not self.deactivate_seqmodel else 0   #[num_trajs timesteps obsdim]
-            # Phi = torch.movedim(Phi, 1, 0) #[num_trajs timesteps statedim]
-            # Phi_koop = torch.movedim(Phi_koop, 1, 0) #[num_trajs timesteps-1 statedim]
-
-            # x_seq = x_seq.detach() if not self.deactivate_seqmodel else 0
-
-            return grad_xn_xseq.detach()
-    
-
-########################################################################################################
-    def plot_eigenvectors(self, initial_conditions, timesteps):
-
-        kMatrix = self.model.koopman.getKoopmanMatrix()
-        kMatrix = kMatrix.detach().cpu().numpy()
-        
-        #calculating initial conditions
-        w, v = np.linalg.eig(kMatrix)
-        idx = w.argsort()[::-1]
-        w = w[idx]
-        v = v[:,idx]
 
 ###########################################################################################################
     def plot_learning_curves(self):

@@ -21,24 +21,15 @@ class DynSystem_Data:
         '''
         
         self.lp_data   = np.load(self.data_dir)
-
-        #For Duffing
-        if self.dynsys == "Duffing":
-            self.lp_data = self.lp_data[...,:2]
         
         #For KS
-        elif self.dynsys == "KS": 
+        if self.dynsys == "KS": 
             self.lp_data = self.lp_data[:,::self.time_sample,:]
             self.lp_data = self.lp_data[:,self.ntransients:,:]
         
         #For 2D Cylinder Flow
         elif self.dynsys == "2DCyl":
             self.lp_data = self.lp_data[:,self.ntransients:self.nenddata,:]
-
-        #for Experimental Data
-        elif self.dynsys == "ExpData":
-            self.lp_data = self.lp_data[1+self.ntransients:]
-        print("Data Shape: ", self.lp_data.shape)
 
         #additional data parameters
         self.statedim   = self.lp_data.shape[2:]
@@ -49,21 +40,14 @@ class DynSystem_Data:
         #Normalising Data
         if self.norm_input:
             print("normalizing Input")
-            # self.lp_data[...,0] = (self.lp_data[...,0] - np.mean(self.lp_data[...,0],axis=0))/np.std(self.lp_data[...,0],axis=0)
             self.lp_data = (self.lp_data - np.mean(self.lp_data))/np.std(self.lp_data)
         else:
             print("Not normalizing Input")
         
         # Calculate the noise level as a fraction of the maximum data value
-        # max_data_value = np.max(self.lp_data)
-        # noise_level = max_data_value * (10**(desired_psnr_percent / -20.0))
-
-        # # Generate Gaussian noise with the calculated noise level for each data point
-
-        # noise = cn.powerlaw_psd_gaussian(self.noisecolor, self.lp_data.shape) * self.np
-        noise = np.random.normal(0, self.lp_data.std()*self.np, self.lp_data.shape) 
-        self.lp_data_without_noise = self.lp_data
-        self.lp_data = self.lp_data_without_noise + noise
+        # noise = np.random.normal(0, self.lp_data.std()*self.np, self.lp_data.shape) 
+        # self.lp_data_without_noise = self.lp_data
+        # self.lp_data = self.lp_data_without_noise + noise
     
     def create_dataset(self, mode = "Both"):
 
@@ -79,6 +63,7 @@ class DynSystem_Data:
         Dataset : [num_traj, timesteps, statedim] Input , Output (both test and train)
         Dataloader: [num_traj*timesteps, statedim] 
         '''
+
         if mode == "Both" or mode == "Train":
             
             if self.dynsys == "KS" or self.dynsys == "2DCyl":
@@ -98,11 +83,6 @@ class DynSystem_Data:
             
             if self.dynsys == "KS" or self.dynsys == "2DCyl":
                 self.test_data  = self.lp_data[:,int(self.train_size * self.lp_data.shape[1]):]
-
-            elif self.dynsys == "ExpData":
-                self.test_data = self.lp_data[int(self.train_size**2 * self.lp_data.shape[0]):int(self.train_size * self.lp_data.shape[0])]
-                self.val_data = self.lp_data[int(self.train_size * self.lp_data.shape[0]):]
-                print("Val_Shape: ", self.val_data.shape)
                 
             else:
                 self.test_data  = self.lp_data[int(self.train_size * self.lp_data.shape[0]):]
@@ -111,13 +91,3 @@ class DynSystem_Data:
             self.test_num_trajs  = self.test_data.shape[0]
             self.test_dataset     = StackedSequenceDataset(self.test_data , self.__dict__)
             self.test_dataloader  = DataLoader(self.test_dataset, batch_size=self.batch_size, shuffle = False, num_workers = 0)
-
-        #print the dataset shape
-        # X,y = next(iter(test_dataloader))
-        # print("Input Shape : ", X.shape)
-        # print("Output Shape: ", y.shape)
-
-    #redirecting print output
-    # orig_stdout = sys.stdout
-    # f = open(exp_dir+'/out.txt', 'w+')
-    # sys.stdout = f

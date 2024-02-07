@@ -151,10 +151,6 @@ class Train_Methodology():
             StateEvo_Loss     = mseLoss(Phi_nn_hat_ph, Phi_nn_ph)
             LatentEvo_Loss    = mseLoss(x_nn_hat_ph, x_nn_ph)
 
-            #calculating l1 norm of the matrix
-            # kMatrix = self.model.koopman.getKoopmanMatrix(requires_grad = False)
-            # l1_norm = torch.norm(kMatrix, p=1)
-            # seqnorm = torch.norm(seqmodel_nn_ph, p = 'fro')**2
             if not self.deactivate_seqmodel:
                 loss = (KoopEvo_Loss + self.lambda_ResL*Residual_Loss + LatentEvo_Loss) + \
                         100*(Autoencoder_Loss) #+ StateEvo_Loss) #+ self.seq_model_weight*seqnorm
@@ -233,7 +229,6 @@ class Train_Methodology():
 
             ####### flattening batchsize seqlen / batchsize pred_horizon ######
             Phi_seq   = torch.flatten(Phi_seq,   start_dim = 0, end_dim = 1)        #[bs*seqlen, statedim]
-            # Phi_nn_ph = torch.flatten(Phi_nn_ph, start_dim = 0, end_dim = 1)      #[bs*ph_size, statedim]
             ###### obtain observables ######
             x_seq, Phi_seq_hat = self.model.autoencoder(Phi_seq)
 
@@ -241,11 +236,6 @@ class Train_Methodology():
             mseLoss      = nn.MSELoss()
             Autoencoder_Loss  = mseLoss(Phi_seq, Phi_seq_hat)
             
-
-            #calculating l1 norm of the matrix
-            # kMatrix = self.model.koopman.getKoopmanMatrix(requires_grad = False)
-            # l1_norm = torch.norm(kMatrix, p=1)
-            # seqnorm = torch.norm(seqmodel_nn_ph, p = 'fro')**2
             loss = Autoencoder_Loss
             
             if mode == "Train":

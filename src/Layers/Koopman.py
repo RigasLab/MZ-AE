@@ -17,24 +17,8 @@ class Koopman(nn.Module):
             self.device              = self.args["device"]
             self.stable_koopman_init = self.args["stable_koopman_init"]
             
-            # Learned koopman operator
-            # Learns skew-symmetric matrix with a diagonal
-            # self.kMatrixDiag = nn.Parameter(torch.rand(self.latent_size), requires_grad=True)#.to(self.device)
-            # self.kMatrixUT   = nn.Parameter(torch.randn(int(self.latent_size*(self.latent_size-1)/2)), requires_grad = True)#.to(self.device)
-            
-            #stable matrix initialization
-            if self.stable_koopman_init:
-                self.kMatrixDiag = nn.Parameter(torch.empty(self.latent_size,1))
-                self.kMatrixUDiag = nn.Parameter(torch.empty(self.latent_size-1,1))
-                torch.nn.init.xavier_uniform_(self.kMatrixDiag)
-                torch.nn.init.xavier_uniform_(self.kMatrixUDiag)
-        
-            #Complete matrix initialization
-            else:
-                self.kMatrix = nn.Parameter(torch.empty(self.latent_size, self.latent_size))
-                torch.nn.init.xavier_uniform_(self.kMatrix)
-
-        # print('Koopman Parameters: {}'.format(self._num_parameters()))
+            self.kMatrix = nn.Parameter(torch.empty(self.latent_size, self.latent_size))
+            torch.nn.init.xavier_uniform_(self.kMatrix)
 
     def forward(self, x_n):
         '''
@@ -58,16 +42,6 @@ class Koopman(nn.Module):
             self.kMatrix[udIdx] = torch.nn.functional.relu(self.kMatrixUDiag.squeeze())
             self.kMatrix[ldIdx] = -self.kMatrix[udIdx]
             
-        # Build Koopman matrix (skew-symmetric with diagonal)
-        
-        # self.kMatrix = Variable(torch.Tensor(self.latent_size, self.latent_size)).to(self.device)
-        # utIdx = torch.triu_indices(self.latent_size, self.latent_size, offset=1)
-        # diagIdx = torch.stack([torch.arange(0,self.latent_size,dtype=torch.long).unsqueeze(0), \
-        #     torch.arange(0,self.latent_size,dtype=torch.long).unsqueeze(0)], dim=0)
-        # self.kMatrix[utIdx[0], utIdx[1]] = self.kMatrixUT
-        # self.kMatrix[utIdx[1], utIdx[0]] = -self.kMatrixUT
-        # self.kMatrix[diagIdx[0], diagIdx[1]] = torch.nn.functional.relu(self.kMatrixDiag)
-
         #forward one step time propagation
         if x_n.ndim == 2:
             x_n = x_n.unsqueeze(1)
@@ -81,19 +55,7 @@ class Koopman(nn.Module):
     def getKoopmanMatrix(self, requires_grad=False):
         '''
         Returns current Koopman operator
-        # '''
-
-        # kMatrix = self.kMatrix
-        
-        # self.kMatrix = Variable(torch.Tensor(self.latent_size, self.latent_size), requires_grad=requires_grad).to(self.kMatrixUT.device)
-
-        # utIdx   = torch.triu_indices(self.latent_size, self.latent_size, offset=1)
-        # diagIdx = torch.stack([torch.arange(0, self.latent_size, dtype=torch.long).unsqueeze(0), \
-        #     torch.arange(0,self.latent_size,dtype=torch.long).unsqueeze(0)], dim=0)
-        # self.kMatrix[utIdx[0], utIdx[1]] = self.kMatrixUT
-        # self.kMatrix[utIdx[1], utIdx[0]] = -self.kMatrixUT
-        # self.kMatrix[diagIdx[0], diagIdx[1]] = torch.nn.functional.relu(self.kMatrixDiag)
-
+        '''
         return self.kMatrix
 
     def _num_parameters(self):
@@ -103,57 +65,3 @@ class Koopman(nn.Module):
             count += param.numel()
         return count
     
-
-
-class new_Koopman(nn.Module):
-
-    def __init__(self, args, model_eval = False):
-
-        super(new_Koopman, self).__init__()
-
-        print("Koop_Model: new_Koopman")
-
-        self.args = args
-
-        if not model_eval:
-            self.latent_size         = self.args["num_obs"]
-            self.device              = self.args["device"]
-            self.stable_koopman_init = self.args["stable_koopman_init"]
-
-            #encoder layers
-            self.e_fc1 = nn.Linear(self.latent_size, self.latent_size, bias = False)
-    
-
-    def forward(self, x_n):
-        x_nn = self.e_fc1(x_n)
-        return x_nn
-
-    def getKoopmanMatrix(self, requires_grad=False):
-        '''
-        Returns current Koopman operator
-        # '''
-
-        # kMatrix = self.kMatrix
-        
-        # self.kMatrix = Variable(torch.Tensor(self.latent_size, self.latent_size), requires_grad=requires_grad).to(self.kMatrixUT.device)
-
-        # utIdx   = torch.triu_indices(self.latent_size, self.latent_size, offset=1)
-        # diagIdx = torch.stack([torch.arange(0, self.latent_size, dtype=torch.long).unsqueeze(0), \
-        #     torch.arange(0,self.latent_size,dtype=torch.long).unsqueeze(0)], dim=0)
-        # self.kMatrix[utIdx[0], utIdx[1]] = self.kMatrixUT
-        # self.kMatrix[utIdx[1], utIdx[0]] = -self.kMatrixUT
-        # self.kMatrix[diagIdx[0], diagIdx[1]] = torch.nn.functional.relu(self.kMatrixDiag)
-
-        for name, param in self.named_parameters():
-            print(name, param.numel())
-            koopman = param
-            break
-
-        return koopman
-    
-    def _num_parameters(self):
-        count = 0
-        for name, param in self.named_parameters():
-            # print(name, param.numel())
-            count += param.numel()
-        return count
