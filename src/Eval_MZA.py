@@ -17,42 +17,20 @@ class Eval_MZA(MZA_Experiment):
 
     def __init__(self, exp_dir, exp_name):
 
-        
         args = pickle.load(open(exp_dir + "/" + exp_name + "/args","rb"))
-        # #safety measure for new parameters added in model
-        if ("np" not in args.keys()):
-            args["np"] = 0
-        
-        if ("train_onlyautoencoder" not in args.keys()):
-            args["train_onlyautoencoder"] = False
-        if ("linear_autoencoder" not in args.keys()):
-            args["linear_autoencoder"] = False
-        
-        if ("nenddata" not in args.keys()):
-            args["nenddata"] = None
-        
-        if ("stable_koopman_init" not in args.keys()):
-            ski_flag = False
-            args["stable_koopman_init"] = False
-        else:
-            ski_flag = True
+        #safety measure for new parameters added in model
+        ski_flag = Eval_MZA.safety_measure_model_update(args)
             
         super().__init__(args)
         self.exp_dir = exp_dir
         self.exp_name = exp_name
 
-        # if not ski_flag: 
-        #     self.model.koopman.stable_koopman_init = False
-        
-        try:
-            if self.nepoch_actseqmodel != 0:
-                self.deactivate_seqmodel = False
-        except Exception as error:
-            print("An exception occurred:", error)
+        if not ski_flag: 
+            self.model.koopman.stable_koopman_init = False
             
 
 ##################################################################################################################
-    def load_weights(self, epoch_num, min_test_loss = False, min_train_loss = False):
+    def load_weights(self, epoch_num = 500, min_test_loss = False, min_train_loss = False):
 
         if min_test_loss:
             PATH = self.exp_dir+'/'+ self.exp_name+"/model_weights/min_test_loss".format(epoch=epoch_num)
@@ -63,7 +41,7 @@ class Eval_MZA(MZA_Experiment):
         else:
             PATH = self.exp_dir+'/'+ self.exp_name+"/model_weights/at_epoch{epoch}".format(epoch=epoch_num)
         
-        if self.dynsys == "2DCyl":
+        if self.autoencoder_model == "Autoencoder":
             self.model.load_state_dict(torch.load(PATH))
         else:
             checkpoint = torch.load(PATH)
@@ -92,29 +70,6 @@ class Eval_MZA(MZA_Experiment):
 
         return StateMSE
 
-################################################################################################################## 
-    @staticmethod
-    def state_relative_mse(Phi,Phi_hat):
-        '''
-        Input
-        -----
-        Phi (torch tensor): [num_tajs timesteps statedim]
-        Phi_hat (torch tensor): [num_tajs timesteps statedim]
-
-        Returns
-        -------
-        StateMSE [timesteps]
-        '''
-        Phi_sm = Phi.to("cpu")
-        Phi_hat_sm  = Phi_hat.to("cpu")
-        mseLoss     = nn.MSELoss(reduction = 'none')
-        StateMSE    = mseLoss(Phi_sm, Phi_hat_sm) #[num_trajs timesteps statedim]
-        # print(StateMSE.shape)
-        StateMSE    = torch.mean(StateMSE, dim = (0,*tuple(range(2, StateMSE.ndim)))) #[timesteps]
-
-        return StateMSE
-
-
 ##################################################################################################################
     @staticmethod 
     def calc_pdf(ke):
@@ -133,10 +88,10 @@ class Eval_MZA(MZA_Experiment):
         pdf = kde.evaluate(k)
         return k, pdf
 
-
 ##################################################################################################################
     @staticmethod
-    def CCF(data1, data2, plot=False):
+    def ccf_values(data1, data2):
+
         '''
         Calculates Cross Correlation Function
 
@@ -147,8 +102,42 @@ class Eval_MZA(MZA_Experiment):
 
         Returns
         -------
-        CCF (ndarray): [um_trajs timesteps statedim] 
+        CCF (ndarray): [num_trajs timesteps statedim] 
         '''
+
+        p = data1
+        q = data2
+        p = (p - np.mean(p)) / (np.std(p) * len(p))
+        q = (q - np.mean(q)) / (np.std(q))  
+        c = np.correlate(p, q, 'full')
+        return c
+
+    @staticmethod
+    def ccf_plot(lags, ccf, fig, ax, mode = "dns", color = None):
+
+        '''
+        Plots ccf
+        '''
+        
+        if color == "red":
+            ax.plot(lags, ccf, "maroon", label = "DNS", linewidth=3.0)
+        elif color == "without mem":
+            ax.plot(lags, ccf, "--", label = "Without Memory", linewidth=3.0)
+        else:
+            ax.plot(lags, ccf, "--", label = "MZA", linewidth=3.0)
+        
+        ax.axvline(x = 0, color = 'black', lw = 1)
+        ax.axhline(y = 0, color = 'black', lw = 1)
+        
+        ax.set_ylabel('Correlation Coefficients', fontsize = 12)
+        ax.set_xlabel('Time Lags', fontsize = 12)
+        plt.legend()
+        # plt.xlim(0,6)
+        plt.grid("on")
+
+    @staticmethod
+    def CCF(data1, data2, plot=False):
+        
 
         #calculate cross correlation
         ccf = sm.tsa.stattools.ccf(data1, data2, adjusted=False)
@@ -438,14 +427,6 @@ class Eval_MZA(MZA_Experiment):
         plt.xlabel("Epochs")
         plt.savefig(self.exp_dir+'/'+self.exp_name+"/out_log/TotalLoss.png", dpi = 256, facecolor = 'w', bbox_inches='tight')
 
-        # #Observable Evolution Loss
-        # plt.figure()
-        # plt.semilogy(df['epoch'],df['Train_ObsEvo_Loss'], label="Train Observable Evolution Loss")
-        # plt.semilogy(df['epoch'], df['Test_ObsEvo_Loss'], label="Test Observable Evolution Loss")
-        # plt.legend()
-        # plt.xlabel("Epochs")
-        # plt.savefig(self.exp_dir+'/'+self.exp_name+"/out_log/ObservableLoss.png", dpi = 256, facecolor = 'w', bbox_inches='tight')
-
         #KoopEvo Loss
         plt.figure()
         plt.semilogy(df['epoch'],df['Train_KoopEvo_Loss'], label="Train KoopEvo Loss")
@@ -475,3 +456,30 @@ class Eval_MZA(MZA_Experiment):
         plt.legend()
         plt.xlabel("Epochs")
         plt.savefig(self.exp_dir+'/'+self.exp_name+"/out_log/StateLoss.png", dpi = 256, facecolor = 'w', bbox_inches='tight')
+
+    ###########################################################################
+    @staticmethod
+    def safety_measure_model_update(args):
+        '''
+        For updating new added params in old models
+        Not related to overall code logic
+        '''
+
+        if ("np" not in args.keys()):
+            args["np"] = 0
+        
+        if ("train_onlyautoencoder" not in args.keys()):
+            args["train_onlyautoencoder"] = False
+        if ("linear_autoencoder" not in args.keys()):
+            args["linear_autoencoder"] = False
+        
+        if ("nenddata" not in args.keys()):
+            args["nenddata"] = None
+        
+        if ("stable_koopman_init" not in args.keys()):
+            ski_flag = False
+            args["stable_koopman_init"] = False
+        else:
+            ski_flag = True
+        
+        return ski_flag

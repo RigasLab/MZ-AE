@@ -175,11 +175,6 @@ class MZA_Experiment(DynSystem_Data, Train_Methodology):
             self.optimizer = torch.optim.Adam(self.model.parameters(), lr = self.learning_rate, weight_decay=1e-5)
             # print(self.model.parameters)
         
-        if not self.deactivate_lrscheduler:
-            self.scheduler = StepLR(self.optimizer, 
-                    step_size = 20, # Period of learning rate decay
-                    gamma = 0.3) # Multiplicative factor of learning rate decay
-
         if not load_model:
             #Saving Initial Model state
             if self.no_save_model:
