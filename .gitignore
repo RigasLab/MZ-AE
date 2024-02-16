@@ -1,4 +1,5 @@
 Trained_Models/*
+Trained_Models_Submission/*
 Data/*
 __pycache__
 test/noise_images/*
