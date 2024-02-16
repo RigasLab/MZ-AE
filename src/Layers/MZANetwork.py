@@ -26,7 +26,7 @@ class MZANetwork(nn.Module):
         self.autoencoder = autoencoder_models[self.args["autoencoder_model"]](self.args) 
         self.koopman     = koop_models[self.args["koop_model"]](self.args)
 
-        if not self.args["deactivate_seqmodel"] or (self.args["nepoch_actseqmodel"] != 0):
+        if not self.args["deactivate_seqmodel"]:
             self.seqmodel = seq_models[self.args["seq_model"]](self.args).to(self.args["device"])  
 
     def _num_parameters(self):

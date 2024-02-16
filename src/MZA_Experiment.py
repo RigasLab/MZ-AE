@@ -91,14 +91,6 @@ class MZA_Experiment(DynSystem_Data, Train_Methodology):
         if self.stable_koopman_init:
             print("Initializing Stable Koopman")
         
-        # if self.train_onlyautoencoder:
-        #     print("Training only autoencoder")
-            
-        # if self.linear_autoencoder:
-        #     print("Using Linear Autoencoder")
-        # else:
-        #     print("Using Non-Linear Autoencoder")
-        
         #emptying gpu cache memory
         torch.cuda.empty_cache()
 
