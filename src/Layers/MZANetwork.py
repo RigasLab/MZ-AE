@@ -28,9 +28,6 @@ class MZANetwork(nn.Module):
 
         if not self.args["deactivate_seqmodel"] or (self.args["nepoch_actseqmodel"] != 0):
             self.seqmodel = seq_models[self.args["seq_model"]](self.args).to(self.args["device"])  
-            if (self.args["nepoch_actseqmodel"] != 0):
-                for param in self.seqmodel.parameters():
-                    param.requires_grad = False
 
     def _num_parameters(self):
         count = 0

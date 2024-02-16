@@ -45,9 +45,9 @@ class DynSystem_Data:
             print("Not normalizing Input")
         
         # Calculate the noise level as a fraction of the maximum data value
-        # noise = np.random.normal(0, self.lp_data.std()*self.np, self.lp_data.shape) 
-        # self.lp_data_without_noise = self.lp_data
-        # self.lp_data = self.lp_data_without_noise + noise
+        noise = np.random.normal(0, self.lp_data.std()*self.np, self.lp_data.shape) 
+        self.lp_data_without_noise = self.lp_data
+        self.lp_data = self.lp_data_without_noise + noise
     
     def create_dataset(self, mode = "Both"):
 
@@ -66,8 +66,10 @@ class DynSystem_Data:
 
         if mode == "Both" or mode == "Train":
             
-            if self.dynsys == "KS" or self.dynsys == "2DCyl":
+            if self.dynsys == "KS":
                 self.train_data = self.lp_data[:,:int(self.train_size * self.lp_data.shape[1])]
+            elif self.dynsys == "2DCyl":
+                self.train_data = self.lp_data[:,::2]
             elif self.dynsys == "ExpData":
                 self.train_data = self.lp_data[:int(self.train_size**2 * self.lp_data.shape[0])]
             else:
@@ -81,9 +83,11 @@ class DynSystem_Data:
         # print("out of train")
         if mode == "Both" or mode == "Test":
             
-            if self.dynsys == "KS" or self.dynsys == "2DCyl":
+            if self.dynsys == "KS":
                 self.test_data  = self.lp_data[:,int(self.train_size * self.lp_data.shape[1]):]
-                
+            
+            elif self.dynsys == "2DCyl":
+                self.test_data = self.lp_data[:,1::2]
             else:
                 self.test_data  = self.lp_data[int(self.train_size * self.lp_data.shape[0]):]
             

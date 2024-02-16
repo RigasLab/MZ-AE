@@ -4,6 +4,11 @@
 # python main.py --dynsys 2DCyl --lr 5e-5 --nepochs 2000 --train_size 0.99 --info lr5e-5_2 --nhu 40 --seq_len 17 --data_dir Data/2DCylinder/cyl_data_10_2.npy --exp_dir Trained_Models/2DCyl_Num_seqlentest_ts10_2_localtest --num_obs 5 --deactivate_lrscheduler
 
 
+#2D Cylinder Test
+python main.py --dynsys 2DCyl --AE_Model Autoencoder_ws  --Seq_Model LSTM_Model \
+            --lr 5e-5 --nepochs 5000 --nsave 500 --ntransients 130 --train_size 0.98 \
+            --info lr5e-5_ph100 --data_dir Data/2DCylinder/processed_data/npyfiles/nektar_cyl_data_20_dt0.25_T200.npy --exp_dir Trained_Models/new_test_2dcyl_seqtest_oldtrans_ns \
+            --num_obs 2 --ntransients 130 --nhu 40 --seq_len 33 --pred_horizon 10 
 
 ##2D cyl numobs test with Data from Yusuf paper
 # python main.py --load_epoch 4999 --exp_dir Trained_Models/2DCyl_Numobstest_ts10_2_localtest_deactivate_seqmodel --load_exp_name sl8_nhu40_numobs3_bs16_lr5e-5_3
@@ -131,7 +136,7 @@
 
 #Noise Analysis
 
-python main.py --AE_Model Autoencoder_sequential --norm_input --Seq_Model LSTM_Model --dynsys KS --bs 512 --ntransients 75000 --lr 5e-5 --nepochs 2000 --nsave 2 --train_size 0.9 --info lr5e-5 --nhu 100 --seq_len 129 --data_dir Data/KS/ks_N512_dt0.025_L22.0_maxn800000.npy --exp_dir Trained_Models/NoiseTest --num_obs 8 --seq_len 13 --noise_p 0.5 --noisecolor 2 --deactivate_lrscheduler
+# python main.py --AE_Model Autoencoder_sequential --norm_input --Seq_Model LSTM_Model --dynsys KS --bs 512 --ntransients 75000 --lr 5e-5 --nepochs 2000 --nsave 2 --train_size 0.9 --info lr5e-5 --nhu 100 --seq_len 129 --data_dir Data/KS/ks_N512_dt0.025_L22.0_maxn800000.npy --exp_dir Trained_Models/NoiseTest --num_obs 8 --seq_len 13 --noise_p 0.5 --noisecolor 2 --deactivate_lrscheduler
 
 
 ##ExpData Experiments

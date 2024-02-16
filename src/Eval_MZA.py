@@ -41,11 +41,11 @@ class Eval_MZA(MZA_Experiment):
         else:
             PATH = self.exp_dir+'/'+ self.exp_name+"/model_weights/at_epoch{epoch}".format(epoch=epoch_num)
         
-        if self.autoencoder_model == "Autoencoder":
-            self.model.load_state_dict(torch.load(PATH))
-        else:
-            checkpoint = torch.load(PATH)
-            self.model.load_state_dict(checkpoint['model_state_dict'])
+        # if self.autoencoder_model == "Autoencoder":
+        #     self.model.load_state_dict(torch.load(PATH))
+        # # else:
+        checkpoint = torch.load(PATH)
+        self.model.load_state_dict(checkpoint['model_state_dict'])
         # self.optimizer.load_state_dict(checkpoint['optimizer_state_dict'])
 
 ##################################################################################################################
@@ -124,7 +124,7 @@ class Eval_MZA(MZA_Experiment):
         elif color == "without mem":
             ax.plot(lags, ccf, "--", label = "Without Memory", linewidth=3.0)
         else:
-            ax.plot(lags, ccf, "--", label = "MZA", linewidth=3.0)
+            ax.plot(lags, ccf, "--", label = "MZ-AE", linewidth=3.0)
         
         ax.axvline(x = 0, color = 'black', lw = 1)
         ax.axhline(y = 0, color = 'black', lw = 1)

@@ -152,7 +152,7 @@ class Train_Methodology():
             LatentEvo_Loss    = mseLoss(x_nn_hat_ph, x_nn_ph)
 
             if not self.deactivate_seqmodel:
-                loss = (KoopEvo_Loss + self.lambda_ResL*Residual_Loss + LatentEvo_Loss) + \
+                loss = (KoopEvo_Loss + self.lambda_ResL*Residual_Loss) + \
                         100*(Autoencoder_Loss) #+ StateEvo_Loss) #+ self.seq_model_weight*seqnorm
             else:
                 loss = 0.1*(KoopEvo_Loss) + \
@@ -277,10 +277,8 @@ class Train_Methodology():
         print("Device: ", self.device)
         print("Untrained Test\n--------")
 
-        if self.train_onlyautoencoder: 
-            test_Ldict = self.train_test_loss_autoencoder("Test", self.test_dataloader)
-        else:
-            test_Ldict = self.train_test_loss("Test", self.test_dataloader)
+       
+        test_Ldict = self.train_test_loss("Test", self.test_dataloader)
 
         print(f"Test Loss: {test_Ldict['avg_loss']:<{6}}, KoopEvo : {test_Ldict['avg_KoopEvo_Loss']:<{6}}, Residual : {test_Ldict['avg_Residual_Loss']:<{6}}, Auto : {test_Ldict['avg_Autoencoder_Loss']:<{6}}, StateEvo : {test_Ldict['avg_StateEvo_Loss']:<{6}}, LatentEvo : {test_Ldict['avg_LatentEvo_Loss']}")
 
@@ -294,29 +292,12 @@ class Train_Methodology():
 
             #start time
             start_time = time()
-            #LEARNING RATE CUSTOMIZATION
-            if not self.deactivate_lrscheduler:
-                before_lr = self.optimizer.param_groups[0]["lr"]
-                self.scheduler.step()
-                after_lr = self.optimizer.param_groups[0]["lr"]
-                print("Epoch %d: SGD lr %.6f -> %.6f" % (ix_epoch, before_lr, after_lr))
             
-            #ACTIVATING SEQMODEL IN BETWEEN IF ASKED
-            if self.nepoch_actseqmodel!=0:
-                if ix_epoch == self.nepoch_actseqmodel:
-                    self.deactivate_seqmodel = False
-                    for param in self.model.seqmodel.parameters():
-                        param.requires_grad = True
-                    
-                    print("SEQMODEL : ", not self.deactivate_seqmodel)
 
             #CALCULATING LOSS
-            if self.train_onlyautoencoder: 
-                train_Ldict = self.train_test_loss_autoencoder("Train")
-                test_Ldict  = self.train_test_loss_autoencoder("Test", self.test_dataloader)
-            else:
-                train_Ldict = self.train_test_loss("Train")
-                test_Ldict  = self.train_test_loss("Test", self.test_dataloader)
+            
+            train_Ldict = self.train_test_loss("Train")
+            test_Ldict  = self.train_test_loss("Test", self.test_dataloader)
             
             #PRINTING AND SAVING DATA
             print(f"Epoch {ix_epoch} ")
