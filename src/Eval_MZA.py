@@ -135,32 +135,6 @@ class Eval_MZA(MZA_Experiment):
         # plt.xlim(0,6)
         plt.grid("on")
 
-    @staticmethod
-    def CCF(data1, data2, plot=False):
-        
-
-        #calculate cross correlation
-        ccf = sm.tsa.stattools.ccf(data1, data2, adjusted=False)
-
-        # # Variance
-        # var1 = np.var(data[:, 0])
-        # var2 = np.var(data[:, 1])
-        # # Normalized data
-        # ndata1 = data[:, 0] - np.mean(data[:, 0])
-        # ndata2 = data[:, 1] - np.mean(data[:, 1])
-
-        # corr = np.correlate(ndata1, ndata2, 'full')[len(ndata1) - 1:]
-        # corr = corr / np.sqrt(var1 * var2) / len(ndata1)
-
-        # if plot:
-        #     # plt.plot(np.linspace(corr.shape[0] * self.dt, corr.shape[0]), corr)
-        #     plt.plot(corr)
-        #     plt.xlabel("Timeunits")
-        #     plt.ylabel("CCF")
-
-        return ccf
-    
-
 ##################################################################################################################
     def predict_onestep(self, dataset, num_trajs, batch_size = 32):
 
