@@ -36,13 +36,11 @@ class MZA_Experiment(DynSystem_Data, Train_Methodology):
             self.time_sample = args.time_sample
             self.nenddata    = args.nenddata
             self.np          = args.noise_p
-            # self.noisecolor  = args.noisecolor
 
             #Autoncoder Parameters          
             self.autoencoder_model     = args.AE_Model 
             self.num_obs               = args.num_obs
             self.linear_autoencoder    = args.linear_autoencoder 
-            # self.train_onlyautoencoder = args.train_onlyautoencoder
             self.conv_filter_size      = args.conv_filter_size
 
             #Koopman Parameters
@@ -58,10 +56,8 @@ class MZA_Experiment(DynSystem_Data, Train_Methodology):
 
             #Model Training # Model Hyper-parameters
             self.learning_rate          = args.lr      
-            # self.deactivate_lrscheduler = args.deactivate_lrscheduler        
             self.nepochs                = args.nepochs
             self.norm_input             = args.norm_input         #if input should be normalised
-            # self.nepoch_actseqmodel     = args.nepoch_actseqmodel
             self.pred_horizon           = args.pred_horizon
             self.lambda_ResL            = args.lambda_ResL
 

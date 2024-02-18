@@ -366,7 +366,7 @@ class Eval_MZA(MZA_Experiment):
             initial_step = random.randint(100,6000)
             initial_conditions = Phi[:,initial_step,:].to(self.device)
 
-            _,Phi_ms_hat,_,_,_ = self.predict_multistep(initial_conditions, timesteps)
+            _,Phi_ms_hat,_,_ = self.predict_multistep(initial_conditions, timesteps)
             Phi_ms_hat_ = Phi_ms_hat[0,0:timesteps].detach().cpu().numpy()
             Phi_        = Phi[0,initial_step:timesteps+initial_step].numpy()
 

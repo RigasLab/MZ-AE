@@ -41,8 +41,8 @@ class DynSystem_Data:
         if self.norm_input:
             print("normalizing Input")
             self.lp_data = (self.lp_data - np.mean(self.lp_data))/np.std(self.lp_data)
-        else:
-            print("Not normalizing Input")
+        # else:
+        #     print("Not normalizing Input")
         
         # Calculate the noise level as a fraction of the maximum data value
         noise = np.random.normal(0, self.lp_data.std()*self.np, self.lp_data.shape) 
