@@ -1,6 +1,9 @@
 Trained_Models/*
 Trained_Models_Submission/*
+<<<<<<< HEAD
 Pre-trained_Models/*
+=======
+>>>>>>> 1ab9ed1cd2cc6d4eb42d9ce5745b9d0af823ba6e
 Data/*
 __pycache__
 test/noise_images/*

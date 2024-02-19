@@ -41,9 +41,18 @@ class Eval_MZA(MZA_Experiment):
         else:
             PATH = self.exp_dir+'/'+ self.exp_name+"/model_weights/at_epoch{epoch}".format(epoch=epoch_num)
         
+<<<<<<< HEAD
     
         checkpoint = torch.load(PATH)
         self.model.load_state_dict(checkpoint['model_state_dict'])
+=======
+        # if self.autoencoder_model == "Autoencoder":
+        #     self.model.load_state_dict(torch.load(PATH))
+        # # else:
+        checkpoint = torch.load(PATH)
+        self.model.load_state_dict(checkpoint['model_state_dict'])
+        # self.optimizer.load_state_dict(checkpoint['optimizer_state_dict'])
+>>>>>>> 1ab9ed1cd2cc6d4eb42d9ce5745b9d0af823ba6e
 
 ##################################################################################################################
     @staticmethod
