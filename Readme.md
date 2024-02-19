@@ -18,3 +18,9 @@ To evaluate the trained models, notebooks are present in the repository "Noteboo
 The pre-trained models can be downloaded from [here].
 
 This code can be easily adapted to use on cluster.
+
+## References
+
+1. Nektar++ [link](https://www.sciencedirect.com/science/article/pii/S0010465515000533) was used for obtaining the 2DCylinder flow data.
+
+2. The Kuramoto Sivashisnky data was obtained using the solver from [link](https://arxiv.org/pdf/2106.06069.pdf).
