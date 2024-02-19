@@ -15,7 +15,7 @@ The source code is in directory "src/".
 The training can be run through command provided in bashcript "jobs". The corresponding data is available [here](https://1drv.ms/f/s!AvyaisSoiJmohT1KME46oTsjqwEp?e=5DfHTx).
 
 To evaluate the trained models, notebooks are present in the repository "Notebooks".
-The pre-trained models can be downloaded from [here].
+The pre-trained models can be downloaded from [here](https://drive.google.com/drive/folders/1SadYTCc2UNjDtEBHXXpKpkKyaym4tyMG?usp=sharing).
 
 This code can be easily adapted to use on cluster.
 
