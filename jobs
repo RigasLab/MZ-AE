@@ -1,10 +1,10 @@
 #!/bin/bash
 
 #2DCylinder MZ-AE
-# python main.py --dynsys 2DCyl --AE_Model Autoencoder --Seq_Model LSTM_Model \
-#                 --lr 5e-5 --nepochs 7000 --nsave 500 --ntransients 130 \
-#                 --info MZ-AE --data_dir Data/2DCylinder/processed_data/npyfiles/nektar_cyl_data_20_dt0.1_T200_new_steady_longer.npy --exp_dir Trained_Models/2DCyl_new/ \
-#                 --num_obs 2 --nhu 40 --seq_len 9 --pred_horizon 10 
+python main.py --dynsys 2DCyl --AE_Model Autoencoder --Seq_Model LSTM_Model \
+                --lr 5e-5 --nepochs 7000 --nsave 500 --ntransients 130 \
+                --info MZ-AE --data_dir Data/2DCylinder/processed_data/npyfiles/nektar_cyl_data_20_dt0.1_T200_new_steady_longer.npy --exp_dir Trained_Models/2DCyl_new/ \
+                --num_obs 2 --nhu 40 --seq_len 9 --pred_horizon 10 
 
 #2DCylinder Without Memory
 # python main.py --dynsys 2DCyl --AE_Model Autoencoder --Seq_Model LSTM_Model \
@@ -28,8 +28,8 @@
 #                --data_dir Data/KS/ks_N256_dt0.025_L22.0_maxn800000.npy --exp_dir Trained_Models/KS/ 
 
 #KS MZ-AE Noise Analysis
-python main.py --AE_Model Autoencoder --Seq_Model LSTM_Model --dynsys KS \
-               --bs 512 --lr 5e-5 --nepochs 15000 --nsave 1000 --train_size 0.8 \
-               --noise_p 1e-1 --time_sample 10 --pred_horizon 20 --num_obs 8 --nhu 100 \
-               --ntransients 5000 --seq_len 13 --info MZ-AE_Noise \
-               --data_dir Data/KS/ks_N256_dt0.025_L22.0_maxn800000.npy --exp_dir Trained_Models/KS/ 
+# python main.py --AE_Model Autoencoder --Seq_Model LSTM_Model --dynsys KS \
+#                --bs 512 --lr 5e-5 --nepochs 15000 --nsave 1000 --train_size 0.8 \
+#                --noise_p 1e-1 --time_sample 10 --pred_horizon 20 --num_obs 8 --nhu 100 \
+#                --ntransients 5000 --seq_len 13 --info MZ-AE_Noise \
+#                --data_dir Data/KS/ks_N256_dt0.025_L22.0_maxn800000.npy --exp_dir Trained_Models/KS/ 
