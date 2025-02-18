@@ -21,6 +21,6 @@ This code can be easily adapted to use on cluster.
 
 ## References
 
-1. [Nektar++ ](https://www.sciencedirect.com/science/article/pii/S0010465515000533) was used for obtaining the 2DCylinder flow data.
+1. [Nektar++ ](https://www.sciencedirect.com/science/article/pii/S0010465515000533) is used for obtaining the 2DCylinder flow data.
 
 2. The Kuramoto Sivashisnky data was obtained using the solver from [Pachev et al.](https://arxiv.org/pdf/2106.06069.pdf).
