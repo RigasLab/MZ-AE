@@ -6,7 +6,6 @@ from src.Layers.MZANetwork import MZANetwork
 
 from src.Train_Methods.Train_Methodology import Train_Methodology
 from src.PreProc_Data.DynSystem_Data import DynSystem_Data
-from torch.optim.lr_scheduler import StepLR
 
 import matplotlib.pyplot as plt
 import pandas as pd
