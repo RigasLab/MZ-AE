@@ -1,7 +1,6 @@
 import numpy as np
 import csv, h5py, json, pickle
 import torch
-import colorednoise as cn
 from torch.utils.data import DataLoader
 from src.PreProc_Data.DataProc import StackedSequenceDataset
 
@@ -21,14 +20,9 @@ class DynSystem_Data:
         '''
         
         self.lp_data   = np.load(self.data_dir)
-        
-        #For KS
-        if self.dynsys == "KS": 
-            self.lp_data = self.lp_data[:,::self.time_sample,:]
-            self.lp_data = self.lp_data[:,self.ntransients:,:]
-        
+    
         #For 2D Cylinder Flow
-        elif self.dynsys == "2DCyl":
+        if self.dynsys == "2DCyl":
             self.lp_data = self.lp_data[:,self.ntransients:self.nenddata,:]
 
         #additional data parameters
@@ -37,17 +31,6 @@ class DynSystem_Data:
         self.statedim   = self.statedim[0] if self.state_ndim == 1 else self.statedim
         print("State Dims: ", self.statedim)
 
-        #Normalising Data
-        if self.norm_input:
-            print("normalizing Input")
-            self.lp_data = (self.lp_data - np.mean(self.lp_data))/np.std(self.lp_data)
-        # else:
-        #     print("Not normalizing Input")
-        
-        # Calculate the noise level as a fraction of the maximum data value
-        noise = np.random.normal(0, self.lp_data.std()*self.np, self.lp_data.shape) 
-        self.lp_data_without_noise = self.lp_data
-        self.lp_data = self.lp_data_without_noise + noise
     
     def create_dataset(self, mode = "Both"):
 
@@ -66,12 +49,8 @@ class DynSystem_Data:
 
         if mode == "Both" or mode == "Train":
             
-            if self.dynsys == "KS":
-                self.train_data = self.lp_data[:,:int(self.train_size * self.lp_data.shape[1])]
-            elif self.dynsys == "2DCyl":
+            if self.dynsys == "2DCyl":
                 self.train_data = self.lp_data[:,::2]
-            elif self.dynsys == "ExpData":
-                self.train_data = self.lp_data[:int(self.train_size**2 * self.lp_data.shape[0])]
             else:
                 self.train_data = self.lp_data[:int(self.train_size * self.lp_data.shape[0])]
 
@@ -82,11 +61,8 @@ class DynSystem_Data:
         
         # print("out of train")
         if mode == "Both" or mode == "Test":
-            
-            if self.dynsys == "KS":
-                self.test_data  = self.lp_data[:,int(self.train_size * self.lp_data.shape[1]):]
-            
-            elif self.dynsys == "2DCyl":
+        
+            if self.dynsys == "2DCyl":
                 self.test_data = self.lp_data[:,1::2]
             else:
                 self.test_data  = self.lp_data[int(self.train_size * self.lp_data.shape[0]):]
