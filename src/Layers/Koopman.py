@@ -11,15 +11,19 @@ class Koopman(nn.Module):
         print("Koop_Model: Koopman")
 
         self.args = args
+        self.set_variables(args)
 
         if not model_eval:
-            self.latent_size         = self.args["num_obs"]
-            self.device              = self.args["device"]
-            self.stable_koopman_init = self.args["stable_koopman_init"]
-            
+
             self.kMatrix = nn.Parameter(torch.empty(self.latent_size, self.latent_size))
             torch.nn.init.xavier_uniform_(self.kMatrix)
 
+    def set_variables(self, args):
+        self.args = args
+        self.latent_size         = args["num_obs"]
+        self.device              = args["device"]
+        self.stable_koopman_init = args["stable_koopman_init"]
+        
     def forward(self, x_n):
         '''
         Applies the learned koopman operator on the given observables.

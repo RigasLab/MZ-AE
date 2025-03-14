@@ -2,6 +2,8 @@ import torch
 import torch.nn as nn
 import matplotlib.pyplot as plt
 from time import time
+import numpy as np
+from src.utils import MetricsLogger
 
 
 
@@ -212,7 +214,7 @@ class Train_Methodology():
         # min train loss
         self.min_train_loss = 1000 
         self.min_test_loss  = 1000
-        
+        min_mse = 1000
         print("################## Starting Training ###############")
         
         for ix_epoch in range(self.load_epoch, self.load_epoch + self.nepochs):
@@ -240,8 +242,6 @@ class Train_Methodology():
                               "Train_koop_ptg": 0, "Train_seqmodel_ptg": 0,\
                               "Test_koop_ptg": 0, "Test_seqmodel_ptg": 0}
             
-            self.log.writerow(writeable_loss)
-            self.logf.flush()
             
             #saving Min Loss weights and optimizer state
             if self.min_test_loss > test_Ldict["avg_loss"]:
@@ -273,8 +273,22 @@ class Train_Methodology():
                     'model_state_dict': self.model.state_dict(),
                     # 'optimizer_state_dict':self.optimizer.state_dict()
                     }, self.exp_dir+'/'+ self.exp_name+"/model_weights/at_epoch{epoch}".format(epoch=ix_epoch))
-                
-
+            if (self.dynsys == "2DCyl"):
+                cyl_initial_conditions = torch.tensor(self.test_data[:,0,...]).to(torch.float32).to(self.device)
+                _,pred_Phi_cyl,_,_ = self.predict_multistep(initial_conditions = cyl_initial_conditions,\
+                                                   timesteps = self.test_data.shape[1]-1)
+                mean_state_mse = self.mean_state_mse(torch.tensor(self.test_data).to(torch.float32), pred_Phi_cyl)
+                writeable_loss["mean_state_mse"] = mean_state_mse
+                # print("KS_MCX: ", mean_coeff_x)
+                if min_mse > mean_state_mse:
+                    min_mse = mean_state_mse
+                    torch.save({
+                        'epoch':ix_epoch,
+                        'model_state_dict': self.model.state_dict(),
+                        'optimizer_state_dict':self.optimizer.state_dict()
+                        }, self.exp_dir+'/'+ self.exp_name+"/model_weights/min_mse")    
+            #log data
+            self.logger.log_metrics(writeable_loss)
             #ending time
             end_time = time()
             print("Epoch Time Taken: ", end_time - start_time)
@@ -287,4 +301,113 @@ class Train_Methodology():
                     'optimizer_state_dict':self.optimizer.state_dict()
                     }, self.exp_dir+'/'+ self.exp_name+"/model_weights/at_epoch{epoch}".format(epoch=ix_epoch))
         
-        self.logf.close()
+        
+        
+
+    def predict_multistep(self, initial_conditions, timesteps):
+
+        '''
+        Input
+        -----
+        initial_conditions (torch tensor): [num_trajs, statedim]
+        timesteps (int): Number timesteps for prediction
+
+        Returns
+        x (torch tensor): [num_trajs timesteps obsdim] observable vetcor
+        Phi (torch tensor): [num_trajs timesteps statedim] state vector
+        '''
+
+        self.model.eval()
+        Phi_n  = initial_conditions  
+        x_n, _ = self.model.autoencoder(Phi_n)    #[num_trajs obsdim]
+        
+        x   = x_n[None,...].to("cpu")                    #[timesteps num_trajs obsdim]
+        
+        Phi = Phi_n[None, ...].to("cpu")                    #[timesteps num_trajs statedim]
+
+        for n in range(timesteps):
+
+            non_time_dims = (1,)*(x.ndim-1)   #dims apart from timestep in tuple form (1,1,...)
+            if n >= self.seq_len:
+                i_start = n - self.seq_len + 1
+                x_seq_n = x[i_start:(n+1), ...].to(self.device)
+            elif n==0:
+                # padding = torch.zeros(x[0].repeat(self.seq_len - 1, *non_time_dims).shape).to(self.device)
+                padding = x[0].repeat(self.seq_len - 1, *non_time_dims).to(self.device)
+                x_seq_n = x[0:(n+1), ...].to(self.device)
+                x_seq_n = torch.cat((padding, x_seq_n), 0)
+            else:
+                # padding = torch.zeros(x[0].repeat(self.seq_len - n, *non_time_dims).shape).to(self.device)
+                padding = x[0].repeat(self.seq_len - n, *non_time_dims).to(self.device)
+                x_seq_n = x[1:(n+1), ...].to(self.device)
+                x_seq_n = torch.cat((padding, x_seq_n), 0)
+            
+            x_seq_n = torch.movedim(x_seq_n, 1, 0) #[num_trajs seq_len obsdim]
+            x_seq_n = x_seq_n[:,:-1,:]
+
+            koop_out     = self.model.koopman(x[n].to(self.device))
+            if self.deactivate_seqmodel:
+                x_nn     = koop_out 
+            else:
+                seqmodel_out = self.model.seqmodel(x_seq_n)
+                x_nn         = koop_out + seqmodel_out 
+            Phi_nn = self.model.autoencoder.recover(x_nn)
+            # Phi_nn_koop = self.model.autoencoder.recover(koop_out)
+
+            x   = torch.cat((x,x_nn[None,...].detach().cpu()), 0)
+            Phi = torch.cat((Phi,Phi_nn[None,...].detach().cpu()), 0)
+
+            if n == 0:
+                # Phi_koop = Phi_nn_koop[None,...].detach().cpu()
+                x_koop   = koop_out[None,...].detach().cpu()                    #[timesteps num_trajs obsdim]
+                x_seq    = seqmodel_out[None,...].detach().cpu() if not self.deactivate_seqmodel else 0                #[timesteps num_trajs obsdim]
+            else:
+                # Phi_koop = torch.cat((Phi_koop, Phi_nn_koop[None,...].detach().cpu()), 0)
+                x_koop   = torch.cat((x_koop, koop_out[None,...].detach().cpu()), 0)
+                x_seq    = torch.cat((x_seq, seqmodel_out[None,...].detach().cpu()), 0) if not self.deactivate_seqmodel else 0
+
+        x      = torch.movedim(x, 1, 0)   #[num_trajs timesteps obsdim]
+        x_koop = torch.movedim(x_koop, 1, 0)   #[num_trajs timesteps obsdim]
+        x_seq  = torch.movedim(x_seq, 1, 0) if not self.deactivate_seqmodel else 0   #[num_trajs timesteps obsdim]
+        Phi    = torch.movedim(Phi, 1, 0) #[num_trajs timesteps statedim]
+        # Phi_koop = torch.movedim(Phi_koop, 1, 0) #[num_trajs timesteps-1 statedim]
+
+        x_seq = x_seq if not self.deactivate_seqmodel else 0
+
+        return x, Phi, x_koop, x_seq 
+    
+    
+            
+##################################################################################################################
+    def mean_state_mse(self, Phi, Phi_hat):
+        '''
+        Input
+        -----
+        Phi (torch tensor): [num_tajs timesteps statedim]
+        Phi_hat (torch tensor): [num_tajs timesteps statedim]
+
+        Returns
+        -------
+        StateMSE [timesteps]
+        '''
+        Phi_sm = Phi.to("cpu")
+        Phi_hat_sm = Phi_hat.to("cpu")
+        mseLoss     = nn.MSELoss(reduction = 'mean')
+        mean_StateMSE    = mseLoss(Phi_sm, Phi_hat_sm) #[num_trajs timesteps statedim]
+        # print(StateMSE.shape)
+        # StateMSE    = torch.mean(StateMSE, dim = (0,*tuple(range(2, StateMSE.ndim)))) #[timesteps]
+        return mean_StateMSE
+    
+    
+    def train_gfdc(self, args, dataloader):
+        trainer = Train_GFDc(args, model)
+        
+        xn_data, data, phi_data = trainer.create_sequence_encoded_data(self)
+        
+        memory_kernels = trainer.fit(xn_data)
+        
+        return memory_kernels
+        
+        
+        
+        

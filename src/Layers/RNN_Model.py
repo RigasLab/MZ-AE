@@ -70,6 +70,59 @@ class LSTM_Model(nn.Module):
         out = self.fc(out)    # Final Output
 
         return out, hn, cn
-        
+
+#######################################################################################################
+class RNN(nn.Module):
+
+    # you can also accept arguments in your model constructor
+    def __init__(self, data_size, hidden_size, output_size):
+        super(RNN, self).__init__()
+
+        self.hidden_size = hidden_size
+        input_size = data_size + hidden_size
+
+        self.i2h = nn.Linear(input_size, hidden_size)
+        self.h2h = nn.Linear(hidden_size, hidden_size)
+        self.h2o = nn.Linear(hidden_size, output_size)
+
+    def forward(self, data, last_hidden):
+        input = torch.cat((data, last_hidden), axis = -1)
+        hidden1 = self.i2h(input)
+        hidden2 = self.h2h(hidden1)
+        output = self.h2o(hidden2)
+        return hidden2, output
+
+########################################################################################################
+class wrap_RNN(nn.Module):
+    def __init__(self, args, model_eval = False):
+        super(wrap_RNN, self).__init__()
+
+        print("RNN_Model: LSTM_Model")
+
+        self.args = args
+
+        if not model_eval:                                                                                           
+            self.device = self.args["device"]
+            self.N = self.args["num_obs"]  # output_size
+            self.num_layers  = self.args["num_layers"]  # number of layers
+            self.input_size  = self.args["num_obs"]  # input size
+            self.hidden_size = self.args["num_hidden_units"] # hidden state
+            self.seq_length  = self.args["seq_len"] - 1  # sequence length one less than input  
+            
+            self.rnn =  RNN(data_size=self.input_size, hidden_size=self.hidden_size, output_size = self.input_size)
+
+            self.relu = nn.ReLU()
+            self.tanh = nn.Tanh()
+
+    def forward(self, x):
+
+        h_0 = torch.zeros(x.size(0), self.hidden_size).to(self.device)  # hidden state        
+        # Propagate input through LSTM
+        h_n = h_0
+        for t in range(self.seq_length):
+            h_nn, out = self.rnn(x[:,t], h_n)
+            h_n = h_nn
+
+        return out
 
 

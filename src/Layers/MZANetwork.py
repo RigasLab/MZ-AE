@@ -28,7 +28,9 @@ class MZANetwork(nn.Module):
 
         if not self.args["deactivate_seqmodel"]:
             self.seqmodel = seq_models[self.args["seq_model"]](self.args).to(self.args["device"])  
-
+    def set_variables(self, args):
+        self.koopman.set_variables(args)
+        
     def _num_parameters(self):
         count = 0
         for name, param in self.named_parameters():

@@ -2,7 +2,6 @@ import torch
 import torch.nn as nn
 # from torch.autograd import Variable
 
-"Autoencoder without seq"
 class Autoencoder(nn.Module):
  
     def __init__(self, args, model_eval = False):
@@ -34,35 +33,28 @@ class Autoencoder(nn.Module):
  
             #reg layers
             self.dropout = nn.Dropout(0.25)
-            self.relu    = nn.ReLU()
+            self.af    = nn.SELU()
  
     def encoder(self, x):
+        self.af = nn.SELU()
         #non linear encoder
         #             
-        x = self.relu(self.e_fc1(x))
-        # x = self.dropout(x)
-        x = self.relu(self.e_fc2(x))
-        # x = self.dropout(x)
-        x = self.relu(self.e_fc3(x))
-        # x = self.dropout(x)
-        x = self.relu(self.e_fc4(x))
+        x = self.af(self.e_fc1(x))
+        x = self.af(self.e_fc2(x))
+        x = self.af(self.e_fc3(x))
+        x = self.af(self.e_fc4(x))
         x = self.e_fc5(x)
-        # x = self.relu(self.e_fc6(x))
         
-        #linear encoder
         
         return x
     
     def decoder(self, x):
+        self.af    = nn.SELU()
  
-        #non linear encoder
-        x = self.relu(self.d_fc1(x))
-        x = self.relu(self.d_fc2(x))
-        # x = self.dropout(x)
-        x = self.relu(self.d_fc3(x))
-        # x = self.dropout(x)
-        x = self.relu(self.d_fc4(x))
-        # x = self.dropout(x)
+        x = self.af(self.d_fc1(x))
+        x = self.af(self.d_fc2(x))
+        x = self.af(self.d_fc3(x))
+        x = self.af(self.d_fc4(x))
         x = self.d_fc5(x)
  
         return x

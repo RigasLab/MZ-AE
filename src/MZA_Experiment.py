@@ -1,5 +1,6 @@
 import torch
 import csv, pickle, copy
+from src.utils import MetricsLogger, mkdirs
 
 from src.Layers.MZANetwork import MZANetwork
 
@@ -65,7 +66,8 @@ class MZA_Experiment(DynSystem_Data, Train_Methodology):
             self.nsave         = args.nsave                 #after how many epochs to save
             self.info          = args.info                  #extra info in the saved driectory name
             self.exp_dir       = args.exp_dir
-            self.exp_name      = "sl{sl}_nhu{nhu}_numobs{numobs}_bs{bs}_{info}".format(sl = args.seq_len, nhu = args.nhu, numobs = args.num_obs, bs=args.bs, info=args.info)
+            self.exp_name      = "sl{sl}_nhu{nhu}_numobs{numobs}_bs{bs}_{info}".format(sl = args.seq_len, nhu = args.nhu,\
+                                                                                        numobs = args.num_obs, bs=args.bs, info=args.info)
             self.data_dir      = args.data_dir
             self.no_save_model = args.no_save_model
             self.load_epoch    = args.load_epoch
@@ -105,21 +107,8 @@ class MZA_Experiment(DynSystem_Data, Train_Methodology):
 ###########################################################################################################################
     def log_data(self, load_model = False):
 
-        self.metrics = ["epoch","Train_Loss","Train_KoopEvo_Loss","Train_Residual_Loss","Train_Autoencoder_Loss","Train_StateEvo_Loss","Train_LatentEvo_Loss"\
-                               ,"Test_Loss","Test_KoopEvo_Loss", "Test_Residual_Loss","Test_Autoencoder_Loss","Test_StateEvo_Loss","Test_LatentEvo_Loss"\
-                               ,"Train_koop_ptg", "Train_seqmodel_ptg"\
-                               ,"Test_koop_ptg", "Test_seqmodel_ptg"]
-
-        if load_model:
-            self.logf = open(self.exp_dir + '/' + self.exp_name + "/out_log/log", "a")
-            self.log = csv.DictWriter(self.logf, self.metrics)
-
-        else:
-            self.logf = open(self.exp_dir + '/' + self.exp_name + "/out_log/log", "w")
-            self.log = csv.DictWriter(self.logf, self.metrics)
-            self.log.writeheader()
-
-        print("Logger Initialised")
+        filename = self.exp_dir + '/' + self.exp_name + "/out_log/metrics.log"
+        self.logger = MetricsLogger(filename, load_model)
 
 ###########################################################################################################################
     def save_args(self):
@@ -129,7 +118,7 @@ class MZA_Experiment(DynSystem_Data, Train_Methodology):
             args_dict = copy.deepcopy(self.__dict__)
 
             #deleting some high memory args
-            print("\n", args_dict.keys(), "\n\n")
+            # print("\n", args_dict.keys(), "\n\n")
             del args_dict['lp_data']
             del args_dict['train_data']
             del args_dict['test_data']
@@ -146,7 +135,8 @@ class MZA_Experiment(DynSystem_Data, Train_Methodology):
     def main_train(self, load_model = False):
 
         #Making Experiment Directory
-        self.make_directories()
+        if not load_model:
+            self.make_directories()
 
         #Loading and visualising data
         print("########## LOADING DATASET ##########")
@@ -193,10 +183,10 @@ class MZA_Experiment(DynSystem_Data, Train_Methodology):
 ###########################################################################################################################
     def plot_learning_curves(self):
 
-        df = pd.read_csv(self.exp_dir+'/'+self.exp_name+"/out_log/log")
-
+        # df = pd.read_csv(self.exp_dir+'/'+self.exp_name+"/out_log/log")
+        df = pd.read_csv(self.exp_dir+'/'+self.exp_name+"/out_log/metrics.log", sep='|')
+        df.columns = df.columns.str.strip()
         min_trainloss = df.loc[df['Train_Loss'].idxmin(), 'epoch']
-        # print("Epoch with Minimum train_error: ", min_trainloss)
 
         #Total Loss
         plt.figure()

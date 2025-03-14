@@ -47,26 +47,26 @@ class SequenceDataset(Dataset):
         if i >= self.sequence_length:
             i_start = i - self.sequence_length + 1
             pi = i-i_start
-            inuse_Phi = self.Phi[i_start:i+self.pred_horizon+1]#.to(self.device)
+            inuse_Phi = self.Phi[i_start:i+self.pred_horizon+1]
             phi = inuse_Phi[0:(pi+1), ...]
         elif i==0:
             pi = 0
-            inuse_Phi = self.Phi[0:i+self.pred_horizon+1]#.to(self.device)
+            inuse_Phi = self.Phi[0:i+self.pred_horizon+1]
             phi = inuse_Phi[0:(i+1), ...]
-            padding = torch.zeros(inuse_Phi[0].repeat(self.sequence_length - 1, *non_time_dims).shape)#.to(self.device)
+            padding = torch.zeros(inuse_Phi[0].repeat(self.sequence_length - 1, *non_time_dims).shape)
             phi = torch.cat((padding, phi), 0)
         else:
             pi = i
-            inuse_Phi = self.Phi[0:i+self.pred_horizon+1]#.to(self.device)
-            padding = torch.zeros(inuse_Phi[0].repeat(self.sequence_length - i-1, *non_time_dims).shape)#.to(self.device)
+            inuse_Phi = self.Phi[0:i+self.pred_horizon+1]
+            padding = torch.zeros(inuse_Phi[0].repeat(self.sequence_length - i-1, *non_time_dims).shape)
             phi = inuse_Phi[0:(i+1), ...]
             phi = torch.cat((padding, phi), 0)
         
         Phi_seq = torch.movedim(phi, -1, 0)
         Phi_nn  = torch.movedim(inuse_Phi[pi+1:], -1, 0)  #includes all the future timesteps because not at the end of dataset 
 
-        Phi_seq = Phi_seq#.to("cpu")
-        Phi_nn  = Phi_nn#.to("cpu")
+        Phi_seq = Phi_seq
+        Phi_nn  = Phi_nn
         return Phi_seq, Phi_nn
 
     
