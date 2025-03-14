@@ -14,12 +14,10 @@ The source code is in directory "src/".
 
 The training can be run through command provided in bashcript "jobs".
 For training MZ-AE GFDc use the notebook (Notebooks/2DCyl/Case1_eval_notebook.ipynb)
- The corresponding data is available [here](https://1drv.ms/f/s!AvyaisSoiJmohT1KME46oTsjqwEp?e=5DfHTx).
 
 To evaluate the trained models, notebooks are present in the repository "Notebooks".
-The pre-trained models can be downloaded from [here](https://drive.google.com/drive/folders/1SadYTCc2UNjDtEBHXXpKpkKyaym4tyMG?usp=sharing).
 
-This code can be easily adapted to use on cluster.
+The training dataset and the pre-trained models can be downloaded from [here](10.5281/zenodo.15029317).
 
 ## References
 
