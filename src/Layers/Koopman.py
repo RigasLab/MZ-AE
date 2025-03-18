@@ -35,16 +35,6 @@ class Koopman(nn.Module):
             x_nn (torch.Tensor): [bs obsdim] predicted observables at the next time-step
         '''
         # assert g.size(-1) == self.kMatrix.size(0), 'Observables should have dim {}'.format(self.kMatrix.size(0))
-        if self.stable_koopman_init:
-
-            self.kMatrix = torch.zeros(self.latent_size, self.latent_size, device = self.device)
-            dIdx = np.where(np.eye(self.latent_size, k=0))
-            udIdx = np.where(np.eye(self.latent_size, k=1))
-            ldIdx = np.where(np.eye(self.latent_size, k=-1))
-
-            self.kMatrix[dIdx]  = -torch.nn.functional.relu(self.kMatrixDiag.squeeze())**2
-            self.kMatrix[udIdx] = torch.nn.functional.relu(self.kMatrixUDiag.squeeze())
-            self.kMatrix[ldIdx] = -self.kMatrix[udIdx]
             
         #forward one step time propagation
         if x_n.ndim == 2:
