@@ -8,4 +8,4 @@ test/noise_images/*
 *.gif
 *.e*
 *.o*
-.ipynb_checkpoints/
+.ipynb_checkpoints/*
