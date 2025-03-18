@@ -17,7 +17,7 @@ For training MZ-AE GFDc use the notebook (Notebooks/2DCyl/Case1_eval_notebook.ip
 
 To evaluate the trained models, notebooks are present in the repository "Notebooks".
 
-The training dataset and the pre-trained models can be downloaded from [here](10.5281/zenodo.15029317).
+The training dataset and the pre-trained models can be downloaded from 10.5281/zenodo.15029317.
 
 ## References
 
