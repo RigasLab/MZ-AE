@@ -49,13 +49,13 @@ class Train_GFDc():
         return xn_data, sequences, dec_xn_data
 
 
-    def gfdc_memory_reg(self, xn_data, num_memory_kernels):
+    def gfdc_memory_reg(self, xn_data, num_memory_kernels, alpha = 1000, fit_intercept = False):
         
         K = num_memory_kernels
         omega = [self.markov_model.model.koopman]
         #initialise memory kernels
         for i in range(1,K+1):
-            omega.append(Ridge(alpha=1000, fit_intercept=False))
+            omega.append(Ridge(alpha=alpha, fit_intercept=fit_intercept))
             
         for n in tqdm(range(1,K+1), desc = "num_memory kernels: "):
             yr = np.zeros((xn_data.shape[0], xn_data.shape[-1]))
