@@ -97,7 +97,7 @@ class wrap_RNN(nn.Module):
     def __init__(self, args, model_eval = False):
         super(wrap_RNN, self).__init__()
 
-        print("RNN_Model: LSTM_Model")
+        print("RNN_Model: Linear_RNN_Model")
 
         self.args = args
 
