@@ -13,6 +13,7 @@ pip3 install -r requirements.txt
 The source code is in directory "src/".
 
 The training can be run through command provided in bashcript "jobs".
+
 For training MZ-AE GFDc use the notebook (Notebooks/2DCyl/Case1_eval_notebook.ipynb)
 
 To evaluate the trained models, notebooks are present in the repository "Notebooks".
