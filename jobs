@@ -1,21 +1,36 @@
 #!/bin/bash
+# This script is used to run the main.py file with different arguments
+# To change the Memory Model set
+#    1. MZi-AE LRNN :  --Seq_Model wrap_RNN
+#    2. MZi-AE NRNN :  --Seq_Model LSTM_Model
+#    3. Koopman-AE : --deactivate_seqmodel   (do not need to set the Seq_Model)
 
-#2DCylinder Case 1 MZi-AE LRNN 
+################# Cylinder FLow CASE 1 #####################
+
+#2DCylinder  MZi-AE LRNN 
 # python main.py --dynsys 2DCyl --AE_Model Autoencoder --Seq_Model wrap_RNN \
 #                 --lr 5e-5 --nepochs 7000 --nsave 500 --ntransients 880 --train_size 0.98  \
 #                 --info No_Memory --data_dir Data/2DCylinder/processed_data/npyfiles/nektar_cyl_data_20_dt0.1_T200_new_steady_longer.npy --exp_dir Trained_Models/2DCyl_new/MZi-AE_LRNN \
 #                 --num_obs 2 --nhu 40 --seq_len 17 --pred_horizon 20 
 
+#2DCylinder Koopman-AE 
 # python main.py --dynsys 2DCyl --AE_Model Autoencoder --deactivate_seqmodel \
 #                 --lr 5e-5 --nepochs 7000 --nsave 500 --ntransients 880 --train_size 0.98  \
 #                 --info No_Memory --data_dir Data/2DCylinder/processed_data/npyfiles/nektar_cyl_data_20_dt0.1_T200_new_steady_longer.npy --exp_dir Trained_Models/2DCyl_new/Koopman-AE \
 #                 --num_obs 2 --nhu 40 --seq_len 17 --pred_horizon 20 
 
+################# Cylinder FLow CASE 2 #####################
 
-#2DCylinder MZ-AE NRNN Case2
+#2DCylinder MZi-AE NRNN 
 # python main.py --dynsys 2DCyl --AE_Model Autoencoder --Seq_Model LSTM_Model \
 #                 --lr 5e-5 --nepochs 6000 --nsave 500 --ntransients 130 \
 #                 --info MZ-AE --data_dir Data/2DCylinder/processed_data/npyfiles/nektar_cyl_data_20_dt0.1_T200_new_steady_longer.npy --exp_dir Trained_Models/2DCyl_new/MZi-AE_NRNN \
 #                 --num_obs 2 --nhu 40 --seq_len 9 --pred_horizon 10 
+
+#2DCylinder MZi-AE LRNN Case2
+# python main.py --dynsys 2DCyl --AE_Model Autoencoder --Seq_Model wrap_RNN \
+#                 --lr 5e-5 --nepochs 6000 --nsave 500 --ntransients 130 \
+#                 --info MZ-AE --data_dir Data/2DCylinder/processed_data/npyfiles/nektar_cyl_data_20_dt0.1_T200_new_steady_longer.npy --exp_dir Trained_Models/2DCyl_new/MZi-AE_LRNN \
+#                 --num_obs 2 --nhu 40 --seq_len 17 --pred_horizon 10
 
 
