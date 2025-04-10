@@ -120,17 +120,14 @@ class Eval_MZA(MZA_Experiment):
                     seqmodel_out = self.model.seqmodel(x_seq_n)
                     x_nn         = koop_out + seqmodel_out 
                 Phi_nn = self.model.autoencoder.recover(x_nn)
-                # Phi_nn_koop = self.model.autoencoder.recover(koop_out)
 
                 x   = torch.cat((x,x_nn[None,...].detach().cpu()), 0)
                 Phi = torch.cat((Phi,Phi_nn[None,...].detach().cpu()), 0)
 
                 if n == 0:
-                    # Phi_koop = Phi_nn_koop[None,...].detach().cpu()
-                    x_koop   = koop_out[None,...].detach().cpu()                    #[timesteps num_trajs obsdim]
-                    x_seq    = seqmodel_out[None,...].detach().cpu() if not self.deactivate_seqmodel else 0                #[timesteps num_trajs obsdim]
+                    x_koop   = koop_out[None,...].detach().cpu()                   
+                    x_seq    = seqmodel_out[None,...].detach().cpu() if not self.deactivate_seqmodel else 0                
                 else:
-                    # Phi_koop = torch.cat((Phi_koop, Phi_nn_koop[None,...].detach().cpu()), 0)
                     x_koop   = torch.cat((x_koop, koop_out[None,...].detach().cpu()), 0)
                     x_seq    = torch.cat((x_seq, seqmodel_out[None,...].detach().cpu()), 0) if not self.deactivate_seqmodel else 0
 

@@ -72,7 +72,6 @@ class Autoencoder(nn.Module):
     def _num_parameters(self):
         count = 0
         for name, param in self.named_parameters():
-            # print(name, param.numel())
             count += param.numel()
         return count
     

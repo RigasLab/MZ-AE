@@ -5,7 +5,7 @@ class LSTM_Model(nn.Module):
     def __init__(self, args, model_eval = False):
         super(LSTM_Model, self).__init__()
 
-        print("RNN_Model: LSTM_Model")
+        print("RNN_Model: Non-Linear RNN Model")
 
         self.args = args
 

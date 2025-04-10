@@ -29,11 +29,11 @@ class Train_Methodology():
 
         x_n   = initial_x_n 
         x_seq = initial_x_seq
-        koop_out_ph = x_n.clone()[:,None,...]   #[bs 1 obsdim]
+        koop_out_ph = x_n.clone()[:,None,...]   
         if not self.deactivate_seqmodel:
-            seqmodel_out_ph = x_n.clone()[:,None,...]   #[bs 1 obsdim]
-        x_nn_hat_ph = x_n.clone()[:,None,...]   #[bs 1 obsdim]
-        Phi_nn_hat_ph = initial_Phi_n.clone()[:,None,...] #[bs 1 statedim]
+            seqmodel_out_ph = x_n.clone()[:,None,...]   
+        x_nn_hat_ph = x_n.clone()[:,None,...]   
+        Phi_nn_hat_ph = initial_Phi_n.clone()[:,None,...] 
 
         #Evolving in Time
         for t in range(ph_size):
@@ -99,7 +99,6 @@ class Train_Methodology():
         
 
         for Phi_seq, Phi_nn_ph in dataloader:
-            # print(Phi_seq.device, Phi_nn_ph.device)
             Phi_seq = Phi_seq.to(self.device)##########
             Phi_nn_ph = Phi_nn_ph.to(self.device)##########
             
@@ -319,11 +318,11 @@ class Train_Methodology():
 
         self.model.eval()
         Phi_n  = initial_conditions  
-        x_n, _ = self.model.autoencoder(Phi_n)    #[num_trajs obsdim]
+        x_n, _ = self.model.autoencoder(Phi_n)    
         
-        x   = x_n[None,...].to("cpu")                    #[timesteps num_trajs obsdim]
+        x   = x_n[None,...].to("cpu")                    
         
-        Phi = Phi_n[None, ...].to("cpu")                    #[timesteps num_trajs statedim]
+        Phi = Phi_n[None, ...].to("cpu")                    
 
         for n in range(timesteps):
 
@@ -332,13 +331,13 @@ class Train_Methodology():
                 i_start = n - self.seq_len + 1
                 x_seq_n = x[i_start:(n+1), ...].to(self.device)
             elif n==0:
-                # padding = torch.zeros(x[0].repeat(self.seq_len - 1, *non_time_dims).shape).to(self.device)
-                padding = x[0].repeat(self.seq_len - 1, *non_time_dims).to(self.device)
+                padding = torch.zeros(x[0].repeat(self.seq_len - 1, *non_time_dims).shape).to(self.device)
+                # padding = x[0].repeat(self.seq_len - 1, *non_time_dims).to(self.device)
                 x_seq_n = x[0:(n+1), ...].to(self.device)
                 x_seq_n = torch.cat((padding, x_seq_n), 0)
             else:
-                # padding = torch.zeros(x[0].repeat(self.seq_len - n, *non_time_dims).shape).to(self.device)
-                padding = x[0].repeat(self.seq_len - n, *non_time_dims).to(self.device)
+                padding = torch.zeros(x[0].repeat(self.seq_len - n, *non_time_dims).shape).to(self.device)
+                # padding = x[0].repeat(self.seq_len - n, *non_time_dims).to(self.device)
                 x_seq_n = x[1:(n+1), ...].to(self.device)
                 x_seq_n = torch.cat((padding, x_seq_n), 0)
             
@@ -352,25 +351,21 @@ class Train_Methodology():
                 seqmodel_out = self.model.seqmodel(x_seq_n)
                 x_nn         = koop_out + seqmodel_out 
             Phi_nn = self.model.autoencoder.recover(x_nn)
-            # Phi_nn_koop = self.model.autoencoder.recover(koop_out)
 
             x   = torch.cat((x,x_nn[None,...].detach().cpu()), 0)
             Phi = torch.cat((Phi,Phi_nn[None,...].detach().cpu()), 0)
 
             if n == 0:
-                # Phi_koop = Phi_nn_koop[None,...].detach().cpu()
-                x_koop   = koop_out[None,...].detach().cpu()                    #[timesteps num_trajs obsdim]
-                x_seq    = seqmodel_out[None,...].detach().cpu() if not self.deactivate_seqmodel else 0                #[timesteps num_trajs obsdim]
+                x_koop   = koop_out[None,...].detach().cpu()                    
+                x_seq    = seqmodel_out[None,...].detach().cpu() if not self.deactivate_seqmodel else 0               
             else:
-                # Phi_koop = torch.cat((Phi_koop, Phi_nn_koop[None,...].detach().cpu()), 0)
                 x_koop   = torch.cat((x_koop, koop_out[None,...].detach().cpu()), 0)
                 x_seq    = torch.cat((x_seq, seqmodel_out[None,...].detach().cpu()), 0) if not self.deactivate_seqmodel else 0
 
-        x      = torch.movedim(x, 1, 0)   #[num_trajs timesteps obsdim]
-        x_koop = torch.movedim(x_koop, 1, 0)   #[num_trajs timesteps obsdim]
-        x_seq  = torch.movedim(x_seq, 1, 0) if not self.deactivate_seqmodel else 0   #[num_trajs timesteps obsdim]
-        Phi    = torch.movedim(Phi, 1, 0) #[num_trajs timesteps statedim]
-        # Phi_koop = torch.movedim(Phi_koop, 1, 0) #[num_trajs timesteps-1 statedim]
+        x      = torch.movedim(x, 1, 0)   
+        x_koop = torch.movedim(x_koop, 1, 0)  
+        x_seq  = torch.movedim(x_seq, 1, 0) if not self.deactivate_seqmodel else 0   
+        Phi    = torch.movedim(Phi, 1, 0) 
 
         x_seq = x_seq if not self.deactivate_seqmodel else 0
 
@@ -393,9 +388,7 @@ class Train_Methodology():
         Phi_sm = Phi.to("cpu")
         Phi_hat_sm = Phi_hat.to("cpu")
         mseLoss     = nn.MSELoss(reduction = 'mean')
-        mean_StateMSE    = mseLoss(Phi_sm, Phi_hat_sm) #[num_trajs timesteps statedim]
-        # print(StateMSE.shape)
-        # StateMSE    = torch.mean(StateMSE, dim = (0,*tuple(range(2, StateMSE.ndim)))) #[timesteps]
+        mean_StateMSE    = mseLoss(Phi_sm, Phi_hat_sm) 
         return mean_StateMSE
     
     
